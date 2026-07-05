@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ACT_ENEMIES, BOSSES } from "./data-enemies.js";
-import { COMMANDERS, gainXp, maybeFactionPick, showCommanderSelect, xpToNext } from "./flow-commanders.js";
+import { COMMANDERS, COMMANDER_PORTRAITS, gainXp, maybeFactionPick, showCommanderSelect, xpToNext } from "./flow-commanders.js";
 import { FACTIONS, META, asc, upgTier } from "./data-units.js";
 import { FAM_COL } from "./data-loot.js";
 import { G, setG } from "./engine-hex.js";
@@ -84,7 +84,7 @@ export function renderHUD(){
   const relicStr=(G.relics&&G.relics.length)
     ? ' <span title="Relics" style="cursor:help" onmouseenter="showRelicBar(event)" onmouseleave="hideTip()">🏺 <b>'+G.relics.length+'</b></span>' : '';
   const cmd=COMMANDERS.find(c=>c.id===G.commander);
-  HUD.innerHTML=`${cmd?`<span title="${cmd.passive}" style="cursor:help">${cmd.ico}</span>`:''}<span>❤️ Run <b>${G.over?'—':'Alive'}</b></span>
+  HUD.innerHTML=`${cmd?`<span title="${cmd.passive}" style="cursor:help"><img class="cmd-icon-sm" src="${COMMANDER_PORTRAITS[cmd.id]}" alt=""></span>`:''}<span>❤️ Run <b>${G.over?'—':'Alive'}</b></span>
     <span>🪙 <b>${G.gold}</b></span>
     ${G.essence?`<span title="Essence — premium currency for the Arcane Forge">🔮 <b>${G.essence}</b></span>`:''}
     <span>📜 Lore <b>${G.lore}</b></span>

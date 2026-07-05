@@ -9,7 +9,6 @@ import {
   eventChoice,
 } from "./flow-events.js";
 import {
-  hoverCommander,
   newRun,
   pickFaction,
   setAscension,
@@ -76,7 +75,6 @@ Object.assign(window, {
   forgeEssence,
   forgeTierUnit,
   hideTip,
-  hoverCommander,
   inspectEquip,
   inspectRecruit,
   leaveShop,

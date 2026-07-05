@@ -53,17 +53,9 @@ export const COMMANDERS=[
 ];
 export const DEFAULT_COMMANDERS=['aldric'];
 export function commanderUnlocked(id){ return (META.commanders||DEFAULT_COMMANDERS).includes(id); }
-export function hoverCommander(id){
-  const img=document.getElementById('cmdPortrait');
-  const src=COMMANDER_PORTRAITS[id];
-  if(!img||!src)return;
-  img.src=src;
-}
 export function showCommanderSelect(){
   let html=`<div class="panel"><div class="lbl">Choose Your Commander</div>
     <p class="tip" style="margin-bottom:12px">Each commander sets your starting band and a run-long signature passive.</p>`;
-  const firstUnlocked=COMMANDERS.find(c=>commanderUnlocked(c.id))||COMMANDERS[0];
-  html+=`<div class="cmd-portrait-wrap"><img id="cmdPortrait" class="cmd-portrait" src="${COMMANDER_PORTRAITS[firstUnlocked.id]}" alt="Commander portrait"></div>`;
   // Ascension selector (only if the player has unlocked at least tier 1)
   if(META.ascMax>=1){
     const a=META.ascension||0;
@@ -82,17 +74,17 @@ export function showCommanderSelect(){
   COMMANDERS.forEach(c=>{
     const unlocked=commanderUnlocked(c.id);
     if(unlocked){
-      html+=`<div class="card" style="width:100%;cursor:pointer" onmouseenter="hoverCommander('${c.id}')" onclick="newRun('${c.id}')">
-        <div class="cn" style="font-size:14px">${c.ico} ${c.name}</div>
+      html+=`<div class="card" style="width:100%;cursor:pointer" onclick="newRun('${c.id}')">
+        <div class="cn" style="font-size:14px;display:flex;align-items:center;gap:8px"><img class="cmd-icon-md" src="${COMMANDER_PORTRAITS[c.id]}" alt="">${c.name}</div>
         <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
         <div class="cs" style="color:#c9bbe0;font-size:11px;margin-top:4px">${c.passive}</div>
         <div class="cs dim" style="font-size:10px;margin-top:3px">Opening factions: ${(c.startFactions||STARTER_FACTIONS).filter(f=>f!=='Neutral').join(', ')} · recruit your army with starting gold</div>
       </div>`;
     } else {
       const afford=META.lore>=c.cost;
-      html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348" onmouseenter="hoverCommander('${c.id}')">
+      html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div><div class="cn" style="font-size:14px">🔒 ${c.ico} ${c.name}</div>
+          <div><div class="cn" style="font-size:14px;display:flex;align-items:center;gap:8px">🔒 <img class="cmd-icon-md" style="filter:grayscale(.6)" src="${COMMANDER_PORTRAITS[c.id]}" alt="">${c.name}</div>
             <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
             <div class="cs" style="color:#9c8fb0;font-size:11px;margin-top:4px">${c.passive}</div></div>
           <button class="small" ${afford?'':'disabled'} onclick="unlockCommander('${c.id}')" style="white-space:nowrap">📜 ${c.cost}</button>
