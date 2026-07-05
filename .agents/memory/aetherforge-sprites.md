@@ -21,3 +21,13 @@ If the game/app renders via synchronous `innerHTML` string templates (no virtual
 **Fix pattern:** tag the placeholder markup with a `data-*` attribute identifying the asset, and in the image's `onload` handler, query the live DOM for any elements still showing that attribute and patch them in-place (`el.outerHTML = ...`) with the real content. This avoids needing to track/re-invoke whichever function originally rendered the current screen (which is often one of many call sites in innerHTML-based codebases).
 
 **How to apply:** any time you're adding lazily-loaded remote assets (images, etc.) into a codebase that renders via `innerHTML` and has no central re-render/redraw hook, use the tag-and-patch approach rather than assuming the first render will already have the asset ready.
+
+## Small icon sets: prefer git + `removeBackground`, and don't trust the image-viewer tool's flattened preview
+
+For small counts of generated UI icons (under ~10 files, each a few hundred KB), store them directly in git under `src/assets/<category>/` and `import` them as ES modules — no need for object storage at that scale (see also the `pnpm-workspace` skill's asset conventions).
+
+When generating icon-style art meant to sit inside an existing styled container (e.g. a bordered node/badge), pass `removeBackground: true` and prompt for "no background, no frame, no border, no text" so the PNG has real transparency and blends into the container's own background/border rather than bringing its own.
+
+**Gotcha:** the `read` tool's image preview flattens transparent PNGs onto a white or black canvas — a transparent icon can look like it still has a solid background when viewed this way. This is a rendering artifact of the preview, not the file. To confirm real transparency, inspect the alpha channel directly (e.g. decode IDAT and check min/max alpha) rather than trusting the visual preview.
+
+**Why:** wasted a regeneration round in one session second-guessing images that were actually already correct — the previewed "background" was just the viewer's canvas fill, not baked into the PNG.

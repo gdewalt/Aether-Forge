@@ -4,7 +4,7 @@ import { COMMANDERS, COMMANDER_PORTRAITS, gainXp, maybeFactionPick, showCommande
 import { FACTIONS, META, asc, upgTier } from "./data-units.js";
 import { FAM_COL } from "./data-loot.js";
 import { G, setG } from "./engine-hex.js";
-import { NODE_META, genMap } from "./engine-map.js";
+import { NODE_ICONS, NODE_META, genMap } from "./engine-map.js";
 import { TT, armTipAutoHide, hideTip, openUnitDetail, positionTip, toast } from "./ui-tooltips.js";
 import { cardHTML, showEquip } from "./ui-army-equip.js";
 import { recruit, showRest, showShop } from "./ui-shop.js";
@@ -171,7 +171,7 @@ export function showMap(){
     nodes+=`<div class="${cls}" style="left:${pos.x}px;top:${pos.y}px"
       ${isReach?`onclick="enterNode('${n.id}')"`:''}
       onmouseenter="mapTip(event,'${n.type}')" onmouseleave="hideTip()">
-      <div class="ic">${meta.ic}</div>${isCur?'<div class="pin">📍</div>':''}</div>`;
+      <img class="ic mnode-icon" src="${NODE_ICONS[n.type]}" alt="${meta.nm}">${isCur?'<div class="pin">📍</div>':''}</div>`;
   });
   let html=`<div class="panel"><div class="lbl">The Road — Act ${G.act} ${'★'.repeat(G.act)}</div>`;
   if(upgTier('cdx_boss') || G._scoutRows){   // Codex Oracle's Sight or Expedition Forward Scouts: preview the act's likely boss

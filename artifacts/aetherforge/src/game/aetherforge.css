@@ -60,12 +60,14 @@ button.small{padding:5px 10px;font-size:12px}
   background:linear-gradient(180deg,var(--panel2),var(--ink2));display:flex;align-items:center;justify-content:center;
   z-index:2;transition:transform .15s, box-shadow .15s, border-color .15s;opacity:.42;transform:translate(-50%,-50%)}
 .mnode .ic{font-size:23px;line-height:1}
+.mnode .ic.mnode-icon{width:36px;height:36px;object-fit:contain;font-size:0;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
 .mnode.reachable{opacity:1;cursor:pointer;border-color:var(--gold)}
 .mnode.reachable:hover{box-shadow:0 0 20px rgba(201,162,39,.6);transform:translate(-50%,-50%) scale(1.14)}
 .mnode.visited{opacity:.9;border-color:var(--teal);box-shadow:0 0 8px rgba(47,143,131,.35)}
 .mnode.current{opacity:1;border-color:var(--gold-bright);box-shadow:0 0 24px rgba(240,211,117,.65)}
 .mnode.boss{width:78px;height:64px;border-color:var(--blood)}
 .mnode.boss .ic{font-size:34px}
+.mnode.boss .ic.mnode-icon{width:52px;height:52px}
 .mnode .pin{position:absolute;top:-9px;right:-9px;font-size:12px;background:var(--ink);border-radius:50%;padding:1px 2px}
 .maplegend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:11px;color:#9c8fb0;margin-top:6px}
 .maplegend span{display:inline-flex;align-items:center;gap:4px}

@@ -2,6 +2,20 @@
 import { G } from "./engine-hex.js";
 import { RNG, pick, rint } from "./rng.js";
 import { recruit } from "./ui-shop.js";
+import battleIcon from "../assets/nodes/battle.png";
+import eliteIcon from "../assets/nodes/elite.png";
+import shopIcon from "../assets/nodes/shop.png";
+import townIcon from "../assets/nodes/town.png";
+import forgeIcon from "../assets/nodes/forge.png";
+import restIcon from "../assets/nodes/rest.png";
+import eventIcon from "../assets/nodes/event.png";
+import bossIcon from "../assets/nodes/boss.png";
+
+/* ---------- map node art (painterly cell-shaded icons, shown on map nodes) ---------- */
+export const NODE_ICONS={
+  battle:battleIcon, elite:eliteIcon, shop:shopIcon, town:townIcon,
+  forge:forgeIcon, rest:restIcon, event:eventIcon, boss:bossIcon,
+};
 
 /* ---------- map generation ---------- */
 /* ============================================================

@@ -42,3 +42,51 @@ id = "LpUM9TYTIrNPlhb5oqyPw"
 uri = "file://artifacts/aetherforge/src/assets/commanders/brunhild.png"
 type = "image"
 title = "Brunhild unbroken portrait"
+
+[[generated]]
+id = "vp--6MHBimRXfzYToHDx4"
+uri = "file://artifacts/aetherforge/src/assets/nodes/battle.png"
+type = "image"
+title = "Battle node icon v2"
+
+[[generated]]
+id = "SmjfwxiJOlKTeClwTF-nZ"
+uri = "file://artifacts/aetherforge/src/assets/nodes/elite.png"
+type = "image"
+title = "Elite node icon v2"
+
+[[generated]]
+id = "auPlwh_9UJAjpUTHyjoJz"
+uri = "file://artifacts/aetherforge/src/assets/nodes/shop.png"
+type = "image"
+title = "Shop node icon v2"
+
+[[generated]]
+id = "tbhO95fQXwsOD5ou32GaT"
+uri = "file://artifacts/aetherforge/src/assets/nodes/town.png"
+type = "image"
+title = "Town node icon v2"
+
+[[generated]]
+id = "hd_db1nr_GASsjJGDmWc1"
+uri = "file://artifacts/aetherforge/src/assets/nodes/forge.png"
+type = "image"
+title = "Forge node icon v2"
+
+[[generated]]
+id = "Zdg9u7M72VX28oLAM4u1O"
+uri = "file://artifacts/aetherforge/src/assets/nodes/rest.png"
+type = "image"
+title = "Rest node icon v2"
+
+[[generated]]
+id = "3tYWzmCO91iX3xJQEdut7"
+uri = "file://artifacts/aetherforge/src/assets/nodes/event.png"
+type = "image"
+title = "Event node icon v2"
+
+[[generated]]
+id = "3gyVA6jg_r3Da_mEgR0O4"
+uri = "file://artifacts/aetherforge/src/assets/nodes/boss.png"
+type = "image"
+title = "Boss node icon v2"
