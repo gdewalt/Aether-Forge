@@ -7,6 +7,16 @@ import { asc, ascEnemyMult } from "./data-units.js";
 import { clone } from "./flow-forge.js";
 import { showPlan } from "./ui-planning.js";
 import { toast } from "./ui-tooltips.js";
+import forestIcon from "../assets/terrain/forest.png";
+import highIcon from "../assets/terrain/high.png";
+import sacredIcon from "../assets/terrain/sacred.png";
+import lavaIcon from "../assets/terrain/lava.png";
+import rubbleIcon from "../assets/terrain/rubble.png";
+
+/* ---------- battlefield terrain art (painterly cell-shaded mini-tiles, shown on hex overlays) ---------- */
+export const TERRAIN_ICONS={
+  forest:forestIcon, high:highIcon, sacred:sacredIcon, lava:lavaIcon, rubble:rubbleIcon,
+};
 
 /* ============================================================
    BATTLE

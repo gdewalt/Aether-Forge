@@ -90,3 +90,33 @@ id = "3gyVA6jg_r3Da_mEgR0O4"
 uri = "file://artifacts/aetherforge/src/assets/nodes/boss.png"
 type = "image"
 title = "Boss node icon v2"
+
+[[generated]]
+id = "UUcrqCL0rsHX8ajZ1P6I1"
+uri = "file://artifacts/aetherforge/src/assets/terrain/forest.png"
+type = "image"
+title = "Forest terrain icon"
+
+[[generated]]
+id = "RxRrG4EDxgvYFIamJu2uu"
+uri = "file://artifacts/aetherforge/src/assets/terrain/high.png"
+type = "image"
+title = "High ground terrain icon"
+
+[[generated]]
+id = "y0ydAKTBXH3NKW2O85V_q"
+uri = "file://artifacts/aetherforge/src/assets/terrain/sacred.png"
+type = "image"
+title = "Sacred ground terrain icon"
+
+[[generated]]
+id = "exkeCz-MWzJkmMdP2YAJy"
+uri = "file://artifacts/aetherforge/src/assets/terrain/lava.png"
+type = "image"
+title = "Lava terrain icon"
+
+[[generated]]
+id = "9Gs0Wls1Rbt_BLF5uZinG"
+uri = "file://artifacts/aetherforge/src/assets/terrain/rubble.png"
+type = "image"
+title = "Rubble terrain icon"

@@ -5,7 +5,7 @@ import { COLS, G, GRIDH, GRIDW, HR, ROWS, hexCenter } from "./engine-hex.js";
 import { EQUIP_BY_ID, unitPower, unitRarity } from "./data-loot.js";
 import { RNG } from "./rng.js";
 import { SC, hasSprite, unitBodyHTML } from "./ui-render-core.js";
-import { TERRAIN_META, terrainAt } from "./engine-battle-setup.js";
+import { TERRAIN_ICONS, TERRAIN_META, terrainAt } from "./engine-battle-setup.js";
 import { TT, ULT_DESC, armTipAutoHide, hideTip, positionTip, showTip, toast } from "./ui-tooltips.js";
 import { applyUnitAbility, beginCombat, computeEnemyPositions, hasRelic, occupied } from "./engine-combat.js";
 import { cardHTML } from "./ui-army-equip.js";
@@ -195,45 +195,11 @@ export function drawGrid(mode){
 export function hexPts(cx,cy){let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i);p.push((cx+HR*Math.cos(a)).toFixed(1)+','+(cy+HR*Math.sin(a)).toFixed(1));}return p.join(' ');}
 // subtle earthen tonal variation for neutral-band hexes
 export function past(n){ const t=[[126,110,82],[116,102,76],[134,116,86],[120,108,84],[128,114,80]]; return t[n%t.length].join(','); }
-// illustrated terrain tiles (hand-drawn SVG instead of emoji)
+// illustrated terrain tiles (painterly cell-shaded PNG art instead of emoji)
 export function terrainSVG(type,size){
   const s=size||40;
-  if(type==='forest'){
-    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40">
-      <g filter="url(#tShadow)">
-      <path d="M12 30 L8 30 L14 14 L20 30 Z" fill="#2f6b34"/><path d="M14 22 L11 22 L16 10 L21 22 Z" fill="#3f8a44"/>
-      <rect x="14.5" y="29" width="3" height="5" fill="#5a3d22"/>
-      <path d="M28 31 L23 31 L30 12 L37 31 Z" fill="#27602c"/><path d="M30 22 L26 22 L31 9 L36 22 Z" fill="#3a8040"/>
-      <rect x="29" y="30" width="3.2" height="5.5" fill="#5a3d22"/></g></svg>`;
-  }
-  if(type==='high'){
-    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><g filter="url(#tShadow)">
-      <path d="M6 34 L18 12 L24 22 L30 14 L36 34 Z" fill="#8a7a58"/>
-      <path d="M18 12 L24 22 L20 22 Z" fill="#b6a578"/><path d="M30 14 L36 34 L28 34 L31 22 Z" fill="#6f6248"/>
-      <path d="M16 16 L18 12 L21 17 L19 18 Z" fill="#efe9d6"/><path d="M29 17 L30 14 L33 19 Z" fill="#efe9d6"/></g></svg>`;
-  }
-  if(type==='sacred'){
-    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><g filter="url(#tShadow)">
-      <circle cx="20" cy="21" r="10" fill="none" stroke="#b9a6ef" stroke-width="1.4" opacity="0.8"/>
-      <circle cx="20" cy="21" r="6" fill="rgba(170,150,240,.35)"/>
-      <path d="M20 9 L21.6 17 L20 20 L18.4 17 Z" fill="#e6dcff"/>
-      <path d="M20 33 L18.4 25 L20 22 L21.6 25 Z" fill="#cdbcf5"/>
-      <path d="M8 21 L16 19.4 L19 21 L16 22.6 Z" fill="#cdbcf5"/><path d="M32 21 L24 19.4 L21 21 L24 22.6 Z" fill="#cdbcf5"/>
-      <circle cx="20" cy="21" r="2" fill="#fff" opacity="0.9"/></g></svg>`;
-  }
-  if(type==='lava'){
-    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><g filter="url(#tShadow)">
-      <path d="M6 26 Q12 20 18 25 Q24 30 30 24 Q35 20 36 27 L36 36 L6 36 Z" fill="#3a1810"/>
-      <path d="M8 28 Q13 24 18 28 Q24 32 29 27 Q33 24 34 29 L34 34 L8 34 Z" fill="#d4431a"/>
-      <path d="M10 30 Q15 27 19 30 Q24 33 28 29 L30 33 L10 33 Z" fill="#ff8a2a"/>
-      <circle cx="15" cy="29" r="1.4" fill="#ffd27a"/><circle cx="25" cy="30" r="1.2" fill="#ffd27a"/>
-      <circle cx="20" cy="20" r="1" fill="#ff7a2a" opacity="0.8"/><circle cx="27" cy="22" r="0.8" fill="#ffb05a" opacity="0.7"/></g></svg>`;
-  }
-  // rubble
-  return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><g filter="url(#tShadow)">
-    <ellipse cx="14" cy="27" rx="9" ry="7" fill="#6a6470"/><ellipse cx="11" cy="24" rx="3.5" ry="3" fill="#857f8d"/>
-    <ellipse cx="27" cy="29" rx="8" ry="6" fill="#5b5663"/><ellipse cx="25" cy="26" rx="3" ry="2.6" fill="#7a7582"/>
-    <ellipse cx="20" cy="22" rx="5" ry="4.2" fill="#777180"/></g></svg>`;
+  const src=TERRAIN_ICONS[type]||TERRAIN_ICONS.rubble;
+  return `<img src="${src}" width="${s}" height="${s}" style="display:block;object-fit:contain" alt="${type}">`;
 }
 // Scrying Orb: draw translucent enemy preview tokens on the planning grid.
 export function drawEnemyPreview(){
