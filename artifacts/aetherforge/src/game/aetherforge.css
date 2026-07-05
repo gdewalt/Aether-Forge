@@ -100,7 +100,7 @@ button.small{padding:5px 10px;font-size:12px}
 .spr-body img{pointer-events:none}
 .spr-e{filter:hue-rotate(-12deg) saturate(.92)}   /* subtle cool tint so enemy sprites read as the opposing side */
 .tok-stack{position:relative}
-.tok-stack.has-spr{position:absolute;left:50%;top:50%;transform:translate(-50%,-40%);display:flex;justify-content:center;align-items:flex-end;z-index:6}
+.tok-stack.has-spr{position:absolute;left:50%;top:50%;width:max-content;transform:translate(-50%,-40%);display:flex;justify-content:center;align-items:flex-end;z-index:6}
 .spr-shield{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:90%;height:80%;border-radius:45%;
   box-shadow:0 0 12px 4px rgba(124,220,255,.6);pointer-events:none}
 .spr-bars{position:absolute;left:50%;top:50%;transform:translateX(-50%);margin-top:46px;z-index:7}
