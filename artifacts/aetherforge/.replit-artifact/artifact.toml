@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Aetherforge"
+version = "1.0.0"
+id = "artifacts/aetherforge"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18742
+
+[services.development]
+run = "pnpm --filter @workspace/aetherforge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aetherforge", "run", "build" ]
+publicDir = "artifacts/aetherforge/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18742"
+BASE_PATH = "/"

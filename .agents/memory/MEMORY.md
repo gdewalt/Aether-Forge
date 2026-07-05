@@ -1,0 +1,1 @@
+- [Splitting monolithic HTML games into ES modules](aetherforge-split.md) — script-driven split + diff verification; watch for cross-file `let` reassignment and inline-handler `window` exposure.
