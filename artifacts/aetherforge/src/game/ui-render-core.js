@@ -18,23 +18,48 @@ import { startBattle } from "./engine-battle-setup.js";
    ============================================================ */
 export const SC=document.getElementById('screen');
 // ---- Sprite system: load sprites/{exact unit name}.png, fall back to emoji ----
-export const SPRITE_DIR='sprites/';
+// Served by the api-server artifact from object storage (see artifacts/api-server/src/routes/storage.ts)
+export const SPRITE_DIR='/api/storage/public-objects/sprites/';
 export const _sprStatus={};   // name -> 'ok' | 'fail' | undefined(loading)
 export function spriteURL(name){ return SPRITE_DIR+encodeURIComponent(name)+'.png'; }
 export function preloadSprite(name){
   if(_sprStatus[name]!==undefined) return;
   _sprStatus[name]='loading';
   const img=new Image();
-  img.onload=()=>{ _sprStatus[name]='ok'; };
+  img.onload=()=>{ _sprStatus[name]='ok'; _patchLoadedSprites(name); };
   img.onerror=()=>{ _sprStatus[name]='fail'; };
   img.src=spriteURL(name);
 }
 export function hasSprite(name){ return _sprStatus[name]==='ok'; }
+// Sprite loads are async (fetched from object storage), so the very first render of a
+// card/token often happens before the image is ready and falls back to the emoji glyph.
+// We tag that fallback markup with data attributes and, once the sprite finishes loading,
+// patch any matching elements still in the DOM in-place — no full-screen re-render needed.
+function _sprThumbHTML(name,px){
+  return `<img src="${spriteURL(name)}" style="height:${px}px;width:auto;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))">`;
+}
+function _sprBodyHTML(name,ds){
+  const h=Number(ds.sprSize)||44;
+  const ring=ds.sprRing||'';
+  const flip=ds.sprFlip==='1'?'transform:scaleX(-1);':'';
+  const extra=decodeURIComponent(ds.sprExtra||'');
+  const sideClass=ring==='tok-e'?'spr-e':'spr-p';
+  return `<div class="spr-body ${sideClass}" style="height:${h}px;${flip}${extra}">`
+    +`<img src="${spriteURL(name)}" draggable="false" style="height:${h}px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));"></div>`;
+}
+function _patchLoadedSprites(name){
+  const sel='[data-spr="'+encodeURIComponent(name)+'"]';
+  document.querySelectorAll(sel).forEach(el=>{
+    el.outerHTML = el.dataset.sprKind==='thumb'
+      ? _sprThumbHTML(name, el.dataset.sprPx)
+      : _sprBodyHTML(name, el.dataset);
+  });
+}
 // small inline thumbnail for cards/tooltips/lists; falls back to the emoji glyph
 export function spriteThumb(u,px){
   const name=u.name||''; preloadSprite(name); px=px||22;
-  if(hasSprite(name)) return `<img src="${spriteURL(name)}" style="height:${px}px;width:auto;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))">`;
-  return u.ico;
+  if(hasSprite(name)) return _sprThumbHTML(name,px);
+  return `<span class="spr-fallback" data-spr="${encodeURIComponent(name)}" data-spr-kind="thumb" data-spr-px="${px}">${u.ico}</span>`;
 }
 // Render the visual body of a unit: a standee sprite if available, else the emoji disc.
 // opts: {size, ring:'tok-p'|'tok-e', flip:bool, fc, extra:''(css), fs}
@@ -47,13 +72,11 @@ export function unitBodyHTML(u,opts){
   if(hasSprite(name)){
     // standee: preserve aspect ratio, sit on the hex; height drives size
     const h=opts.size||44;
-    const sideClass=ring==='tok-e'?'spr-e':'spr-p';
-    return `<div class="spr-body ${sideClass}" style="height:${h}px;${flip}${extra}">`
-      +`<img src="${spriteURL(name)}" draggable="false" style="height:${h}px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));"></div>`;
+    return _sprBodyHTML(name,{sprSize:h,sprRing:ring,sprFlip:opts.flip?'1':'0',sprExtra:encodeURIComponent(extra)});
   }
   // fallback: emoji disc (existing look)
   const sz=opts.discSize||opts.size||38, fs=opts.fs||19, fc=opts.fc||'#888';
-  return `<div class="tok-body ${ring}" style="background:${fc};color:#0e0b14;width:${sz}px;height:${sz}px;font-size:${fs}px;cursor:help;${extra}">${u.ico}</div>`;
+  return `<div class="tok-body ${ring}" data-spr="${encodeURIComponent(name)}" data-spr-kind="body" data-spr-size="${opts.size||44}" data-spr-ring="${ring}" data-spr-flip="${opts.flip?'1':'0'}" data-spr-extra="${encodeURIComponent(extra)}" style="background:${fc};color:#0e0b14;width:${sz}px;height:${sz}px;font-size:${fs}px;cursor:help;${extra}">${u.ico}</div>`;
 }
 export const HUD=document.getElementById('hud');
 export function renderHUD(){

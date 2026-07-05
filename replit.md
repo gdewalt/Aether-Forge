@@ -6,7 +6,7 @@ A hex-grid auto-battler / roguelike deckbuilder game — "Banners of the Broken 
 
 - `pnpm --filter @workspace/aetherforge run dev` — run the game (Vite dev server)
 - `pnpm --filter @workspace/aetherforge run typecheck` — typecheck the artifact
-- `pnpm --filter @workspace/api-server run dev` — run the API server (unused by the game currently; scaffold artifact only)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (now serves unit sprite art from object storage; otherwise unused by the game)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 
@@ -14,7 +14,7 @@ A hex-grid auto-battler / roguelike deckbuilder game — "Banners of the Broken 
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - Game artifact: React + Vite shell (`artifacts/aetherforge`) hosting a vanilla-JS game engine
-- API: Express 5 (scaffold artifact, not used by the game)
+- API: Express 5 (`artifacts/api-server`) — serves unit sprite PNGs from Replit Object Storage; otherwise a scaffold, not used by the game
 - DB: PostgreSQL + Drizzle ORM (scaffold, not used by the game)
 
 ## Where things live
@@ -23,6 +23,8 @@ A hex-grid auto-battler / roguelike deckbuilder game — "Banners of the Broken 
 - `artifacts/aetherforge/src/game/boot.js` — entry point; imports every module, exposes ~41 functions on `window` (required because game UI is built via `innerHTML` strings with inline `onclick`/`onmouseenter`/etc. handlers), then boots the title screen.
 - `artifacts/aetherforge/src/App.tsx` — thin React shell: renders the static `#hud`/`#screen`/`#tooltip` containers the vanilla game code targets, and dynamically imports `boot.js` once on mount. No game state lives in React.
 - `artifacts/aetherforge/src/game/aetherforge.css` — game's original stylesheet, imported directly (not Tailwind).
+- `artifacts/api-server/src/routes/storage.ts` + `src/lib/objectStorage.ts`/`objectAcl.ts` — serves unit sprite PNGs from Replit Object Storage at `GET /api/storage/public-objects/*filePath` (trimmed from the object-storage skill template: public-read only, no presigned upload endpoint since sprites were uploaded once via a one-off script, not by end users).
+- Sprite art lives in the object storage bucket under `public/sprites/<Exact Unit Name>.png` (270 units, resized to 480px max dimension + optimized, ~103MB total) — not in git, so the repo stays small.
 
 ## Architecture decisions
 
@@ -43,6 +45,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 - If you add new inline `onclick`/`onmouseenter`/etc. handler strings referencing a game function, you must also add that function to the `window` exposure list in `boot.js`, or the handler will silently no-op (function not defined) at runtime.
 - Any new module-level `let` that ends up reassigned from a different file than the one it's declared in needs a paired `setX()` exported function — plain `import { x }` bindings can't be reassigned by importers.
+- Unit sprites (`ui-render-core.js`) load asynchronously from the api-server's object-storage route. Since cards/tokens render synchronously via `innerHTML` before the image finishes loading, the fallback emoji is tagged with a `data-spr` attribute and patched in-place with the real `<img>` once the sprite's `onload` fires — there's no full-screen re-render loop in this codebase to hook into otherwise. If you add a new place that renders a unit sprite, reuse `spriteThumb`/`unitBodyHTML` rather than inlining `spriteURL()` directly, or the patch-on-load behavior won't apply and the emoji will get stuck.
 
 ## Pointers
 

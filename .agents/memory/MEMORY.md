@@ -1,1 +1,2 @@
-- [Splitting monolithic HTML games into ES modules](aetherforge-split.md) — script-driven split + diff verification; watch for cross-file `let` reassignment and inline-handler `window` exposure.
+- [Aetherforge unit sprites](aetherforge-sprites.md) — bulk user art served from object storage (not git); async-load DOM-patch pattern for innerHTML-based UIs.
+- [Aetherforge module split](aetherforge-split.md) — how the original monolithic HTML game was split into vanilla ES modules; useful if similar splitting work recurs.
