@@ -687,7 +687,6 @@ export function simTick(){
     if(u._sporeHeal && u.hp<u.maxhp && inSporeCloud(u)){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._sporeHeal*TICK); }
     if(u._periodicHeal){ u._phT=(u._phT||0)-TICK; if(u._phT<=0){ u._phT=u._periodicHeal.every; let pool=living(u.side).filter(m=>m!==u&&hexDist(m,u)<=u._periodicHeal.range); if(!u._cleanse)pool=pool.filter(m=>m.hp<m.maxhp); if(pool.length){ let t; if(u._cleanse){ const debuffed=pool.filter(m=>m.slowT>0||m.burnT>0||m.poisonT>0||m.bleedStacks>0||m.curseT>0); t=debuffed.length?debuffed.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]:pool.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; } else t=pool.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; if(t.hp<t.maxhp)t.hp=Math.min(t.maxhp,t.hp+u._periodicHeal.amt*healScale(u)*(1-(t._healCut||0))); if(u._cleanse)cleanseDebuffs(t); healRingAt(t); if(u._periodicHealCharge)t.mag=Math.min(100,t.mag+u._periodicHealCharge); if(u._healGrantsAS){t._healAS=u._healGrantsAS;t._healAST=3;} if(u._healShield)applyShield(t,u._periodicHeal.amt*0.5*healScale(u)); } } }
     if(u._periodicShield){ u._psT=(u._psT||0)-TICK; if(u._psT<=0){ u._psT=u._periodicShield.every; if(u._periodicShield.self){ [u,...living(u.side).filter(m=>m!==u&&hexDist(m,u)<=1)].forEach(t=>{applyShield(t,u._periodicShield.amt*healScale(u));}); } else { const allies=living(u.side).filter(m=>m!==u&&hexDist(m,u)<=u._periodicShield.range); if(allies.length){ const t=allies.sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; applyShield(t,u._periodicShield.amt*healScale(u)); } } } }
-    if(u.bleedStacks>0) applyDamage(u, u.maxhp*0.0012*Math.min(5,u.bleedStacks), 'dot');
     if(u.burnT>0){ u.burnT-=TICK; const vael=[...b.P,...b.E].find(a=>a.alive&&a._burnFieldAmp&&a.side!==u.side); const amp=vael?(1+vael._burnFieldAmp):1; applyDamage(u, u.maxhp*0.0018*(u.burnMul||1)*amp, 'dot'); }
     if(u.poisonT>0){ u.poisonT-=TICK; applyDamage(u, u.maxhp*0.0015, 'poison'); }
     if(u.regen>0&&u.hp<u.maxhp&&u.alive){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u.regen*TICK*healScale(u)); }   // Verdant Cuirass regen
@@ -1035,7 +1034,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
   if(dmg>0){ const g=living(tgt.side).find(a=>a!==tgt&&a._guardianWard&&hexDist(a,tgt)<=2); if(g)dmg*=0.92; }  // Guardian class synergy: allies near a Guardian take -8%
   if(dmg>0){ const w=living(tgt.side).find(a=>a!==tgt&&a.auraWard&&hexDist(a,tgt)<=2); if(w)dmg*=(1-w.auraWard); }  // Sigil of the Bound: nearby allies take less damage
   if(tgt._frontWard&&dmg>0)dmg*=(1-tgt._frontWard);  // Sentinel's Aegis: front-row units take less
-  if(tgt.bleedStacks>0)dmg*=(1+0.06*Math.min(3,tgt.bleedStacks)); // bleed amp
+  if(tgt.bleedStacks>0)dmg*=(1+0.08*(tgt.bleedAmpMul||1)*Math.min(3,tgt.bleedStacks)); // bleed amp
   if(kind==='atk'&&src&&src.webAmp&&tgt.slowT>0)dmg*=1.15;   // Arachnari: webbed foes take more
   if(kind==='atk'&&src&&src.sporeAmp&&inSporeCloud(tgt))dmg*=1.15; // Myconid: foes in a spore cloud take more
   if(tgt.curseT>0)dmg*=1.25; // Curse ultimate: cursed foes take more damage

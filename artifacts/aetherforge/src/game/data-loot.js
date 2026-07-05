@@ -28,7 +28,7 @@ export const RELICS=[
    desc:'All units +15% max HP.',apply:(us)=>us.forEach(u=>{u.hp*=1.15;u.maxhp=u.hp;})},
   // ---- Synergy ----
   {id:'crimson',name:'Crimson Pact',fam:'Synergy',ico:'🩸',rar:'Rare',
-   desc:'Bleed gains +2 max stacks and ticks 60% harder.',apply:(us)=>us.forEach(u=>{u.bleedBonus=2;u.bleedDotMul=1.6;})},
+   desc:'Bleed gains +2 max stacks and amplifies 60% harder.',apply:(us)=>us.forEach(u=>{u.bleedBonus=2;u.bleedAmpMul=1.6;})},
   {id:'everburn',name:'Everburning Coal',fam:'Synergy',ico:'🔥',rar:'Rare',
    desc:'Burns deal +60% damage and last longer.',apply:(us)=>us.forEach(u=>{if(u.burn)u.burn*=1.6;u.burnDur=3.2;})},
   {id:'deepfrost',name:'Deepfreeze Sigil',fam:'Synergy',ico:'❄️',rar:'Rare',
