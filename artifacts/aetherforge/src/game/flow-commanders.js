@@ -8,6 +8,19 @@ import { SC, renderHUD, showMap, showTitle } from "./ui-render-core.js";
 import { genMap } from "./engine-map.js";
 import { recruit } from "./ui-shop.js";
 import { toast } from "./ui-tooltips.js";
+import aldricPortrait from "../assets/commanders/aldric.png";
+import myrraPortrait from "../assets/commanders/myrra.png";
+import rakkanPortrait from "../assets/commanders/rakkan.png";
+import korvenPortrait from "../assets/commanders/korven.png";
+import silkweaverPortrait from "../assets/commanders/silkweaver.png";
+import hollowqueenPortrait from "../assets/commanders/hollowqueen.png";
+import brunhildPortrait from "../assets/commanders/brunhild.png";
+
+/* ---------- commander portrait art (painterly cell-shaded busts, shown on hover/select) ---------- */
+export const COMMANDER_PORTRAITS={
+  aldric:aldricPortrait, myrra:myrraPortrait, rakkan:rakkanPortrait, korven:korvenPortrait,
+  silkweaver:silkweaverPortrait, hollowqueen:hollowqueenPortrait, brunhild:brunhildPortrait,
+};
 
 /* ---------- COMMANDERS (GDD §22) — alternate starts with signature passives ---------- */
 export const COMMANDERS=[
@@ -40,9 +53,17 @@ export const COMMANDERS=[
 ];
 export const DEFAULT_COMMANDERS=['aldric'];
 export function commanderUnlocked(id){ return (META.commanders||DEFAULT_COMMANDERS).includes(id); }
+export function hoverCommander(id){
+  const img=document.getElementById('cmdPortrait');
+  const src=COMMANDER_PORTRAITS[id];
+  if(!img||!src)return;
+  img.src=src;
+}
 export function showCommanderSelect(){
   let html=`<div class="panel"><div class="lbl">Choose Your Commander</div>
     <p class="tip" style="margin-bottom:12px">Each commander sets your starting band and a run-long signature passive.</p>`;
+  const firstUnlocked=COMMANDERS.find(c=>commanderUnlocked(c.id))||COMMANDERS[0];
+  html+=`<div class="cmd-portrait-wrap"><img id="cmdPortrait" class="cmd-portrait" src="${COMMANDER_PORTRAITS[firstUnlocked.id]}" alt="Commander portrait"></div>`;
   // Ascension selector (only if the player has unlocked at least tier 1)
   if(META.ascMax>=1){
     const a=META.ascension||0;
@@ -61,7 +82,7 @@ export function showCommanderSelect(){
   COMMANDERS.forEach(c=>{
     const unlocked=commanderUnlocked(c.id);
     if(unlocked){
-      html+=`<div class="card" style="width:100%;cursor:pointer" onclick="newRun('${c.id}')">
+      html+=`<div class="card" style="width:100%;cursor:pointer" onmouseenter="hoverCommander('${c.id}')" onclick="newRun('${c.id}')">
         <div class="cn" style="font-size:14px">${c.ico} ${c.name}</div>
         <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
         <div class="cs" style="color:#c9bbe0;font-size:11px;margin-top:4px">${c.passive}</div>
@@ -69,7 +90,7 @@ export function showCommanderSelect(){
       </div>`;
     } else {
       const afford=META.lore>=c.cost;
-      html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348">
+      html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348" onmouseenter="hoverCommander('${c.id}')">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div><div class="cn" style="font-size:14px">🔒 ${c.ico} ${c.name}</div>
             <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>

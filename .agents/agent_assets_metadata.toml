@@ -1,0 +1,44 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "R9y9fWxEVT5H-OTWJI38G"
+uri = "file://artifacts/aetherforge/src/assets/commanders/aldric.png"
+type = "image"
+title = "Sir Aldric warden portrait"
+
+[[generated]]
+id = "n761NqiEQNIxf2N8lBNCk"
+uri = "file://artifacts/aetherforge/src/assets/commanders/myrra.png"
+type = "image"
+title = "Myrra starseer portrait"
+
+[[generated]]
+id = "lXQvdJYfYX3MRQ-c6zz02"
+uri = "file://artifacts/aetherforge/src/assets/commanders/rakkan.png"
+type = "image"
+title = "Rakkan pride-father portrait"
+
+[[generated]]
+id = "MP5_JQZJEnxVE0A41Iswn"
+uri = "file://artifacts/aetherforge/src/assets/commanders/korven.png"
+type = "image"
+title = "Korven ashheart portrait"
+
+[[generated]]
+id = "XfH8I3N59HAvLJu9dNKXo"
+uri = "file://artifacts/aetherforge/src/assets/commanders/silkweaver.png"
+type = "image"
+title = "Mother Silkweaver portrait"
+
+[[generated]]
+id = "q2WTuzpvAxBqs-kRHg-xW"
+uri = "file://artifacts/aetherforge/src/assets/commanders/hollowqueen.png"
+type = "image"
+title = "Hollow Queen portrait"
+
+[[generated]]
+id = "LpUM9TYTIrNPlhb5oqyPw"
+uri = "file://artifacts/aetherforge/src/assets/commanders/brunhild.png"
+type = "image"
+title = "Brunhild unbroken portrait"
