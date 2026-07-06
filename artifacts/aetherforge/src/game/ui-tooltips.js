@@ -377,7 +377,7 @@ window.addEventListener('scroll',()=>{ if(TT.classList.contains('show'))hideTip(
 
 /* ---------- toast ---------- */
 export let toastT;
-export function toast(msg){let t=document.querySelector('.toast');if(t)t.remove();
-  t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);
+export function toast(msg,html=false){let t=document.querySelector('.toast');if(t)t.remove();
+  t=document.createElement('div');t.className='toast';if(html)t.innerHTML=msg;else t.textContent=msg;document.body.appendChild(t);
   clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),1800);}
 

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { EQUIPMENT, activePool, newEquip, relicReward, unitRarity } from "./data-loot.js";
+import { EQUIPMENT, activePool, equipIcoHTML, newEquip, relicIcoHTML, relicReward, unitRarity } from "./data-loot.js";
 import { FACTION_INFO, FCOL } from "./data-units.js";
 import { FAC_SYN } from "./synergies.js";
 import { G } from "./engine-hex.js";
@@ -53,13 +53,13 @@ export function forgeEssence(action){
   if(action==='equip'){
     if(E<1){ toast('Need 🔮1 Essence'); return; }
     const e=pick(EQUIPMENT); G.essence-=1; G.stash.push(newEquip(e.id));
-    G._forgeUsed=true; toast('⚙️ Forged '+e.ico+' '+e.name+' (🔮1)'); advanceRow();
+    G._forgeUsed=true; toast('⚙️ Forged '+equipIcoHTML(e,16)+' '+e.name+' (🔮1)',true); advanceRow();
   } else if(action==='relic'){
     if(E<3){ toast('Need 🔮3 Essence'); return; }
     const offers=relicReward(1,false);
     if(!offers.length){ toast('No new relics to forge'); return; }
     const r=offers[0]; G.essence-=3; G.relics.push(r); if(r.onPick)r.onPick(G);
-    G._forgeUsed=true; toast('🏺 Forged relic: '+r.ico+' '+r.name+' (🔮3)'); advanceRow();
+    G._forgeUsed=true; toast('🏺 Forged relic: '+relicIcoHTML(r,16)+' '+r.name+' (🔮3)',true); advanceRow();
   } else if(action==='apprentice'){
     if(G.army.length>=benchMax()){ toast('Bench full — sell a unit first'); return; }
     const pool=activePool().filter(x=>{const r=unitRarity(x); return r==='Common'||r==='Uncommon';});
