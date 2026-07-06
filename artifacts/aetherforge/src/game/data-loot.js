@@ -38,6 +38,8 @@ export const RELICS=[
   // ---- Class ----
   {id:'quiver',name:"Hunter's Quiver",fam:'Class',ico:'🏹',rar:'Uncommon',
    desc:'Archers ignore 20% of target armor.',apply:(us)=>us.forEach(u=>{if(u.cls==='Archer')u.armorPierce=(u.armorPierce||0)+.20;})},
+  {id:'barbedarrows',name:'Barbed Arrows',fam:'Class',ico:'🩸',rar:'Uncommon',
+   desc:'Archers: attacks apply bleed.',apply:(us)=>us.forEach(u=>{if(u.cls==='Archer')u.bleed=true;})},
   {id:'shadowstep',name:'Shadowstep Cloak',fam:'Class',ico:'🌑',rar:'Rare',
    desc:'Rogues begin each battle behind the enemy line.',apply:(us)=>us.forEach(u=>{if(u.cls==='Rogue')u.infiltrate=true;})},
   {id:'gricharm',name:'Grimoire Charm',fam:'Class',ico:'📖',rar:'Uncommon',
