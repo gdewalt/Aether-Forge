@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { CCOL, FCOL, POOL } from "./data-units.js";
 import { CLASS_SYN, FAC_SYN } from "./synergies.js";
-import { EQUIP_BY_ID, RAR_COL } from "./data-loot.js";
+import { EQUIP_BY_ID, RAR_COL, equipIcoHTML } from "./data-loot.js";
 import { HOVU, activeDebuffs, auraAtkSpeed, living, setHOVU, slowAtkRate, slowMoveRate } from "./engine-combat.js";
 import { TIER_STARS } from "./ui-shop.js";
 import { spriteThumb } from "./ui-render-core.js";
@@ -243,7 +243,7 @@ export function openUnitDetail(u, action){
   const clsTxt=cs?`<div class="abil" style="margin-top:6px"><b>${u.cls} class (cross-faction)</b><br>At 3: ${cs.desc[0]}<br>At 6: ${cs.desc[1]}</div>`:'';
   const rngTxt = u.t==='r'?`${u.rng} (ranged)`:'1 (melee)';
   const gearTxt = (u.gear&&['weapon','armor','trinket'].some(s=>u.gear[s]))
-    ? `<div class="sect"><h4>Equipment</h4>`+['weapon','armor','trinket'].filter(s=>u.gear[s]).map(s=>{const e=EQUIP_BY_ID[u.gear[s]];return `<div class="abil" style="margin-bottom:5px"><b style="color:${RAR_COL[e.rar]}">${e.ico} ${e.name}</b><br>${e.desc}</div>`;}).join('')+`</div>` : '';
+    ? `<div class="sect"><h4>Equipment</h4>`+['weapon','armor','trinket'].filter(s=>u.gear[s]).map(s=>{const e=EQUIP_BY_ID[u.gear[s]];return `<div class="abil" style="margin-bottom:5px"><b style="color:${RAR_COL[e.rar]}">${equipIcoHTML(e,16)} ${e.name}</b><br>${e.desc}</div>`;}).join('')+`</div>` : '';
   const scrim=document.createElement('div');scrim.className='scrim';scrim.id='umodal-scrim';
   scrim.addEventListener('click',e=>{if(e.target===scrim)closeModal();});
   scrim.innerHTML=`<div class="umodal">
@@ -285,7 +285,7 @@ export function openEquipDetail(e, action){
   const scrim=document.createElement('div');scrim.className='scrim';scrim.id='umodal-scrim';
   scrim.addEventListener('click',ev=>{if(ev.target===scrim)closeModal();});
   scrim.innerHTML=`<div class="umodal">
-    <div class="uhead"><div class="uname" style="color:${RAR_COL[e.rar]}">${e.ico} ${e.name}</div>
+    <div class="uhead"><div class="uname" style="color:${RAR_COL[e.rar]}">${equipIcoHTML(e,22)} ${e.name}</div>
       <div class="utags"><span class="chip" style="background:${RAR_COL[e.rar]};color:#0e0b14">${e.rar}</span>
         <span class="chip" style="background:#2a2138;color:#c9bbe0">${SLOT[e.slot]}</span></div></div>
     <div class="ubody"><div class="abil">${e.desc}</div>
@@ -350,7 +350,7 @@ export function gearLine(u){
   const g=['weapon','armor','trinket'].map(s=>u.gear[s]).filter(Boolean).map(id=>EQUIP_BY_ID[id]);
   if(!g.length)return '';
   return `<div class="tt-ult" style="border-top-color:#3a3050"><b style="color:#9fd0a0">Equipment</b><br>`+
-    g.map(e=>`<span style="font-size:11px;color:${RAR_COL[e.rar]}">${e.ico} ${e.name}</span>`).join('<br>')+`</div>`;
+    g.map(e=>`<span style="font-size:11px;color:${RAR_COL[e.rar]}">${equipIcoHTML(e,14)} ${e.name}</span>`).join('<br>')+`</div>`;
 }
 export let _tipTimer=null;
 export function armTipAutoHide(ms){ clearTimeout(_tipTimer); _tipTimer=setTimeout(hideTip, ms||2600); }

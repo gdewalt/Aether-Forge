@@ -120,3 +120,375 @@ id = "9Gs0Wls1Rbt_BLF5uZinG"
 uri = "file://artifacts/aetherforge/src/assets/terrain/rubble.png"
 type = "image"
 title = "Rubble terrain icon"
+
+[[generated]]
+id = "ikZb8b4N86v9DkG2TXjai"
+uri = "file://artifacts/aetherforge/src/assets/relics/banner.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "qHgXPMrnH5NKr4094qeB8"
+uri = "file://artifacts/aetherforge/src/assets/relics/whetstone.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ENgnjQevhhnlBNvRxQb5Y"
+uri = "file://artifacts/aetherforge/src/assets/relics/aegisplate.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "htn2TGL5YNZOTh-TEp6bs"
+uri = "file://artifacts/aetherforge/src/assets/relics/warhorn.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "-2v-NO9_WLNH6MgH3lDI-"
+uri = "file://artifacts/aetherforge/src/assets/relics/vitalroot.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1ZXkScVB8g5FvNWPAJt9A"
+uri = "file://artifacts/aetherforge/src/assets/relics/crimson.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "pJoB5V8a4wvC6MkN6Y_Y_"
+uri = "file://artifacts/aetherforge/src/assets/relics/everburn.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "wd3sZo7UdvbGLbW6nj7HW"
+uri = "file://artifacts/aetherforge/src/assets/relics/deepfrost.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "EhDlpUZO8MmspEzWhzHkx"
+uri = "file://artifacts/aetherforge/src/assets/relics/starcharge.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "rjZpOSYYJOLBCyRzeZRRz"
+uri = "file://artifacts/aetherforge/src/assets/relics/quiver.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XXw_ZSSDonUfxZM1BRD_I"
+uri = "file://artifacts/aetherforge/src/assets/relics/barbedarrows.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ad3DArZYAHH7qgyEHbp7W"
+uri = "file://artifacts/aetherforge/src/assets/relics/shadowstep.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "h5g9PeKK7yWu6XbxE8uP4"
+uri = "file://artifacts/aetherforge/src/assets/relics/gricharm.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "uUhf9cf88reFiIJPhZXHl"
+uri = "file://artifacts/aetherforge/src/assets/relics/chalice.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "yrTrTrwmheyV7xcXBChlL"
+uri = "file://artifacts/aetherforge/src/assets/relics/coinpurse.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "rwZCs_iJZaYHUPcMFkvtK"
+uri = "file://artifacts/aetherforge/src/assets/relics/duplodie.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NqGYiu_q5XBVQZFWz-k8W"
+uri = "file://artifacts/aetherforge/src/assets/relics/scryingorb.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XkbEtXqnmVJ7FpQn_LKKt"
+uri = "file://artifacts/aetherforge/src/assets/relics/phoenixcrown.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ybHaiGpuLwhROkWswZplt"
+uri = "file://artifacts/aetherforge/src/assets/relics/resonance.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Nt7HVfWgFUt7mb68BEOdS"
+uri = "file://artifacts/aetherforge/src/assets/relics/hourglass.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ekvYNCGwJVO03PZEc8kLY"
+uri = "file://artifacts/aetherforge/src/assets/relics/ruin.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NKetkksusQVJUi7dYoJsp"
+uri = "file://artifacts/aetherforge/src/assets/relics/ironbark.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4YSyXZmsLnnEyJIIUlQyY"
+uri = "file://artifacts/aetherforge/src/assets/relics/bloodidol.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "al-XQQzuUtzbQy5GPMzvT"
+uri = "file://artifacts/aetherforge/src/assets/relics/sentinel.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "8ISleJ4BOuOmSVvKap7Go"
+uri = "file://artifacts/aetherforge/src/assets/relics/farseeker.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "8Y5mT1BQXdbw9xTaemRJs"
+uri = "file://artifacts/aetherforge/src/assets/relics/standard.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "iYFpU2tU2urDo1YexXXeT"
+uri = "file://artifacts/aetherforge/src/assets/relics/warlord.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "81hZcBA29qBXCtF6FfdLD"
+uri = "file://artifacts/aetherforge/src/assets/relics/bulwarkbanner.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "eKCJurJmWuGqjFCRb1KGf"
+uri = "file://artifacts/aetherforge/src/assets/relics/spoils.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "UOnUQOSFUhPi3oHi6KG7I"
+uri = "file://artifacts/aetherforge/src/assets/relics/whistle.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "k3lUg6iQrFNDmldr51YV_"
+uri = "file://artifacts/aetherforge/src/assets/relics/compass.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3E6lmf1zvQ0Hy-7MxJd_7"
+uri = "file://artifacts/aetherforge/src/assets/relics/twinsoul.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "c23WK2ZrPS6Ld-Tl1WVdH"
+uri = "file://artifacts/aetherforge/src/assets/relics/conqmap.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "sggCUcnU6BssejgeyfsyV"
+uri = "file://artifacts/aetherforge/src/assets/relics/soulforge.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "d1dBf9h_c6Ljc8FftnMVx"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_greatsword.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "z9IysWGYJvryBMupE_Pua"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_serrated.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "oBVncmGa_Ex59Vxq1c3tj"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_emberbrand.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3c8reKMciYP7nCXgtanEz"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_swiftbow.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "2qISO7fJyrVqUcfFSeB3X"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_executioner.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "rNgX5EmpXlk6fjHFXydxg"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_frostward.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "IdhypOG8svEeSCRYPgD9Q"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_aegis.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "QBcxFOmajNdWDIeuKQgWZ"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_thorns.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "C7_mS-FdD7vU5UXDcLgWz"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_phoenix.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "G1GTqx3eLGBYu3bPnX1JO"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_swiftboots.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "v8iY_APU_1miBmN_TSuAn"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_soulreaver.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "V06D3ZDKfL8bAqIN9tQei"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_focusgem.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "-a8PK3Sm11GLzDvC7SXym"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_warbanner.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "QbNkyyCRL4jODD8yjOywS"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_wardstone.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "DAbvAUsDqZQJ7V4eW9CQa"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_tideglaive.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "2kNqJgCBdp0l9uPNcVhrP"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_venomfang.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "5MrXj6jm66hidsIqUkq3d"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_stormpike.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NvAoUdYT3tSWKS_mbs0Bu"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_warhammer.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "VjpWP95jhGzYMgpwCcerS"
+uri = "file://artifacts/aetherforge/src/assets/equipment/w_reaper.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1av51hyb7gP7Y6O3pFVJW"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_plate.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "fS4tZs5Mw2aBg3xwB3xMh"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_regen.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "slU1GVMC9F3BeFyKDHyVB"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_warding.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "rk5C4YPEsjO9MxLLl5gwF"
+uri = "file://artifacts/aetherforge/src/assets/equipment/a_juggernaut.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "m0wo8nrRFkjvG1xfj92Q2"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_lucky.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "FowalSNymc7gnnVhwBDwd"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_battlestandard.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6l71o2WtuK17dI9UhpzKB"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_shadowcloak.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "n4TWrxrSweiWjX0EmD4WD"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_runestone.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XvPEF34ibntdjy9KYq5J8"
+uri = "file://artifacts/aetherforge/src/assets/equipment/t_sigil.png"
+type = "image"
+title = "generated_image"

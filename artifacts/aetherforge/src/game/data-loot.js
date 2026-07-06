@@ -162,6 +162,17 @@ export const EQUIPMENT=[
    desc:'Aura: allies within 2 hexes take −12% damage.',apply:(u)=>{u.auraWard=(u.auraWard||0)+.12;}},
 ];
 export const EQUIP_BY_ID={};EQUIPMENT.forEach(e=>EQUIP_BY_ID[e.id]=e);
+
+/* ---------- relic/equipment art (painterly cell-shaded icons, replace emoji `ico`) ---------- */
+const _relicIconMods=import.meta.glob('../assets/relics/*.png',{eager:true,import:'default'});
+export const RELIC_ICONS={};
+for(const p in _relicIconMods){ RELIC_ICONS[p.split('/').pop().replace('.png','')]=_relicIconMods[p]; }
+const _equipIconMods=import.meta.glob('../assets/equipment/*.png',{eager:true,import:'default'});
+export const EQUIP_ICONS={};
+for(const p in _equipIconMods){ EQUIP_ICONS[p.split('/').pop().replace('.png','')]=_equipIconMods[p]; }
+export function relicIcoHTML(r,px=18){ const src=RELIC_ICONS[r.id]; return src?`<img class="item-ico" style="width:${px}px;height:${px}px" src="${src}" alt="">`:r.ico; }
+export function equipIcoHTML(e,px=18){ const src=EQUIP_ICONS[e.id]; return src?`<img class="item-ico" style="width:${px}px;height:${px}px" src="${src}" alt="">`:e.ico; }
+
 export const RAR_COL={Common:'#9aa0a6',Uncommon:'#5bbf6a',Rare:'#4a90c2',Legendary:'#f0d375'};
 export const FAM_COL={Static:'#9aa0a6',Synergy:'#e0726b',Class:'#7c9ed4',Economy:'#d9a521','Game-Changer':'#f0d375'};
 export function newEquip(id){return {id};}

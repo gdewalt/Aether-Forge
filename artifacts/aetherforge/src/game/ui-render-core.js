@@ -2,7 +2,7 @@
 import { ACT_ENEMIES, BOSSES } from "./data-enemies.js";
 import { COMMANDERS, COMMANDER_PORTRAITS, gainXp, maybeFactionPick, showCommanderSelect, xpToNext } from "./flow-commanders.js";
 import { FACTIONS, META, asc, upgTier } from "./data-units.js";
-import { FAM_COL } from "./data-loot.js";
+import { FAM_COL, relicIcoHTML } from "./data-loot.js";
 import { G, setG } from "./engine-hex.js";
 import { NODE_ICONS, NODE_META, genMap } from "./engine-map.js";
 import { TT, armTipAutoHide, hideTip, openUnitDetail, positionTip, toast } from "./ui-tooltips.js";
@@ -97,7 +97,7 @@ export function renderHUD(){
 export function showRelicBar(e){
   if(!G.relics||!G.relics.length)return;
   TT.innerHTML=`<div class="tt-n">Relics</div>`+G.relics.map(r=>
-    `<div style="margin-top:6px"><b style="color:${FAM_COL[r.fam]}">${r.ico} ${r.name}</b>
+    `<div style="margin-top:6px"><b style="color:${FAM_COL[r.fam]}">${relicIcoHTML(r,16)} ${r.name}</b>
      <div style="font-size:11px;color:#b7a9cc">${r.desc}</div></div>`).join('');
   TT.classList.add('show');positionTip(e.clientX,e.clientY);armTipAutoHide(4000);
 }

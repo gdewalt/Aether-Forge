@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { FACTIONS, FACTION_INFO, FCOL, META, META_TRACKS, ascGoldMult, buyUpgrade, metaLockable, saveMeta, upgTier } from "./data-units.js";
 import { FAC_SYN } from "./synergies.js";
-import { FAM_COL, RAR_COL, equipReward, newEquip, relicReward } from "./data-loot.js";
+import { FAM_COL, RAR_COL, equipIcoHTML, equipReward, newEquip, relicIcoHTML, relicReward } from "./data-loot.js";
 import { G } from "./engine-hex.js";
 import { SC, advanceRow, renderHUD, showTitle } from "./ui-render-core.js";
 import { buyUnit, freeRerollAllow, inspectRecruit, renderRecruit, rollUnitOffers } from "./ui-shop.js";
@@ -62,7 +62,7 @@ export function showRelicReward(allowGC){
     <p class="tip" style="margin:8px 0">A run-long, army-wide power. Choose one:</p>
     <div class="bench" style="justify-content:center;margin:14px 0">`;
   offers.forEach((r,i)=>html+=`<div class="card" style="cursor:pointer;border-color:${FAM_COL[r.fam]}" onclick="takeRelic(${i})">
-    <div class="cn" style="color:${RAR_COL[r.rar]}">${r.ico} ${r.name}</div>
+    <div class="cn" style="color:${RAR_COL[r.rar]}">${relicIcoHTML(r,22)} ${r.name}</div>
     <div class="cf"><span class="chip" style="background:${FAM_COL[r.fam]};color:#0e0b14">${r.fam}</span></div>
     <div class="cs" style="color:#c9bbe0">${r.desc}</div></div>`);
   html+=`</div><button class="small" onclick="afterRelicReward()">Skip relic →</button></div>`;
@@ -89,7 +89,7 @@ export function showEquipReward(){
 export function takeEquip(i){ G.stash.push(newEquip(G._equipOffers[i].id)); toast('Stashed '+G._equipOffers[i].name); advanceRow(); }
 export function equipCardInner(e){
   const SLOT_ICO={weapon:'⚔ Weapon',armor:'🛡 Armor',trinket:'💍 Trinket'};
-  return `<div class="cn" style="color:${RAR_COL[e.rar]}">${e.ico} ${e.name}</div>
+  return `<div class="cn" style="color:${RAR_COL[e.rar]}">${equipIcoHTML(e,22)} ${e.name}</div>
     <div class="cf"><span class="chip" style="background:${RAR_COL[e.rar]};color:#0e0b14">${e.rar}</span>
       <span class="chip" style="background:#2a2138;color:#c9bbe0">${SLOT_ICO[e.slot]}</span></div>
     <div class="cs" style="color:#c9bbe0">${e.desc}</div>`;

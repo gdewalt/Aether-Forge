@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { CCOL, FCOL } from "./data-units.js";
-import { EQUIP_BY_ID, RAR_COL, newEquip, unitRarity } from "./data-loot.js";
+import { EQUIP_BY_ID, RAR_COL, equipIcoHTML, newEquip, unitRarity } from "./data-loot.js";
 import { G } from "./engine-hex.js";
 import { SC, showMap, spriteThumb } from "./ui-render-core.js";
 import { TIER_STARS } from "./ui-shop.js";
@@ -31,7 +31,7 @@ export function renderEquip(){
       html+=`<div onclick="equipSlotClick(${ui},'${slot}')"
         style="flex:1;min-width:120px;border:1px dashed ${sel?'var(--gold-bright)':canDrop?'var(--good)':'var(--line)'};border-radius:5px;padding:6px;cursor:pointer;background:${canDrop?'#1c3a1c':'#0004'}">
         <div class="tip" style="font-size:9px;text-transform:uppercase">${SLOT_ICO[slot]} ${slot}</div>
-        ${e?`<div style="color:${RAR_COL[e.rar]};font-size:11px;font-family:Cinzel">${e.ico} ${e.name}</div>`:`<div class="dim" style="font-size:11px">— empty —</div>`}</div>`;
+        ${e?`<div style="color:${RAR_COL[e.rar]};font-size:11px;font-family:Cinzel">${equipIcoHTML(e,16)} ${e.name}</div>`:`<div class="dim" style="font-size:11px">— empty —</div>`}</div>`;
     });
     html+=`</div>`;
   });

@@ -53,6 +53,10 @@ button.small{padding:5px 10px;font-size:12px}
 .cmd-icon-sm{width:18px;height:18px;border-radius:50%;object-fit:cover;object-position:top center;
   border:1px solid var(--line);vertical-align:middle;display:inline-block}
 
+/* ---- relic/equipment icons (replace emoji ico) ---- */
+.item-ico{object-fit:contain;vertical-align:middle;display:inline-block;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+
 /* ---- MAP ---- */
 #map-wrap{position:relative;margin:0 auto;overflow:visible}
 #map-edges{position:absolute;left:0;top:0;z-index:1;pointer-events:none;overflow:visible}

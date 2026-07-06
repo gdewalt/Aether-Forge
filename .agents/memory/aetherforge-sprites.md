@@ -24,7 +24,7 @@ If the game/app renders via synchronous `innerHTML` string templates (no virtual
 
 ## Small icon sets: prefer git + `removeBackground`, and don't trust the image-viewer tool's flattened preview
 
-For small counts of generated UI icons (under ~10 files, each a few hundred KB), store them directly in git under `src/assets/<category>/` and `import` them as ES modules — no need for object storage at that scale (see also the `pnpm-workspace` skill's asset conventions).
+For generated UI icon sets, store them directly in git under `src/assets/<category>/` rather than object storage — the deciding factor is total optimized size, not file count. 62 icons (relics+equipment) at ~5.7MB total after `convert -resize 320x320 -strip -define png:compression-level=9` was fine for git; object storage is really for the "hundreds of MB of user-supplied photographic art" case above. For dozens of same-shaped icon files, use `import.meta.glob('../assets/<category>/*.png', { eager: true })` to build an id→url map instead of writing 30-60 manual import statements — valid Vite syntax, works fine in `// @ts-nocheck` vanilla JS modules.
 
 When generating icon-style art meant to sit inside an existing styled container (e.g. a bordered node/badge), pass `removeBackground: true` and prompt for "no background, no frame, no border, no text" so the PNG has real transparency and blends into the container's own background/border rather than bringing its own.
 
