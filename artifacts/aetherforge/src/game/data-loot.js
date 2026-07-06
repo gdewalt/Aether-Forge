@@ -182,33 +182,14 @@ export function unitPower(u){
   const dps=u.dmg*u.as;
   return u.hp*0.06 + dps*1.0 + (u.t==='r'?u.rng*6:0) + (u.cls==='Cleric'?30:0);
 }
-// Authored rarity: each faction is ranked by power into a fixed shape — top 1 Legendary,
-// next 2 Rare, next 2 Uncommon, the rest Common. For an 8-unit faction that's the intended
-// 3 Common / 2 Uncommon / 2 Rare / 1 Legendary; larger factions get extra Commons (filler
-// backbone), smaller ones drop a Common. Computed once and cached on each unit as _rar.
-export let _rarityAssigned=false;
-export function assignRarities(){
-  if(_rarityAssigned)return; _rarityAssigned=true;
-  const byFac={};
-  POOL.forEach(u=>{ (byFac[u.faction]=byFac[u.faction]||[]).push(u); });
-  for(const f in byFac){
-    const us=byFac[f].slice().sort((a,b)=>unitPower(b)-unitPower(a));   // strongest first
-    us.forEach((u,i)=>{
-      if(u._rarFixed){ return; }                       // honor any hand-set rarity
-      u._rar = i===0 ? 'Legendary'
-             : i<=2  ? 'Rare'
-             : i<=4  ? 'Uncommon'
-             : 'Common';
-    });
-  }
-}
+// Authored rarity: each unit's `rar` field (Common/Uncommon/Rare/Legendary) is set directly
+// in its U(...) definition in data-units.js — edit it there to change how often a unit is
+// offered (see rarityWeights() below for how rarity maps to offer odds).
 export function unitRarity(u){
-  if(u._rar) return u._rar;
-  assignRarities();
-  if(u._rar) return u._rar;
-  // fallback for units outside POOL (tokens, transformed forms): stat-threshold estimate
+  if(u.rar) return u.rar;
+  // fallback for units outside POOL (tokens, transformed forms) with no authored rar: stat-threshold estimate
   const p=unitPower(u);
-  return u._rar = p>=135?'Legendary' : p>=115?'Rare' : p>=95?'Uncommon' : 'Common';
+  return p>=135?'Legendary' : p>=115?'Rare' : p>=95?'Uncommon' : 'Common';
 }
 export const UNIT_COST={Common:20, Uncommon:40, Rare:65, Legendary:100};
 export const EQUIP_COST={Common:15, Uncommon:30, Rare:50, Legendary:85};

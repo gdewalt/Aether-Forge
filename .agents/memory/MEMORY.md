@@ -1,2 +1,3 @@
 - [Aetherforge unit sprites](aetherforge-sprites.md) — bulk user art served from object storage (not git); async-load DOM-patch pattern; small icon sets should use git+removeBackground, don't trust flattened image-preview backgrounds.
 - [Aetherforge module split](aetherforge-split.md) — how the original monolithic HTML game was split into vanilla ES modules; useful if similar splitting work recurs.
+- [Aetherforge unit rarity](aetherforge-rarity.md) — rarity is an authored `rar` field per unit in data-units.js, not computed from stats at runtime.

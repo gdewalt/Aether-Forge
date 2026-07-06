@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { assignRarities } from "./data-loot.js";
 import { buyUpgrade } from "./data-units.js";
 import {
   beginCombat,
@@ -106,5 +105,4 @@ Object.assign(window, {
 });
 
 /* ---------- boot ---------- */
-assignRarities();
 showTitle();
