@@ -18,7 +18,7 @@ export const ENEMY_FACTIONS={
   'Wildwood Pack':{ico:'🐺',col:'#5b7b3a',units:[
     EU('Dire Wolf','Beast','m',1,420,46,1.25,1.7,'🐺',{k:"berserk",v:0.45,d:0.25,name:"Frenzy"}),
     EU('Boar','Beast','m',1,620,42,.8,1.3,'🐗',{k:"banish",name:"Gore Toss"}),
-    EU('Treant Sapling','Guardian','m',1,820,34,.6,0.8,'🌲',{k:"bulwark",v:200,r:2,name:"Bark Ward"}),
+    EU('Treant Sapling','Guardian','m',1,820,34,.6,0.8,'🌲',{k:"bulwark",v:100,r:2,name:"Bark Ward"}),
     EU('Spitting Viper','Beast','r',3,260,40,1.3,1.9,'🐍',{k:"curse",name:"Venom Spray"}),
     EU('Pack Alpha','Beast','m',1,540,54,1.1,1.6,'🐾',{k:"rally",v:0.6,name:"Howl"}),
   ]},
@@ -26,29 +26,29 @@ export const ENEMY_FACTIONS={
     EU('Cultist','Mage','r',3,320,48,.9,1.1,'🕯️',{k:"curse",name:"Hex"}),
     EU('Bog Lurker','Rogue','m',1,420,44,1.1,1.2,'🐍',{k:"drain",v:1.6,name:"Leech"}),
     EU('Toad Brute','Guardian','m',1,760,40,.7,0.9,'🐸',{k:"quake",v:1.2,name:"Belly Flop"}),
-    EU('Mire Priest','Cleric','r',3,420,30,.8,1.0,'🔮',{k:"heal",v:180,name:"Foul Mend"}),
+    EU('Mire Priest','Cleric','r',3,420,30,.8,1.0,'🔮',{k:"heal",v:100,name:"Foul Mend"}),
     EU('Swamp Hag','Mage','r',4,360,58,.85,1.0,'🧙',{k:"zone",v:1.2,r:2,name:"Quagmire"}),
   ]},
   // ---- ACT II ----
   'Iron Legion':{ico:'🤖',col:'#7a7f88',units:[
-    EU('Sentinel Automaton','Warrior','m',1,720,56,.85,1.0,'🤖',{k:"bulwark",v:240,r:2,name:"Bulwark Protocol"}),
-    EU('Rust Pikebot','Warrior','m',1,640,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"}),
-    EU('Siege Engine','Archer','r',5,520,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"}),
+    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:180,r:2,name:"Bulwark Protocol"}),
+    EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"}),
+    EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"}),
     EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Reactivate"}),
     EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"}),
   ]},
   'Frostbound Clan':{ico:'🧊',col:'#6fa8c7',units:[
     EU('Frost Raider','Warrior','m',1,620,54,.95,1.2,'🪓',{k:"berserk",v:0.5,d:0.3,name:"Coldblood Fury"}),
-    EU('Ice Shaman','Mage','r',4,420,60,.85,1.0,'❄️',{k:"freeze",v:1.5,r:1,name:"Frost Nova"}),
+    EU('Ice Shaman','Mage','r',4,600,60,.85,1.0,'❄️',{k:"freeze",v:1.5,r:1,name:"Frost Nova"}),
     EU('Tundra Bear','Beast','m',1,980,60,.75,1.1,'🐻‍❄️',{k:"quake",v:1.5,name:"Maul"}),
     EU('Snow Stalker','Rogue','m',1,520,58,1.2,1.4,'🐆',{k:"execute",v:0.3,name:"Frozen Strike"}),
     EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.6,r:2,name:"Avalanche"}),
   ]},
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
-    EU('Flame Cannon','Archer','r',5,520,98,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"}),
+    EU('Flame Cannon','Archer','r',5,720,98,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"}),
     EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"}),
-    EU('Magma Adept','Mage','r',4,460,82,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"}),
+    EU('Magma Adept','Mage','r',4,660,82,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"}),
     EU('Cinder Sprite','Beast','m',1,360,50,1.3,1.6,'✨',{k:"blink",name:"Cinder Dash"}),
   ]},
   // ---- ACT III ----
@@ -67,11 +67,11 @@ export const ENEMY_FACTIONS={
     EU('Tempest Rider','Beast','m',1,620,66,1.2,1.8,'🌩️',{k:"blink",name:"Sky Dive"}),
   ]},
   'Dread Dominion':{ico:'👑',col:'#9e2b25',units:[
-    EU('Tyrant Guard','Guardian','m',1,1200,80,.7,0.9,'🛡️',{k:"bulwark",v:340,r:2,name:"Iron Will"}),
-    EU('Dominion Mage','Mage','r',5,520,96,.8,1.0,'🔮',{k:"beam",v:2.4,name:"Doom Bolt"}),
+    EU('Tyrant Guard','Guardian','m',1,1200,80,.7,0.9,'🛡️',{k:"bulwark",v:240,r:2,name:"Iron Will"}),
+    EU('Dominion Mage','Mage','r',5,720,96,.8,1.0,'🔮',{k:"beam",v:2.4,name:"Doom Bolt"}),
     EU('Death Knight','Warrior','m',1,940,82,.9,1.1,'☠️',{k:"execute",v:0.3,name:"Reaper Strike"}),
     EU('Soul Reaver','Rogue','m',1,680,76,1.2,1.4,'🗡️',{k:"drain",v:2,name:"Harvest"}),
-    EU('Royal Cleric','Cleric','r',3,560,44,.8,1.0,'✝️',{k:"heal",v:280,name:"Royal Mend"}),
+    EU('Royal Cleric','Cleric','r',3,680,44,.8,1.0,'✝️',{k:"heal",v:200,name:"Royal Mend"}),
   ]},
 };
 // Elite enemies: two per faction, stronger than normal units but weaker than bosses.

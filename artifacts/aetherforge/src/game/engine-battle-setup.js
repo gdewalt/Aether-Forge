@@ -154,7 +154,7 @@ export function buildEnemyArmy(node){
   const ac=G.actCleared||0;
   // size: gentler early; grows with act & clears WITHIN the current act (resets each act).
   // Act I grows its enemy count more slowly so the introductory act stays comfortably winnable.
-  let size = node.t==='boss'?5 : node.t==='elite'?3
+  let size = node.t==='boss'?5 : node.t==='elite'?5
            : G.act===1 ? 3+Math.floor(ac/4)
            : 3+Math.floor(ac/2)+(G.act-1);
   size=Math.min(size, node.t==='boss'?7:8);
@@ -192,7 +192,7 @@ export function buildEnemyArmy(node){
     const boss=clone(fac.units[0]);
     boss.name=B.name; boss.ico=B.ico; boss.cls=B.cls; boss.t='m'; boss.rng=1;
     const bossActMul = G.act===2?1.06 : G.act===3?1.12 : 1.0;   // later bosses scale up modestly
-    boss.hp=Math.round(B.hp*1.35*GLOBAL_DIFF*bossActMul*actHpMult()); boss.dmg=Math.round(B.dmg*GLOBAL_DIFF*bossActMul*actDmgMult()); boss.as=B.as; boss.mv=0.9; boss.ult=B.ult; boss.boss=true;   // tougher bosses: +35% HP, act-scaled
+    boss.hp=Math.round(B.hp*2.0*GLOBAL_DIFF*bossActMul*actHpMult()); boss.dmg=Math.round(B.dmg*GLOBAL_DIFF*bossActMul*actDmgMult()); boss.as=B.as; boss.mv=0.9; boss.ult=B.ult; boss.boss=true;   // tougher bosses: +35% HP, act-scaled
     if(asc()>=6) boss.hp=Math.round(boss.hp*1.15);   // A6: Cruel Bosses
     boss.mech=B.mech; boss.foot=B.foot||2; boss.bossDesc=B.desc;
     boss.efaction=fname; boss.ecol=fac.col;

@@ -621,8 +621,8 @@ export const GLOBAL_DIFF=1.0;           // global difficulty ease: <1 lowers all
 // Per-act balance knobs — multipliers applied to ALL enemy HP / damage (rank-and-file, elites, bosses).
 // Index by act (1/2/3); index 0 is an unused padding slot so ACT_HP_MULT[act] reads naturally.
 // Set to 1.0 for no change; raise to make an act harder, lower to ease it.
-export const ACT_HP_MULT  = [1.0, 1.0, 1.0, 1.0];   // [pad, Act I, Act II, Act III]
-export const ACT_DMG_MULT = [1.0, 1.0, 1.0, 1.0];   // [pad, Act I, Act II, Act III]
+export const ACT_HP_MULT  = [1.0, 1.0, 2.0, 3.0];   // [pad, Act I, Act II, Act III]
+export const ACT_DMG_MULT = [1.0, 1.0, 1.5, 2.0];   // [pad, Act I, Act II, Act III]
 export function actHpMult(){  return ACT_HP_MULT[Math.min(3, G.act||1)]  || 1.0; }
 export function actDmgMult(){ return ACT_DMG_MULT[Math.min(3, G.act||1)] || 1.0; }
 export const MOVE_BASE=1.1;             // seconds-per-hex = MOVE_BASE / unit.mv  (higher = slower, more visible movement)
@@ -1121,7 +1121,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
 // death with self-revive (Phoenix Feather) and Phoenix Crown relic handling
 export function tryDeath(u){
   if(u.phoenixRevive && !u._phoenixUsed){ u._phoenixUsed=true; u.hp=u.maxhp*u.phoenixRevive; if(u.phoenixEmpower)u.dmg*=1.2; fx(u,'🔥 REBORN','#ff7043','big'); healRingAt(u); return; }
-  if(u.selfRevive && !u._revivedSelf){ u._revivedSelf=true; u.hp=u.maxhp*u.selfRevive; fx(u,'REVIVE','#f0a35a','big'); healRingAt(u); return; }
+  // if(u.selfRevive && !u._revivedSelf){ u._revivedSelf=true; u.hp=u.maxhp*u.selfRevive; fx(u,'REVIVE','#f0a35a','big'); healRingAt(u); return; }
   if(u._korvenEligible && !G.battle._korvenUsed && u.side==='P'){ G.battle._korvenUsed=true; u.hp=u.maxhp*0.5; fx(u,'🔥 REBORN','#f0a35a','big'); healRingAt(u); return; }
   if(u._reviveEligible && !G.battle._crownUsed && u.side==='P'){ G.battle._crownUsed=true; u.hp=u.maxhp; u.dmg*=1.3; u.as*=1.3; fx(u,'👑 REBORN','#f0d375','big'); healRingAt(u); return; }
   if(u.selfRevive && !u._revivedSelf){ if(u._reviveChance==null || RNG()<u._reviveChance){ u._revivedSelf=true; u._deathCount=(u._deathCount||0)+1; u.hp=u.maxhp*u.selfRevive; fx(u,'REVIVE','#f0a35a','big'); healRingAt(u); return; } }
