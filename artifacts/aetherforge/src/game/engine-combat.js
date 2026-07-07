@@ -621,8 +621,8 @@ export const GLOBAL_DIFF=1.0;           // global difficulty ease: <1 lowers all
 // Per-act balance knobs — multipliers applied to ALL enemy HP / damage (rank-and-file, elites, bosses).
 // Index by act (1/2/3); index 0 is an unused padding slot so ACT_HP_MULT[act] reads naturally.
 // Set to 1.0 for no change; raise to make an act harder, lower to ease it.
-export const ACT_HP_MULT  = [1.0, 1.0, 2.0, 3.0];   // [pad, Act I, Act II, Act III]
-export const ACT_DMG_MULT = [1.0, 1.0, 1.5, 2.0];   // [pad, Act I, Act II, Act III]
+export const ACT_HP_MULT  = [1.0, 1.0, 1.5, 2.0];   // [pad, Act I, Act II, Act III]
+export const ACT_DMG_MULT = [1.0, 1.0, 1.2, 1.5];   // [pad, Act I, Act II, Act III]
 export function actHpMult(){  return ACT_HP_MULT[Math.min(3, G.act||1)]  || 1.0; }
 export function actDmgMult(){ return ACT_DMG_MULT[Math.min(3, G.act||1)] || 1.0; }
 export const MOVE_BASE=1.1;             // seconds-per-hex = MOVE_BASE / unit.mv  (higher = slower, more visible movement)
