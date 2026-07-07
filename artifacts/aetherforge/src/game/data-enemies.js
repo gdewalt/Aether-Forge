@@ -45,10 +45,10 @@ export const ENEMY_FACTIONS={
     EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.6,r:2,name:"Avalanche"}),
   ]},
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
-    EU('Flame Cannon','Archer','r',5,720,98,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"}),
+    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"}),
     EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"}),
-    EU('Magma Adept','Mage','r',4,660,82,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"}),
+    EU('Magma Adept','Mage','r',4,600,65,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"}),
     EU('Cinder Sprite','Beast','m',1,360,50,1.3,1.6,'✨',{k:"blink",name:"Cinder Dash"}),
   ]},
   // ---- ACT III ----
