@@ -22,8 +22,8 @@ export function U(name,faction,cls,t,rng,hp,dmg,as,mv,ico,ult,rar){
 // ultimate kinds: nova(aoe), heal, shield, execute, rally(+as), freeze(stun)
 export const POOL=[
   // Neutral — starter units, no faction synergy (flexible, well-rounded)
-  U('Footman','Neutral','Warrior','m',1,640,50,.85,1.2,'🪖',{k:'shield',v:240,name:'Shield Wall'},'Common'),
-  U('Archer','Neutral','Archer','r',4,400,58,.95,1.2,'🎯',{k:'nova',v:1.6,r:1,name:'Volley'},'Common'),
+  U('Footman','Neutral','Warrior','m',1,640,50,.85,1.2,'🪖',{k:'shield',v:240,name:'Hunker Down'},'Common'),
+  U('Archer','Neutral','Archer','r',4,400,58,.95,1.2,'🎯',{k:'nova',v:1.4,r:1,name:'Volley'},'Common'),
   U('Spearman','Neutral','Warrior','m',1,560,54,.9,1.2,'🔱',{k:'rally',v:.5,name:'Phalanx Formation'},'Common'),
   U('Crossbowman','Neutral','Archer','r',5,420,80,.65,1.0,'🏹',{k:'execute',v:.3,name:'Heavy Bolt'},'Uncommon'),
   U('Mercenary','Neutral','Warrior','m',1,720,70,.95,1.2,'🗡️',{k:'berserk',v:0.4,d:0.25,name:'War Cry'},'Uncommon'),
@@ -38,11 +38,11 @@ export const POOL=[
   U('Anvil Priest','Ironhold','Cleric','m',1,740,46,0.65,0.82,'🪓',{k:'heal',v:300,name:'Molten Blessing'},'Uncommon'),
   U('Thane Brokk Ironfist','Ironhold','Warrior','m',1,1500,105,0.8,0.82,'⚒️',{k:'quake',v:2.0,name:'Avalanche of Steel'},'Legendary'),
   // Sylvan — ranged scaling (Archer)
-  U('Greenwood Archer','Sylvan','Archer','r',4,380,64,1.05,1.3,'🏹',{k:'nova',v:1.6,r:1,name:'Twin Shot'},'Uncommon'),
-  U('Hawkeye Ranger','Sylvan','Archer','r',5,420,86,.95,1.2,'🎯',{k:'beam',v:2.2,name:'Piercing Shot'},'Rare'),
+  U('Greenwood Archer','Sylvan','Archer','r',4,380,64,1.05,1.3,'🏹',{k:'zone',v:0.55,r:2,dur:4,zico:'🏹',zcol:'#ff7a3a',name:'Hail of Arrows'},'Uncommon'),
+  U('Hawkeye Ranger','Sylvan','Archer','r',5,420,86,.95,1.2,'🎯',{k:'beam',v:3.2,name:'Piercing Shot'},'Rare'),
   U('Thornblade Dancer','Sylvan','Rogue','m',1,440,60,1.25,1.5,'🍃',{k:'blink',v:3.0,name:'Thornstep'},'Common'),
   U('Druid of the Grove','Sylvan','Cleric','r',3,500,44,.8,1.1,'🌿',{k:'transform',form:'Grizzly Bear',fico:'🐻',hp:1.6,dmg:2.4,as:1.1,name:'Wild Shape'},'Uncommon'),
-  U('Briar Scout','Sylvan','Archer','r',4,340,58,1.1,1.22,'🏹',{k:'zone',v:0.55,r:2,dur:4,zico:'🔥',zcol:'#ff7a3a',name:'Pinning Volley'},'Common'),
+  U('Briar Scout','Sylvan','Archer','r',4,340,58,1.1,1.22,'🏹',{k:'nova',v:1.6,r:1,name:'Thorn Burst'},'Common'),
   // U('Moonpetal Sage','Sylvan','Mage','r',4,450,70,0.8,0.95,'🍃',{k:'chain',v:1.6,j:4,name:'Lunar Grove'},'Common'),
   // U('Treant Warden','Sylvan','Guardian','m',1,1300,70,0.55,0.8,'🌿',{k:'summon',v:1,n:3,token:'squirrel',name:'Living Barricade'},'Rare'),
   U('Lady Aelwyn, Voice of the Wild','Sylvan','Archer','r',6,760,98,1.1,1.09,'🦌',{k:'summon',v:1,n:4,token:'squirrel',name:'Call of the Wild'},'Legendary'),
