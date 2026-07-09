@@ -54,8 +54,8 @@ export const POOL=[
   U('Lightbringer','Gilded','Mage','r',4,480,72,0.8,0.95,'✝️',{k:'beam',v:2.2,name:'Smite'},'Uncommon'),
   U('Seraphine, the Dawnward','Gilded','Cleric','r',4,860,90,0.8,0.95,'😇',{k:'transform',form:'Seraph',fico:'😇',hp:1.0,dmg:2.0,as:1.2,name:'Apotheosis'},'Legendary'),
   // Leonin — bleed & speed (Rogue/Beast)
-  U('Maned Brawler','Leonin','Warrior','m',1,640,58,1.15,1.5,'🦷',{k:'berserk',v:0.5,d:0.3,name:'Blood Rage'},'Common'),
-  U('Pridehunter','Leonin','Archer','r',3,420,52,1.1,1.4,'🌾',{k:'execute',v:.3,name:'Heavy Throw'},'Uncommon'),
+  U('Maned Brawler','Leonin','Warrior','m',1,700,65,1.15,1.5,'🦷',{k:'berserk',v:0.5,d:0.3,name:'Blood Rage'},'Common'),
+  U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'execute',v:.3,name:'Heavy Throw'},'Uncommon'),
   U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'nova',v:1.7,r:1,name:'Rapid Slashes'},'Common'),
   U('Savannah Seer','Leonin','Cleric','r',3,450,46,0.9,1.16,'🐾',{k:'curse',v:1,r:2,name:'Bloodletting Curse'},'Uncommon'),
   U('Sunmane Duelist','Leonin','Rogue','m',1,700,72,1.35,1.36,'🐆',{k:'blink',v:3.0,name:'Hundred Cuts'},'Rare'),
