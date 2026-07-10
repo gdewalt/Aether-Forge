@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ABILITIES, TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
+import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { CLASS_SYN, FAC_SYN } from "./synergies.js";
 import { COLS, G, GRIDH, GRIDW, HR, ROWS, hexCenter, hexDist } from "./engine-hex.js";
 import { ENEMY_FACTIONS, ENEMY_SYN } from "./data-enemies.js";
@@ -12,194 +12,24 @@ import { endBattle } from "./flow-battle-end.js";
 import { ensureGear } from "./flow-commanders.js";
 import { terrainAt } from "./engine-battle-setup.js";
 
+// Merges a unit's structured `passive` data (authored directly on its template in
+// data-units.js/data-enemies.js, see U()/EU()) onto the live combat unit. Runs right after
+// gear (mkLive applies equipment first), so the handful of fields gear can also grant
+// combine the same way the old text-parser used to: strongest-wins for lifesteal/reflect/
+// crit/armorPierce, additive-capped for armor (dr), multiplicative for chargeMul, and
+// burn prefers whichever source already applied it (only burnDur always updates).
 export function applyUnitAbility(u){
-  const ab=ABILITIES[u.name]; if(!ab) return;
-  const a=ab.toLowerCase();
-  // --- on-hit status application ---
-  if(/\bbleed\b/.test(a) && /(apply|appl|stack|on hit|each hit|attacks)/.test(a)) u.bleed=true;
-  if(/\bweb\b/.test(a)) u.web=true;
-  else if(/\bslow/.test(a) && /(apply|attack|hit)/.test(a)) u.slow=true;
-  if(/\bburn\b/.test(a) && /(apply|attack|hit|cinder)/.test(a)){ u.burn=u.burn||1.0; u.burnDur=2; }
-  if(/\bpoison\b/.test(a) || /\bspore (shot|cloud|burst)\b/.test(a)){ if(/(apply|attack|hit|shot)/.test(a)) u.spore=true; }
-  // --- sustain ---
-  let ls=a.match(/heal[^.]*?(\d+)% of damage|(\d+)%[^.]*?(?:lifesteal|of damage dealt|leech)/);
-  if(/siphon|lifesteal|leech|heal[^.]*of damage/.test(a)){ const m=a.match(/(\d+)%/); u.lifesteal=Math.max(u.lifesteal||0,(m?+m[1]:12)/100); }
-  // regen while idle / over time
-  if(/heals \d+% max ?hp\/?\s*sec while in (any )?spore cloud/.test(a)){ const m=a.match(/(\d+)%/); u._sporeHeal=+m[1]/100; }
-  else if(/regen|heals \d+%|loyal|fungal hide/.test(a)){ const m=a.match(/(\d+)%\s*max hp\/?\s*sec/); if(m){ u._regenIdle=+m[1]/100; } }
-  // --- defensive ---
-  if(/reflect|thorn|molten skin|attackers take/.test(a)){ const m=a.match(/(\d+)%/); u.reflect=Math.max(u.reflect||0,(m?+m[1]:20)/100); }
-  if(/cannot be knocked back|immovable/.test(a)) u.ccImmune=true;
-  if(/converts? \d+% of damage taken into[^.]*armor|aegis|plating/.test(a)){ const m=a.match(/(\d+)%/); u.aegis=(m?+m[1]:10)/100; u.aegisCap=0.25; }
-  // flat armor / HP buffs (apply immediately as a simplification of conditional buffs)
-  if(/\+(\d+)% armor/.test(a)){ const m=a.match(/\+(\d+)% armor/); u.dr=Math.min(.85,(u.dr||0)+(+m[1]/100)*0.5); } // armor→dr, halved
-  // --- offense ---
-  if(/\+(\d+)% damage|deal \+(\d+)%|deals \+(\d+)%/.test(a)){ /* conditional dmg — left as flavor to avoid always-on power creep */ }
-  if(/crit/.test(a)){ const m=a.match(/(\d+)%\s*crit/); if(m) u.crit=Math.max(u.crit||0,+m[1]/100); else u.crit=Math.max(u.crit||0,0.15); }
-  // charge-rate (ultimate builds faster)
-  if(/ult[^.]*charges? \d+% faster|charges? \d+% faster/.test(a)){ const m=a.match(/(\d+)% faster/); u.chargeMul=(u.chargeMul||1)*(1+(m?+m[1]:15)/100); }
-  // --- Batch 1: conditional damage vs target STATE ---
-  const vs={};
-  const vsPct=(re)=>{ const m=a.match(re); return m?1+(+m[1])/100:0; };
-  if(/vs (any )?bleeding|on bled/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.bled=p; }
-  if(/vs frozen|on frozen/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.frozen=p; }
-  if(/vs (webbed|slowed)|on slowed/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.slowed=p; }
-  if(/vs wounded|<50% hp|wounded \(/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.wounded=p; }
-  if(/full-?hp|full hp target/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.full=p; }
-  if(/vs voidtouched\/undead|vs undead|undead/.test(a) && /\+\d+%/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.undead=p; }
-  if(/vs guardians?\/constructs?|high armor|guardians\/constructs/.test(a)){ const p=vsPct(/\+(\d+)%/); if(p)vs.armored=p; }
-  if(Object.keys(vs).length) u._vs=vs;
-  // --- Batch 2: on-death revives & triggers ---
-  if(/the first time it would die|revives once at|revive[^.]*at \d+%/.test(a)){ const m=a.match(/(\d+)%/); u.selfRevive=(m?+m[1]:40)/100; }
-  if(/revives once as a weaker skeleton|undying/.test(a)){ u.selfRevive=u.selfRevive||0.5; u._reviveAsSkeleton=true; }
-  if(/\d+% chance to revive/.test(a)){ const m=a.match(/(\d+)% chance to revive[^.]*?(\d+)%/); if(m){ u._reviveChance=+m[1]/100; u.selfRevive=(+m[2]||25)/100; } }
-  if(/first ally to (fall|die)[^.]*revives/.test(a)){ const m=a.match(/(\d+)%/); u._teamReviveAura=(m?+m[1]:50)/100; }
-  if(/on death[^.]*poison cloud|leaves a poison cloud/.test(a)) u._deathPoisonCloud=true;
-  if(/poisoned enemy dies[^.]*poison jumps|poison jumps to/.test(a)) u._poisonJumpAura=true;
-  if(/heals \d+% max hp whenever a nearby enemy dies|heals[^.]*when[^.]*enemy dies|soul harvest|heals nearby allies when an enemy dies/.test(a)){ const m=a.match(/heals (\d+)%/); u._healOnEnemyDeath=(m?+m[1]:5)/100; }
-  // --- Batch 3: nearby-ally auras ---
-  if(/nearby all[^.]*\+(\d+)% attack speed|nearby all[^.]*\+(\d+)% as|allies[^.]*\+(\d+)% as|nearby[^.]*gain \+(\d+)% attack speed/.test(a)){ const m=a.match(/\+(\d+)%/); u._auraAS=(m?+m[1]:8)/100; }
-  if(/allies within \d+ hexes take -(\d+)% magic|ward field|-(\d+)% magic damage/.test(a)){ const m=a.match(/-(\d+)%/); u._auraMagicResist=(m?+m[1]:8)/100; const r=a.match(/within (\d+) hex/); if(r)u._auraRange=+r[1]; }
-  if(/nearby [a-z]+ \+(\d+)% dmg|nearby [a-z]+ \+(\d+)% damage/.test(a)){ const m=a.match(/\+(\d+)%/); u._auraAllyDmg=(m?+m[1]:10)/100; }
-  // --- Batch 4: self-conditional damage ---
-  let mm;
-  if(mm=a.match(/\+(\d+)% damage while above (\d+)% hp/)) u._dmgAboveHP={amt:+mm[1]/100,thr:+mm[2]/100};
-  if(mm=a.match(/below (\d+)% hp[^.]*\+(\d+)% (dmg|damage)/)) u._dmgBelowHP={amt:+mm[2]/100,thr:+mm[1]/100};
-  if(mm=a.match(/\+(\d+)% (?:dmg|damage) each second[^.]*max \+?(\d+)%/)) u._dmgRamp={per:+mm[1]/100,max:+mm[2]/100};
-  if(mm=a.match(/\+(\d+)% (?:dmg|damage) per ally that has died|\+(\d+)% dmg per[^.]*died/)){ u._dmgPerStack=+mm[1]/100; u._stackOn='allyDeath'; }
-  if(mm=a.match(/kills grant[^.]*\+(\d+)% dmg|every enemy death = [a-z]+ \+(\d+)% dmg/)){ u._dmgPerStack=(+(mm[1]||mm[2]))/100; u._stackOn='kill'; }
-  // --- Batch 5: armor-pierce & periodic support ---
-  if(mm=a.match(/attacks ignore (\d+)% (?:of )?(?:target )?armor/)) u.armorPierce=Math.max(u.armorPierce||0,+mm[1]/100*0.5);
-  if(/every \d+(?:th|rd|nd|st) (?:hit|shot)[^.]*ignores? (\d+)% armor/.test(a)){ const m=a.match(/(\d+)% armor/); u.armorPierce=Math.max(u.armorPierce||0,(+m[1])/100*0.25); } // averaged over the cycle
-  if(mm=a.match(/heals (?:the )?lowest-?hp ally within (\d+) hexes for (\d+)/)){ u._periodicHeal={amt:+mm[2],range:+mm[1],every:4}; }
-  else if(/heals lowest-?hp ally|heals the lowest-?hp ally|lunar grace|field repair/.test(a)){ const m=a.match(/for (\d+)/); u._periodicHeal={amt:(m?+m[1]:80),range:3,every:4}; }
-  if(mm=a.match(/shields? (?:the )?nearest ally for (\d+)/)) u._periodicShield={amt:+mm[1],range:3,every:5};
-  // --- Batch 6: conditional armor ---
-  let ca={};
-  if(mm=a.match(/while adjacent to (\d+)\+? allies[^.]*\+(\d+)% armor/)) ca.adjAllies={n:+mm[1],amt:+mm[2]/100};
-  if(mm=a.match(/\+(\d+)% armor while adjacent to another (dwarf|[a-z]+)/)){ const facMap={dwarf:'Ironhold'}; ca.adjFaction={fac:facMap[mm[2]]||u.faction,amt:+mm[1]/100}; }
-  if(mm=a.match(/\+(\d+)% armor while a cleric is alive/)) ca.clericAlive=+mm[1]/100;
-  if(mm=a.match(/\+(\d+)% armor[^.]*while a turret\/bot ally is alive|\+(\d+)% armor and \+\d+% hp while a turret/)) ca.constructAlive=(+(mm[1]||mm[2]))/100;
-  if(mm=a.match(/\+(\d+)% armor for each living (hivemind|[a-z]+)|gains armor per living (hivemind|[a-z]+)/)){ const facMap={hivemind:'Hivemind'}; ca.perFaction={fac:facMap[(mm[2]||mm[3]||'').toLowerCase()]||'Hivemind',amt:(mm[1]?+mm[1]/100:0.06),cap:0.36}; }
-  if(/gains armor as nearby enemies are slowed/.test(a)) ca.perSlowedEnemy=0.05;
-  if(Object.keys(ca).length) u._condArmor=ca;
-  // --- Batch 7: splash / blast attacks ---
-  if(mm=a.match(/attacks splash (\d+)% damage|deal (\d+)% splash/)) u._splash={frac:(+(mm[1]||mm[2]))/100};
-  else if(/2-hex blast|aoe on impact|spore cloud in a 2-hex|hits a 2-hex blast/.test(a)) u._splash={frac:0.5};
-  else if(/every \d+(?:th|rd|nd|st) shot explodes[^.]*splashing 1 adjacent|splashing 1 adjacent/.test(a)) u._splash={frac:0.6,max:1};
-  // --- Batch 8: assorted clean mechanics ---
-  if(mm=a.match(/every (\d+)(?:th|rd|nd|st) (?:shot|hit|attack) deals \+(\d+)%/)) u._nthHit={n:+mm[1],amt:+mm[2]/100};
-  if(mm=a.match(/(\d+)% chance to dodge/)) u.dodge=+mm[1]/100;
-  if(mm=a.match(/attacks heal the nearest ally for (\d+)% of (?:dmg|damage)/)) u._healAllyOnHit=+mm[1]/100;
-  if(mm=a.match(/\+(\d+) range while no enemy is adjacent/)) u._condRange={amt:+mm[1],when:'noEnemyAdj'};
-  if(mm=a.match(/\+(\d+) range while adjacent to a friendly unit|\+(\d+) range while adjacent to an? all/)) u._condRange={amt:+(mm[1]||mm[2]),when:'allyAdj'};
-  if(/a cast that kills refunds (\d+)% magic|refunds? (\d+)% magic/.test(a)){ const m=a.match(/(\d+)% magic/); u._magicRefundOnKill=(m?+m[1]:30)/100; }
-  if(mm=a.match(/attacks grant a nearby ally \+(\d+) magic/)) u._grantAllyCharge=+mm[1];
-  if(mm=a.match(/marked target takes \+(\d+)%|marks an enemy[^.]*\+(\d+)%/)) u._markAmp=(+(mm[1]||mm[2]))/100;
-  // --- Batch 9: on-hit chain bolts & pierce ---
-  if(/attacks chain a small bolt|chain a small bolt to a 2nd|chains? to a nearby/.test(a)) u._chainBolt={frac:0.35};
-  else if(/every \d+(?:th|rd|nd|st) hit chains to a nearby/.test(a)){ const m=a.match(/every (\d+)/); u._chainBolt={frac:0.6,nth:+(m?m[1]:4)}; }
-  if(/attacks pierce \d+ extra target|pierce 1 extra target|all sylvan attacks pierce/.test(a)) u._pierce={extra:1};
-  // --- Batch 10: counter-attack & first-hit ---
-  if(mm=a.match(/on being hit, counter for (\d+)%/)){ u._counter={frac:+mm[1]/100, bleed:/bleed/.test(a)}; }
-  if(/first hit on a full-?hp target/.test(a)){ const m=a.match(/(\d+) bleed/); u._firstHitBleed=m?+m[1]:2; }
-  if(/takes -(\d+)% (?:damage )?from the first hit of each enemy/.test(a)){ const m=a.match(/-(\d+)%/); u._firstHitReduce=+m[1]/100; }
-  // --- Batch 11: periodic ally shields & burn amplification ---
-  if(mm=a.match(/grants? an ally a (\d+) shield/)) u._periodicShield={amt:+mm[1],range:3,every:5};
-  if(mm=a.match(/self ?& adjacent allies gain a (\d+) shield/)) u._periodicShield={amt:+mm[1],range:1,every:6,self:true};
-  if(/heals ?& shields a front-?line ally/.test(a)){ u._periodicHeal=u._periodicHeal||{amt:200,range:3,every:4}; u._periodicShield=u._periodicShield||{amt:150,range:3,every:6}; }
-  if(mm=a.match(/\+(\d+)% (?:to|damage to) (?:already-?)?burning targets?/)){ u._vs=u._vs||{}; u._vs.burning=1+(+mm[1])/100; }
-  // --- Batch 12: burn-spread, ignite, slow auras, stationary regen ---
-  if(/burns spread to adjacent enemies each tick|all burns on the field deal/.test(a)){ if(/spread/.test(a))u._burnSpread=true; }
-  if(/attacks ignite 1 nearby enemy too|ignite 1 nearby/.test(a)) u._igniteNearby=true;
-  if(mm=a.match(/enemies adjacent are slowed (\d+)%|enemies near [a-z]+ are slowed/)) u._slowAura={range:1};
-  if(/regenerates? (\d+)% hp\/?sec while stationary|2% hp\/sec while stationary/.test(a)){ const m=a.match(/(\d+)% hp/); u._regenStationary=(m?+m[1]:2)/100; }
-  if(mm=a.match(/\+(\d+)% as per burning enemy/)) u._asPerBurn=+mm[1]/100;
-  // --- Batch 13: token summons (periodic or every-Nth-attack) ---
-  if(/every (\d+)s summons a temporary lesser demon|every \d+s summons/.test(a)){ const m=a.match(/every (\d+)s/); u._periodicSummon={key:'swarmling',every:+(m?m[1]:6),mult:1.3}; }
-  if(/builds a scrap bot nearby/.test(a)) u._periodicSummon={key:'scrapbot',every:6,mult:1};
-  if(/summons a skeleton at an ally death site|necromancer/.test(a)&&u.name==='Necromancer') u._summonOnAllyDeath='skeleton';
-  if(/heals lowest-?hp hivemind \+? ?spawns a swarmling|heals lowest-?hp hivemind/.test(a)) u._periodicSummon={key:'swarmling',every:5,mult:1,healHive:true};
-  if(/spawns 2 swarmlings near lowest-?hp ally/.test(a)) u._periodicSummon={key:'swarmling',every:6,mult:1,count:2,nearLowAlly:true};
-  if(mm=a.match(/every (\d+)(?:rd|th|nd|st) attack spawns a (swarmling|broodling)/)) u._nthSpawn={n:+mm[1],key:'swarmling'};
-  // --- Batch 14: self-scaling damage / AS / move ---
-  if(mm=a.match(/\+(\d+)% dmg per time it has died|\+(\d+)% damage per time it has died/)) u._dmgPerDeath=(+(mm[1]||mm[2]))/100;
-  if(mm=a.match(/\+(\d+)% dmg per living (hivemind|[a-z]+) within \d+ hexes/)){ const fm={hivemind:'Hivemind'}; u._dmgPerFactionNear={fac:fm[mm[2]]||'Hivemind',amt:+mm[1]/100,cap:0.6}; }
-  if(mm=a.match(/\+(\d+)% dmg per friendly robot\/turret|\+(\d+)% dmg per friendly robot/)) u._dmgPerRobot=(+(mm[1]||mm[2]))/100;
-  if(mm=a.match(/\+(\d+)% damage to the farthest enemy/)) u._dmgVsFarthest=+mm[1]/100;
-  if(mm=a.match(/gains \+(\d+)% attack speed each second[^.]*caps? at \+?(\d+)%/)) u._asRamp={per:+mm[1]/100,max:+mm[2]/100};
-  if(/\+as the lower its own hp/.test(a)) u._asLowHP=true;
-  if(mm=a.match(/\+(\d+)% move per other (hivemind|[a-z]+) nearby/)){ const fm={hivemind:'Hivemind'}; u._movePerFaction={fac:fm[mm[2]]||'Hivemind',amt:+mm[1]/100}; }
-  // --- Batch 15: support / utility ---
-  if(mm=a.match(/attacks reduce target healing (\d+)%/)) u._healCut=+mm[1]/100;
-  if(mm=a.match(/nearest ally's magic bar \+(\d+)|nearest ally magic \+(\d+)/)) u._periodicCharge={amt:+(mm[1]||mm[2]),every:4};
-  if(mm=a.match(/each allied ult fired grants self \+(\d+) magic/)) u._chargeOnAllyUlt=+mm[1];
-  if(mm=a.match(/when an enemy ults, deal (\d+)/)) u._punishUlt=+mm[1];
-  if(mm=a.match(/each enemy death speeds this unit's ult by (\d+)%/)) u._chargeOnEnemyDeath=+mm[1]/100;
-  if(/friendly ultimates have a 25% chance to fire a second time|chance to fire a second time/.test(a)) u._ultEcho=true;
-  // Eternal Bulwark — army-wide ranged damage reduction aura
-  if(mm=a.match(/all friendly units take -(\d+)% ranged damage/)) u._rangedWard=+mm[1]/100;
-  // Roc Rider — dive to the enemy back row at combat start, +move speed
-  if(/teleports to the enemy back row at the start of combat/.test(a)){ u.infiltrate=true; const m=a.match(/\+(\d+)% move speed/); u._diveMoveBuff=(m?+m[1]:20)/100; }
-  // Grizzlemaw — empowers and heals friendly constructs
-  if(/friendly turrets and robots have \+\d+% stats and slowly regenerate/.test(a)) u._constructWarboss=true;
-  // Mycelia — while alive, your spore clouds never expire and slow enemies inside them
-  if(/while mycelia is alive, your spore clouds never expire and slow/.test(a)) u._cloudMaster=true;
-  // --- Easy batch: clean pattern hooks ---
-  // self-damage for bonus damage (Phoenix self-immolators)
-  if(mm=a.match(/attacks cost \d+% hp but deal \+(\d+)%|\+(\d+)% fire dmg, \d+% self-?damage|\+(\d+)% (?:fire )?dmg[^.]*self-?damage/)){ u._selfBurnDmg=(+(mm[1]||mm[2]||mm[3]))/100; u._selfBurnCost=0.02; }
-  if(/self takes \d+% of damage dealt|deals \d+; self takes/.test(a)){ const m=a.match(/takes (\d+)%/); u._selfRecoil=(m?+m[1]:8)/100; }
-  // on-hit brief stun chance (Gust Slinger)
-  if(mm=a.match(/(\d+)% chance to shock \(brief stun\)|attacks have \d+% chance to shock/)){ const m=a.match(/(\d+)% chance/); u._shockChance=(m?+m[1]:20)/100; }
-  // chain jolt every Nth attack (Lightning Dancer) — reuse chainBolt
-  if(mm=a.match(/every (\d+)(?:rd|th|nd|st) attack chains a small jolt/)) u._chainBolt={frac:0.4,nth:+mm[1]};
-  // vs already-shocked/lightning-hit foes (Sky Shaman)
-  if(/bonus damage to enemies already hit by lightning/.test(a)){ u._vs=u._vs||{}; u._vs.shocked=1.25; }
-  // mark amplify (Void Cultist) — generic
-  if(/marked foes take \+(\d+)% damage from all sources/.test(a)){ const m=a.match(/\+(\d+)%/); u._markAmp=+m[1]/100; }
-  // heal on nearby enemy death (Lesser Demon)
-  if(/heals \d+% max hp on any nearby enemy death/.test(a)){ const m=a.match(/heals (\d+)%/); u._healOnEnemyDeath=(m?+m[1]:8)/100; }
-  // periodic random meteor (Comet Herald)
-  if(/every \d+s, a small meteor hits a random foe/.test(a)){ const m=a.match(/every (\d+)s/); u._periodicMeteor={every:+(m?m[1]:5)}; }
-  // periodic heal + charge to an ally (Nebula Priest)
-  if(/heals an ally and \+\d+ magic to it/.test(a)){ u._periodicHeal=u._periodicHeal||{amt:240,range:3,every:4}; const m=a.match(/\+(\d+) magic/); u._periodicHealCharge=(m?+m[1]:10); }
-  // token stat buffs (Swarm Matron, Brood Mother)
-  if(mm=a.match(/nearby swarmlings deal \+(\d+)%/)) u._tokenDmgAura={amt:+mm[1]/100,range:3};
-  if(/swarmlings gain \+(\d+)% hp and never expire/.test(a)){ const m=a.match(/\+(\d+)%/); u._tokenHpBuff=+m[1]/100; u._tokenPersist=true; }
-  // healed allies gain +AS (Bloom Sage)
-  if(mm=a.match(/healed allies also gain \+(\d+)% attack speed/)) u._healGrantsAS=+mm[1]/100;
-  // team heal over time (The Undying Phoenix)
-  if(/heals \d+% max hp to all phoenix/.test(a)){ const m=a.match(/heals (\d+)%/); u._periodicTeamHeal={amt:(m?+m[1]:10)/100,fac:'Phoenix',every:4}; }
-  // ally-ult damage amp aura (Constellation Seer)
-  if(mm=a.match(/ally ults within \d+ hexes deal \+(\d+)%/)) u._allyUltAmp={amt:+mm[1]/100,range:3};
-  // global burn multiplier (Vael)
-  if(/all burns on the field deal \+(\d+)%/.test(a)){ const m=a.match(/\+(\d+)%/); u._burnFieldAmp=+m[1]/100; }
-  // +AS by distance traveled before attacking (Galeclaw)
-  if(/\+as the further it traveled before attacking/.test(a)) u._asPerTravel=true;
-  // takes less from shocked enemies (Thunderhide Bull)
-  if(mm=a.match(/takes -(\d+)% from shocked enemies' attacks/)) u._lessFromShocked=+mm[1]/100;
-  // heals an ally; bonus dmg if it's burning an enemy (Cinder Priest already heals; add the +dmg cond)
-  if(/heals an ally; if it's burning an enemy, \+dmg/.test(a)) u._dmgIfBurningEnemy=0.2;
-  // Leviathan Caller — periodically slow a nearby enemy
-  if(/periodically applies a slow stack to a nearby enemy/.test(a)) u._periodicSlow={every:2,range:4};
-  // cleanse — periodic heal that also strips debuffs (Wavebinder, Sporemother Tender)
-  if(/heals an ally and cleanses its debuffs/.test(a)){ u._periodicHeal=u._periodicHeal||{amt:240,range:3,every:4}; u._cleanse=true; }
-  // Lich Adept — spreading DoT that worsens over time
-  if(/a spreading dot that worsens over time/.test(a)) u._decayTouch=true;
-  // Skitterling — temporary opening move buff
-  if(/gains \+(\d+)% move speed for \d+s at the start of combat/.test(a)){ const m=a.match(/\+(\d+)%/); u._diveMoveBuff=(+m[1])/100; u._diveT=3; u._noTeleport=true; }
-  // Mortis — your skeletons never expire
-  if(/your skeletons never expire/.test(a)) u._skeletonPersist=true;
-  // --- Final 7: reframed onto existing mechanics ---
-  if(/gains \+\d+ magic charge whenever any enemy dies/.test(a)){ const m=a.match(/\+(\d+) magic/); u._chargeOnEnemyDeath=(m?+m[1]:12)/100; }
-  if(/while adjacent to an ally, takes -(\d+)% damage/.test(a)){ const m=a.match(/-(\d+)%/); u._condArmor=u._condArmor||{}; u._condArmor.adjAllies={n:1,amt:(+m[1])/100}; }
-  if(/attacks heal the lowest-?hp ally for (\d+)% of damage/.test(a)){ const m=a.match(/(\d+)% of damage/); u._healAllyOnHit=(+m[1])/100; }
-  if(/heals the lowest-?hp ally, paying a little of its own hp/.test(a)){ u._periodicTeamHeal={amt:0.12,fac:null,every:4,lowest:true}; }
-  if(/on death, leaves a poison cloud/.test(a)) u._deathPoisonCloud=true;
-  if(/deals \+(\d+)% damage to poisoned enemies/.test(a)){ const m=a.match(/\+(\d+)%/); u._vs=u._vs||{}; u._vs.poisoned=1+(+m[1])/100; }
-  if(/heals the lowest-?hp ally and grants it \+(\d+) magic charge/.test(a)){ u._periodicHeal={amt:220,range:3,every:4}; const m=a.match(/\+(\d+) magic/); u._periodicHealCharge=(m?+m[1]:10); }
-  if(/leaves a spore cloud on the hex it leaves/.test(a)) u._spawnCloudOnMove=true;
-  if(mm=a.match(/spitter|attacks reduce armor by (\d+)/)){ if(/reduce armor by (\d+)/.test(a)){const m=a.match(/reduce armor by (\d+)[^.]*max (\d+)/); u._armorShred={amt:+m[1],max:+m[2]};} }
+  const p=u.passive; if(!p) return;
+  for(const k in p){
+    const v=p[k];
+    if(k==='lifesteal'||k==='reflect'||k==='crit'||k==='armorPierce') u[k]=Math.max(u[k]||0,v);
+    else if(k==='dr') u.dr=Math.min(.85,(u.dr||0)+v);
+    else if(k==='chargeMul') u.chargeMul=(u.chargeMul||1)*v;
+    else if(k==='burn') u.burn=u.burn||v;
+    else if(k==='selfRevive') u.selfRevive=p._reviveAsSkeleton?(u.selfRevive||v):v;
+    else if(k==='_vs'||k==='_condArmor') u[k]={...(u[k]||{}),...v};
+    else u[k]=v;
+  }
 }
 /* ---------- TOKENS & CONSTRUCTS (GDD §8a) ----------
    Spawned mid-battle, free of Army Cap, never count toward synergy, capped per side. */
