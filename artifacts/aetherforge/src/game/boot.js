@@ -13,7 +13,6 @@ import {
   setAscension,
   showCommanderSelect,
   skipFaction,
-  unlockCommander,
 } from "./flow-commanders.js";
 import {
   forgeEssence,
@@ -100,7 +99,6 @@ Object.assign(window, {
   takeRelic,
   townPickFaction,
   townTakeEssence,
-  unlockCommander,
   unlockFaction,
 });
 

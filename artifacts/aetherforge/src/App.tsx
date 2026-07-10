@@ -42,7 +42,6 @@ declare global {
     takeRelic?: unknown;
     townPickFaction?: unknown;
     townTakeEssence?: unknown;
-    unlockCommander?: unknown;
     unlockFaction?: unknown;
   }
 }

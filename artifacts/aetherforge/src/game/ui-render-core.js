@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ACT_ENEMIES, BOSSES } from "./data-enemies.js";
-import { COMMANDERS, COMMANDER_PORTRAITS, gainXp, maybeFactionPick, showCommanderSelect, xpToNext } from "./flow-commanders.js";
+import { COMMANDERS, COMMANDER_PORTRAITS, checkAct2CommanderUnlocks, gainXp, maybeFactionPick, showCommanderSelect, xpToNext } from "./flow-commanders.js";
 import { FACTIONS, META, asc, upgTier } from "./data-units.js";
 import { FAM_COL, relicIcoHTML } from "./data-loot.js";
 import { G, setG } from "./engine-hex.js";
@@ -228,6 +228,7 @@ export function enterNode(id){
 export function advanceRow(){
   const m=G.map; const n=m.byId[m.curId];
   if(n && n.type==='boss'){
+    if(G.act===2) checkAct2CommanderUnlocks();   // Act 2 boss just fell — check faction-gated commander unlocks
     G.act++; if(G.act>3){ winGame(); return; }
     G.actCleared=0;   // difficulty ramps from scratch each act
     G._seenEvents=[];  // events draw without repeats within an act
