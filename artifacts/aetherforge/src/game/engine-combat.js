@@ -1197,14 +1197,18 @@ export function castUlt(u,esc,_echo){
     if(t.hp/t.maxhp<=u.ult.v){t.hp=0;t.alive=false;fx(t,'EXECUTE','#d4534a','big');onDeath(t);}
     else applyDamage(t,u.dmg*2.5*power*PACE,'atk',u,true);
   } else if(k==='doubleaxe'){
-    // hurl two axes at the two nearest enemies, each for heavy bonus damage
-    const tgts=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b)).slice(0,2);
+    // Barrage: a volley of axes cycles through enemies within range (repeating targets if the volley outnumbers them)
+    const effR=u.rng + ((terrainAt(u.c,u.r)==='high'&&u.t==='r')?1:0);
+    const inRange=foes.filter(f=>hexDist(u,f)<=effR);
+    const tgts=(inRange.length?inRange:foes).slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b));
     if(!tgts.length)return;
-    fx(u,'DOUBLE THROW','#e6b860','big');
-    tgts.forEach(t=>{
+    const shots=u.ult.n||2;
+    fx(u,'⚔ '+(u.ult.name||'BARRAGE').toUpperCase(),'#e6b860','big');
+    for(let i=0;i<shots;i++){
+      const t=tgts[i%tgts.length];
       spawnProjectile(u,t,{glyph:'🪓',color:'#e6b860',dur:240,spin:true});
       applyDamage(t, u.dmg*(u.ult.v||3.0)*power*PACE, 'atk', u, true);
-    });
+    }
   } else if(k==='rally'){
     // battlefield rally: surge nearby allies' attack speed (and a touch of damage), with a loud banner
     fx(u,'⚑ RALLY','#f0d375','big'); blastAt(u.c,u.r,(u.ult.r||3),'#f0d375');
