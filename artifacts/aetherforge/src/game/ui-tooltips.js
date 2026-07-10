@@ -145,7 +145,7 @@ export const ABILITIES={
   'Galeclaw Skirmisher':'Windrunner: +AS the further it traveled before attacking.',
   'Lightning Dancer':'Static Step: every 3rd attack chains a small jolt to a nearby foe.',
   'Sky Shaman':'Conduction: bonus damage to enemies already hit by lightning this fight.',
-  'Stormhoof Charger':'Momentum: gains +4% attack speed each second in combat (caps at +24%).',
+  'Thunderhide Bull':'Momentum: gains +4% attack speed each second in combat (caps at +24%).',
   'Totem Warden':'Spirit Totem (periodic 4s): nearby allies +12% AS.',
   'Thunder Patriarch':'Stormcaller: nearby allies gain +8% attack speed.',
   'Kharz, Stormhorn Chieftain':'Heart of the Storm: all crits chain lightning to 2 foes.',

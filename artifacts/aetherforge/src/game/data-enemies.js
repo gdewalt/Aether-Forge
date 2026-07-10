@@ -31,25 +31,25 @@ export const ENEMY_FACTIONS={
   ]},
   // ---- ACT II ----
   'Iron Legion':{ico:'🤖',col:'#7a7f88',units:[
-    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:180,r:2,name:"Bulwark Protocol"}),
-    EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"}),
-    EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"}),
-    EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Reactivate"}),
-    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"}),
+    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:180,r:2,name:"Defensive Protocol"}),
+    EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Steam Burst"}),
+    EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.5,r:1,name:"Bombardment"}),
+    EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Overclock"}),
+    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Volley"}),
   ]},
   'Frostbound Clan':{ico:'🧊',col:'#6fa8c7',units:[
     EU('Frost Raider','Warrior','m',1,620,54,.95,1.2,'🪓',{k:"berserk",v:0.5,d:0.3,name:"Coldblood Fury"}),
-    EU('Ice Shaman','Mage','r',4,600,60,.85,1.0,'❄️',{k:"freeze",v:1.5,r:1,name:"Frost Nova"}),
+    EU('Ice Shaman','Mage','r',4,600,60,.85,1.0,'❄️',{k:"freeze",v:1.2,r:2,name:"Frost Nova"}),
     EU('Tundra Bear','Beast','m',1,980,60,.75,1.1,'🐻‍❄️',{k:"quake",v:1.5,name:"Maul"}),
     EU('Snow Stalker','Rogue','m',1,520,58,1.2,1.4,'🐆',{k:"execute",v:0.3,name:"Frozen Strike"}),
-    EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.6,r:2,name:"Avalanche"}),
+    EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.0,r:1,name:"Avalanche"}),
   ]},
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
-    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"}),
+    EU('Flame Cannon','Archer','r',4,680,60,.55,0.8,'💥',{k:"zone",v:2.0,r:2,name:"Firebomb"}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"}),
     EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"}),
     EU('Magma Adept','Mage','r',4,600,65,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"}),
-    EU('Cinder Sprite','Beast','m',1,360,50,1.3,1.6,'✨',{k:"blink",name:"Cinder Dash"}),
+    EU('Cinder Sprite','Rogue','m',1,360,50,1.3,1.6,'✨',{k:"blink",name:"Cinder Dash"}),
   ]},
   // ---- ACT III ----
   'Void Choir':{ico:'🐙',col:'#6a4d8c',units:[
