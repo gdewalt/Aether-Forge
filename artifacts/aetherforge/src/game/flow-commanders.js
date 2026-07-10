@@ -22,32 +22,35 @@ export const COMMANDER_PORTRAITS={
   silkweaver:silkweaverPortrait, hollowqueen:hollowqueenPortrait, brunhild:brunhildPortrait,
 };
 
-/* ---------- COMMANDERS (GDD §22) — alternate starts with signature passives ---------- */
+/* ---------- COMMANDERS (GDD §22) — alternate starts with signature passives ----------
+   Unlock conditions (no longer Lore-gated): each commander below Aldric unlocks the
+   first time you clear Act 2 with its signature faction active in that run's draft
+   pool; Brunhild — who has no signature faction — unlocks by winning a full run. */
 export const COMMANDERS=[
-  {id:'aldric',name:'Sir Aldric, the Warden',ico:'🛡️',theme:'Wall & sustain (default)',cost:0,
+  {id:'aldric',name:'Sir Aldric, the Warden',ico:'🛡️',theme:'Wall & sustain (default)',
    passive:'Front-row units (forward 2 columns) gain +10% damage reduction and +60 HP each battle.',
    army:['Footman','Footman','Spearman','Archer']},
-  {id:'myrra',name:'Myrra, the Starseer',ico:'🔮',theme:'Ultimate engine / ranged',cost:120,
+  {id:'myrra',name:'Myrra, the Starseer',ico:'🔮',theme:'Ultimate engine / ranged',unlockFaction:'Stargazers',
    passive:'All units start every battle with +20% magic charge.',
    startFactions:['Neutral','Ironhold','Sylvan','Stargazers'],
    army:['Archer','Crossbowman','Wandering Mage','Spearman']},
-  {id:'rakkan',name:'Rakkan, Pride-Father',ico:'🦁',theme:'Fast aggression / bleed',cost:120,
+  {id:'rakkan',name:'Rakkan, Pride-Father',ico:'🦁',theme:'Fast aggression / bleed',unlockFaction:'Leonin',
    passive:"Each unit's first 3 attacks per battle deal +25% damage and apply bleed.",
    startFactions:['Neutral','Ironhold','Sylvan','Leonin'],
    army:['Mercenary','Spearman','Archer','Footman']},
-  {id:'korven',name:'Korven Ashheart',ico:'🔥',theme:'Sacrifice & rebirth',cost:150,
+  {id:'korven',name:'Korven Ashheart',ico:'🔥',theme:'Sacrifice & rebirth',unlockFaction:'Emberkin',
    passive:'The first ally to die each battle revives at 50% HP.',
    startFactions:['Neutral','Ironhold','Sylvan','Emberkin'],
    army:['Footman','Spearman','Crossbowman','Mercenary']},
-  {id:'silkweaver',name:'Mother Silkweaver',ico:'🕸️',theme:'Control & lockdown',cost:150,
+  {id:'silkweaver',name:'Mother Silkweaver',ico:'🕸️',theme:'Control & lockdown',unlockFaction:'Arachnari',
    passive:'Enemies begin each battle already slowed (1 web stack).',
    startFactions:['Neutral','Ironhold','Sylvan','Arachnari'],
    army:['Spearman','Archer','Wandering Mage','Footman']},
-  {id:'hollowqueen',name:'The Hollow Queen',ico:'💀',theme:'Go-wide attrition',cost:160,
+  {id:'hollowqueen',name:'The Hollow Queen',ico:'💀',theme:'Go-wide attrition',unlockFaction:'Hollow',
    passive:'The first time each of your units dies per battle, it raises a Skeleton in its place.',
    startFactions:['Neutral','Ironhold','Sylvan','Hollow'],
    army:['Footman','Footman','Mercenary','Archer']},
-  {id:'brunhild',name:'Brunhild, the Unbroken',ico:'⚔️',theme:'Expert flexibility',cost:200,
+  {id:'brunhild',name:'Brunhild, the Unbroken',ico:'⚔️',theme:'Expert flexibility',unlockOnWin:true,
    passive:'Start with all factions unlocked and +1 Army Cap, but battle rewards offer only 2 unit choices.',
    army:['Footman','Spearman','Archer','Crossbowman']},
 ];
@@ -69,7 +72,6 @@ export function showCommanderSelect(){
           <button class="small" ${a>=META.ascMax?'disabled':''} onclick="setAscension(${a+1})">+</button>
         </div></div></div>`;
   }
-  html+=`<div class="row" style="justify-content:flex-end;margin-bottom:6px"><span class="tip">📜 <b style="color:var(--gold-bright)">${META.lore}</b> Lore</span></div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:10px">`;
   COMMANDERS.forEach(c=>{
     const unlocked=commanderUnlocked(c.id);
@@ -81,25 +83,34 @@ export function showCommanderSelect(){
         <div class="cs dim" style="font-size:10px;margin-top:3px">Opening factions: ${(c.startFactions||STARTER_FACTIONS).filter(f=>f!=='Neutral').join(', ')} · recruit your army with starting gold</div>
       </div>`;
     } else {
-      const afford=META.lore>=c.cost;
+      const reqText=c.unlockFaction
+        ? `Unlock: finish Act 2 with ${FACTION_INFO[c.unlockFaction]?FACTION_INFO[c.unlockFaction].ico+' ':''}${c.unlockFaction} in your draft pool`
+        : c.unlockOnWin ? 'Unlock: win a full run (defeat the Act 3 boss)' : 'Locked';
       html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div><div class="cn" style="font-size:14px;display:flex;align-items:center;gap:8px">🔒 <img class="cmd-icon-md" style="filter:grayscale(.6)" src="${COMMANDER_PORTRAITS[c.id]}" alt="">${c.name}</div>
-            <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
-            <div class="cs" style="color:#9c8fb0;font-size:11px;margin-top:4px">${c.passive}</div></div>
-          <button class="small" ${afford?'':'disabled'} onclick="unlockCommander('${c.id}')" style="white-space:nowrap">📜 ${c.cost}</button>
-        </div></div>`;
+        <div><div class="cn" style="font-size:14px;display:flex;align-items:center;gap:8px">🔒 <img class="cmd-icon-md" style="filter:grayscale(.6)" src="${COMMANDER_PORTRAITS[c.id]}" alt="">${c.name}</div>
+          <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
+          <div class="cs" style="color:#9c8fb0;font-size:11px;margin-top:4px">${c.passive}</div>
+          <div class="cs" style="color:#e8a59f;font-size:10px;margin-top:4px">${reqText}</div></div>
+        </div>`;
     }
   });
   html+=`</div><div class="row" style="margin-top:14px"><button class="small" onclick="showTitle()">← Back</button></div></div>`;
   SC.innerHTML=html;
 }
-export function unlockCommander(id){
-  const c=COMMANDERS.find(x=>x.id===id); if(!c)return;
-  if(META.lore<c.cost){ toast('Not enough Lore'); return; }
-  META.lore-=c.cost; (META.commanders=META.commanders||['aldric']).push(id); saveMeta(META);
-  toast(c.ico+' '+c.name+' unlocked!');
-  showCommanderSelect();
+function unlockCommanderSilently(c){
+  if(commanderUnlocked(c.id)) return false;
+  (META.commanders=META.commanders||['aldric']).push(c.id); saveMeta(META);
+  toast('🔓 '+c.ico+' '+c.name+' unlocked!');
+  return true;
+}
+// call after clearing Act 2's boss: unlocks any commander whose signature faction was in this run's pool
+export function checkAct2CommanderUnlocks(){
+  COMMANDERS.filter(c=>c.unlockFaction && (G.activeFactions||[]).includes(c.unlockFaction))
+    .forEach(unlockCommanderSilently);
+}
+// call after winning a full run: unlocks commanders (like Brunhild) gated on a full clear
+export function checkWinCommanderUnlocks(){
+  COMMANDERS.filter(c=>c.unlockOnWin).forEach(unlockCommanderSilently);
 }
 export function setAscension(n){ META.ascension=Math.max(0,Math.min(META.ascMax,n)); saveMeta(META); showCommanderSelect(); }
 export function newRun(commanderId){
