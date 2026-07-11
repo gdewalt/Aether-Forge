@@ -206,6 +206,11 @@ export function loadMeta(){
 }
 export function saveMeta(m){ try{ localStorage.setItem(META_KEY, JSON.stringify(m)); }catch(e){} }
 export let META=loadMeta();
+// wipes all account progress (unlocked factions, Lore, ascension, unlocked commanders, Athenaeum upgrades)
+export function resetProgress(){
+  try{ localStorage.removeItem(META_KEY); }catch(e){}
+  META=loadMeta();
+}
 
 /* ---------- ATHENAEUM UPGRADE TRACKS (GDD §25a) — horizontal: options, info, economy, never raw power ----------
    Each upgrade is multi-tier; you buy the next tier with Lore. Persisted in META.upgrades[id] = tier owned. */
