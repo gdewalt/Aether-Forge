@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { buyUpgrade } from "./data-units.js";
+import { buyUpgrade, resetProgress } from "./data-units.js";
 import {
   beginCombat,
   setSpeed,
@@ -81,6 +81,7 @@ Object.assign(window, {
   openUnitDetail,
   pickFaction,
   rerollOffers,
+  resetProgress,
   restChoice,
   sellPrompt,
   setAscension,

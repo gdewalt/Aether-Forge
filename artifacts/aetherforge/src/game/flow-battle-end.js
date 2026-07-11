@@ -5,7 +5,7 @@ import { FAM_COL, RAR_COL, equipIcoHTML, equipReward, newEquip, relicIcoHTML, re
 import { G } from "./engine-hex.js";
 import { SC, advanceRow, renderHUD, showTitle } from "./ui-render-core.js";
 import { buyUnit, freeRerollAllow, inspectRecruit, renderRecruit, rollUnitOffers } from "./ui-shop.js";
-import { checkWinCommanderUnlocks, gainXp, showCommanderSelect } from "./flow-commanders.js";
+import { checkFactionCommanderUnlocks, gainXp, showCommanderSelect } from "./flow-commanders.js";
 import { pick } from "./rng.js";
 import { toast } from "./ui-tooltips.js";
 
@@ -111,7 +111,6 @@ export function showDefeat(){
 }
 export function winGame(){
   bankLore();
-  checkWinCommanderUnlocks();
   // clearing a run unlocks the next ascension tier (up to 10)
   if((G.ascension||0)>=META.ascMax && META.ascMax<10){ META.ascMax++; saveMeta(META); }
   SC.innerHTML=`<div class="panel center"><div class="win-banner" style="color:var(--gold-bright)">The Realm Restored</div>
@@ -175,6 +174,7 @@ export function unlockFaction(f){
   if(META.lore<info.cost){ toast('Not enough Lore'); return; }
   META.lore-=info.cost; META.unlocked.push(f); saveMeta(META);
   toast(info.ico+' '+f+' permanently unlocked!');
+  checkFactionCommanderUnlocks();
   showMetaStore();
 }
 

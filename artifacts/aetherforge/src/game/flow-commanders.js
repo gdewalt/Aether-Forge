@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ASCENSION, FACTION_INFO, FCOL, META, POOL, STARTER_FACTIONS, lockedInRun, saveMeta, upgTier } from "./data-units.js";
+import { ASCENSION, FACTIONS, FACTION_INFO, FCOL, META, POOL, STARTER_FACTIONS, lockedInRun, saveMeta, upgTier } from "./data-units.js";
 import { EQUIPMENT, newEquip } from "./data-loot.js";
 import { FAC_SYN } from "./synergies.js";
 import { G, setG } from "./engine-hex.js";
@@ -25,7 +25,8 @@ export const COMMANDER_PORTRAITS={
 /* ---------- COMMANDERS (GDD §22) — alternate starts with signature passives ----------
    Unlock conditions (no longer Lore-gated): each commander below Aldric unlocks the
    first time you clear Act 2 with its signature faction active in that run's draft
-   pool; Brunhild — who has no signature faction — unlocks by winning a full run. */
+   pool; Brunhild — who has no signature faction — unlocks once every faction on the
+   account has been unlocked. */
 export const COMMANDERS=[
   {id:'aldric',name:'Sir Aldric, the Warden',ico:'🛡️',theme:'Wall & sustain (default)',
    passive:'Front-row units (forward 2 columns) gain +10% damage reduction and +60 HP each battle.',
@@ -50,7 +51,7 @@ export const COMMANDERS=[
    passive:'The first time each of your units dies per battle, it raises a Skeleton in its place.',
    startFactions:['Neutral','Ironhold','Sylvan','Hollow'],
    army:['Footman','Footman','Mercenary','Archer']},
-  {id:'brunhild',name:'Brunhild, the Unbroken',ico:'⚔️',theme:'Expert flexibility',unlockOnWin:true,
+  {id:'brunhild',name:'Brunhild, the Unbroken',ico:'⚔️',theme:'Expert flexibility',unlockAllFactions:true,
    passive:'Start with all factions unlocked and +1 Army Cap, but battle rewards offer only 2 unit choices.',
    army:['Footman','Spearman','Archer','Crossbowman']},
 ];
@@ -85,7 +86,7 @@ export function showCommanderSelect(){
     } else {
       const reqText=c.unlockFaction
         ? `Unlock: finish Act 2 with ${FACTION_INFO[c.unlockFaction]?FACTION_INFO[c.unlockFaction].ico+' ':''}${c.unlockFaction} in your draft pool`
-        : c.unlockOnWin ? 'Unlock: win a full run (defeat the Act 3 boss)' : 'Locked';
+        : c.unlockAllFactions ? `Unlock: unlock every faction (${FACTIONS.filter(f=>META.unlocked.includes(f)).length}/${FACTIONS.length} so far)` : 'Locked';
       html+=`<div class="card" style="width:100%;opacity:.85;border-color:#3a3348">
         <div><div class="cn" style="font-size:14px;display:flex;align-items:center;gap:8px">🔒 <img class="cmd-icon-md" style="filter:grayscale(.6)" src="${COMMANDER_PORTRAITS[c.id]}" alt="">${c.name}</div>
           <div class="cf"><span class="chip" style="background:#2a2138;color:#c9bbe0">${c.theme}</span></div>
@@ -108,9 +109,9 @@ export function checkAct2CommanderUnlocks(){
   COMMANDERS.filter(c=>c.unlockFaction && (G.activeFactions||[]).includes(c.unlockFaction))
     .forEach(unlockCommanderSilently);
 }
-// call after winning a full run: unlocks commanders (like Brunhild) gated on a full clear
-export function checkWinCommanderUnlocks(){
-  COMMANDERS.filter(c=>c.unlockOnWin).forEach(unlockCommanderSilently);
+// call after a faction gets unlocked in the Athenaeum: unlocks commanders (like Brunhild) gated on having every faction
+export function checkFactionCommanderUnlocks(){
+  if(FACTIONS.every(f=>META.unlocked.includes(f))) COMMANDERS.filter(c=>c.unlockAllFactions).forEach(unlockCommanderSilently);
 }
 export function setAscension(n){ META.ascension=Math.max(0,Math.min(META.ascMax,n)); saveMeta(META); showCommanderSelect(); }
 export function newRun(commanderId){
