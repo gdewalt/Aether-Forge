@@ -58,7 +58,7 @@ export const POOL=[
   U('Seraphine, the Dawnward','Gilded','Cleric','r',4,860,90,0.8,0.95,'😇',{k:'transform',form:'Seraph',fico:'😇',hp:1.0,dmg:2.0,as:1.2,name:'Apotheosis'},'Legendary',{passive:{"selfRevive":0.5,"_teamReviveAura":0.5},tip:"Guardian Angel: first ally to fall each battle revives at 50%."}),
   // Leonin — bleed & speed (Rogue/Beast)
   U('Maned Brawler','Leonin','Warrior','m',1,700,65,1.15,1.5,'🦷',{k:'berserk',v:0.5,d:0.3,name:'Blood Rage'},'Common',{passive:{"_vs":{"bled":1.2}},tip:"Bloodscent: +20% AS vs any bleeding enemy."}),
-  U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'execute',v:.3,name:'Heavy Throw'},'Uncommon',{passive:{"slow":true},tip:"Hamstring Shot: hits on bled targets slow them 20% 2s."}),
+  U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'chain',v:1.8,j:3,name:'Bouncing Chakram'},'Uncommon',{passive:{"slow":true},tip:"Hamstring Shot: hits on bled targets slow them 20% 2s."}),
   U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'nova',v:1.7,r:1,name:'Rapid Slashes'},'Common',{passive:{"_firstAtkBleed":2},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
   U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'execute',v:.3,name:'Heavy Throw'},'Uncommon',{passive:{"slow":true},tip:"Hamstring Shot: hits on bled targets slow them 20% for 2s."}),
   U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'burst', r:1, n:3, v:1.2, name:'Rapid Slashes'},'Common',{passive:{"bleed":true},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
