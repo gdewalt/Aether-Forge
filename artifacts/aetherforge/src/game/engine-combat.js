@@ -1039,6 +1039,19 @@ export function castUlt(u,esc,_echo){
       spawnProjectile(u,t,{glyph:'🪓',color:'#e6b860',dur:240,spin:true});
       applyDamage(t, u.dmg*(u.ult.v||3.0)*power*PACE, 'atk', u, true);
     }
+  } else if(k==='burst'){
+    // Burst: detonates a zone centered on the caster, hitting every enemy inside `n` times each.
+    // r sets the radius (1 = adjacent only, 2 = within 2 hexes, ...), v the per-hit damage multiplier.
+    const rad=u.ult.r||1;
+    const inRange=foes.filter(f=>hexDist(f,u)<=rad);
+    if(!inRange.length)return;
+    const hits=u.ult.n||1;
+    const col='#ff6a3a';
+    fx(u,'💥 '+(u.ult.name||'BURST').toUpperCase(),col,'big');
+    blastAt(u.c,u.r,rad,col);
+    for(let i=0;i<hits;i++){
+      inRange.forEach(f=>{ if(f.alive) applyDamage(f, u.dmg*(u.ult.v||1.5)*esc*power*PACE, 'atk', u, true); });
+    }
   } else if(k==='rally'){
     // battlefield rally: surge nearby allies' attack speed (and a touch of damage), with a loud banner
     fx(u,'⚑ RALLY','#f0d375','big'); blastAt(u.c,u.r,(u.ult.r||3),'#f0d375');

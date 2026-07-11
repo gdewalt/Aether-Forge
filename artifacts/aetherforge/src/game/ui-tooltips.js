@@ -12,6 +12,7 @@ export const ULT_DESC={
   shield:'Gains a barrier that absorbs incoming damage before HP',
   execute:'Instantly slays a low-HP foe (else heavy hit)',
   doubleaxe:'Barrage: fires a volley of shots that cycle through enemies in range, each for heavy bonus damage',
+  burst:'Detonates a zone around the caster, striking every enemy inside multiple times for bonus damage',
   rally:'Boosts allied attack speed',
   freeze:'Freezes & damages enemies in an area',
   chain:'Lightning leaps between nearby foes, weakening each jump',
