@@ -47,11 +47,11 @@ export const TRANSFORM_FORMS={
   'Grizzly Bear':      {ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:2.4,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
 };
 export const TOKENS={
-  swarmling:{name:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:6},
-  squirrel:{name:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:7},
+  swarmling:{name:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
+  squirrel:{name:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
   broodling:{name:'Broodling',cls:'Beast',t:'m',rng:1,hp:140,dmg:22,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
-  skeleton:{name:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:26,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:null},
-  turret:{name:'Gun Turret',cls:'Archer',t:'r',rng:4,hp:280,dmg:32,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
+  skeleton:{name:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:50,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
+  turret:{name:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:280,dmg:45,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
   scrapbot:{name:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:180,dmg:22,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
 };
 export const TOKEN_SIDE_CAP=12;
