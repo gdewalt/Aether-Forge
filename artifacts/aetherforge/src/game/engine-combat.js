@@ -47,11 +47,11 @@ export const TRANSFORM_FORMS={
   'Grizzly Bear':      {ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:2.4,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
 };
 export const TOKENS={
-  swarmling:{name:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:6},
-  squirrel:{name:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:7},
+  swarmling:{name:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
+  squirrel:{name:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
   broodling:{name:'Broodling',cls:'Beast',t:'m',rng:1,hp:140,dmg:22,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
-  skeleton:{name:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:26,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:null},
-  turret:{name:'Gun Turret',cls:'Archer',t:'r',rng:4,hp:280,dmg:32,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
+  skeleton:{name:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:50,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
+  turret:{name:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:280,dmg:45,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
   scrapbot:{name:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:180,dmg:22,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
 };
 export const TOKEN_SIDE_CAP=12;
@@ -505,6 +505,14 @@ export function simTick(){
     if(u._decayStacks>0){ u._decayT=(u._decayT||0)+TICK; const dmg=u.maxhp*0.0010*Math.min(5,u._decayStacks); applyDamage(u,dmg,'dot'); if(u._decayT>=1){ u._decayT=0; u._decayStacks=Math.min(5,u._decayStacks+1); const near=living(u.side).filter(e=>e!==u&&e.alive&&hexDist(e,u)<=1&&!(e._decayStacks>0))[0]; if(near){near._decayStacks=1;} } }
     if(u._periodicMeteor){ u._metT=(u._metT||0)-TICK; if(u._metT<=0){ u._metT=u._periodicMeteor.every; const foes=enemyOf(u).filter(f=>f.alive); if(foes.length){ const t=foes[Math.floor(RNG()*foes.length)]; applyDamage(t,u.dmg*1.5*PACE,'dot',u); blastAt(t.c,t.r,1,'#c8a6ff'); } } }
     if(u._periodicTeamHeal){ u._pthT=(u._pthT||0)-TICK; if(u._pthT<=0){ u._pthT=u._periodicTeamHeal.every; if(u._periodicTeamHeal.lowest){ const t=living(u.side).filter(m=>m!==u&&m.hp<m.maxhp).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; if(t){t.hp=Math.min(t.maxhp,t.hp+t.maxhp*u._periodicTeamHeal.amt*healScale(u));healRingAt(t);u.hp=Math.max(1,u.hp-u.maxhp*0.04);} } else { living(u.side).forEach(m=>{ if(m.faction===u._periodicTeamHeal.fac&&m.hp<m.maxhp){m.hp=Math.min(m.maxhp,m.hp+m.maxhp*u._periodicTeamHeal.amt);healRingAt(m);} }); u.hp=Math.max(1,u.hp-u.maxhp*0.05); } } }
+    // Queen's Roar (Pride Matriarch): periodically raises nearby same-faction allies' max Bleed stacks and (once) their attack speed
+    if(u._periodicFactionBuff){ u._pfbT=(u._pfbT||0)-TICK; if(u._pfbT<=0){ u._pfbT=u._periodicFactionBuff.every;
+      living(u.side).forEach(m=>{ if(m.faction===u._periodicFactionBuff.fac){
+        if(u._periodicFactionBuff.bleedCap) m.bleedBonus=Math.max(m.bleedBonus||0,u._periodicFactionBuff.bleedCap);
+        if(u._periodicFactionBuff.asAmt && !m._pfbASApplied){ m.as*=(1+u._periodicFactionBuff.asAmt); m._pfbASApplied=true; }
+        fx(m,'👑','#f4c542');
+      } });
+    } }
     if(u._burnFieldAmp && u.burnT===undefined){} // marker only; applied in DoT below
     if(u._healCutT>0){ u._healCutT-=TICK; if(u._healCutT<=0)u._healCut=0; }
     if(u._regenStationary && (u.movecd||0)>0 && u._idleT>0.3 && u.hp<u.maxhp){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._regenStationary*TICK); }
@@ -864,7 +872,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
   if(dmg>0){ const g=living(tgt.side).find(a=>a!==tgt&&a._guardianWard&&hexDist(a,tgt)<=2); if(g)dmg*=0.92; }  // Guardian class synergy: allies near a Guardian take -8%
   if(dmg>0){ const w=living(tgt.side).find(a=>a!==tgt&&a.auraWard&&hexDist(a,tgt)<=2); if(w)dmg*=(1-w.auraWard); }  // Sigil of the Bound: nearby allies take less damage
   if(tgt._frontWard&&dmg>0)dmg*=(1-tgt._frontWard);  // Sentinel's Aegis: front-row units take less
-  if(tgt.bleedStacks>0)dmg*=(1+0.08*(tgt.bleedAmpMul||1)*Math.min(3,tgt.bleedStacks)); // bleed amp
+  if(tgt.bleedStacks>0)dmg*=(1+0.08*(tgt.bleedAmpMul||1)*Math.min(5,tgt.bleedStacks)); // bleed amp — up to 5 stacks (40%)
   if(kind==='atk'&&src&&src.webAmp&&tgt.slowT>0)dmg*=1.15;   // Arachnari: webbed foes take more
   if(kind==='atk'&&src&&src.sporeAmp&&inSporeCloud(tgt))dmg*=1.15; // Myconid: foes in a spore cloud take more
   if(tgt.curseT>0)dmg*=1.25; // Curse ultimate: cursed foes take more damage
@@ -904,6 +912,11 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
   // Batch 10: first-hit bleed — first strike on a full-HP target applies bleed
   if(kind==='atk'&&src&&src._firstHitBleed&&tgt.alive&&(amt>=0)&&tgt.hp+dmg>=tgt.maxhp*0.99){
     tgt.bleedStacks=Math.min(5,(tgt.bleedStacks||0)+src._firstHitBleed);
+  }
+  // first attack of the battle (not every hit) applies a burst of bleed stacks — Cub Skirmisher
+  if(kind==='atk'&&src&&src._firstAtkBleed&&!src._firstAtkDone&&tgt.alive){
+    src._firstAtkDone=true;
+    tgt.bleedStacks=Math.min(5+(src.bleedBonus||0),(tgt.bleedStacks||0)+src._firstAtkBleed);
   }
   if(kind==='atk'&&src){
     if(src.side==='P') src._dmgDealt=(src._dmgDealt||0)+dmg;
@@ -1038,6 +1051,19 @@ export function castUlt(u,esc,_echo){
       const t=tgts[i%tgts.length];
       spawnProjectile(u,t,{glyph:'🪓',color:'#e6b860',dur:240,spin:true});
       applyDamage(t, u.dmg*(u.ult.v||3.0)*power*PACE, 'atk', u, true);
+    }
+  } else if(k==='burst'){
+    // Burst: detonates a zone centered on the caster, hitting every enemy inside `n` times each.
+    // r sets the radius (1 = adjacent only, 2 = within 2 hexes, ...), v the per-hit damage multiplier.
+    const rad=u.ult.r||1;
+    const inRange=foes.filter(f=>hexDist(f,u)<=rad);
+    if(!inRange.length)return;
+    const hits=u.ult.n||1;
+    const col='#ff6a3a';
+    fx(u,'💥 '+(u.ult.name||'BURST').toUpperCase(),col,'big');
+    blastAt(u.c,u.r,rad,col);
+    for(let i=0;i<hits;i++){
+      inRange.forEach(f=>{ if(f.alive) applyDamage(f, u.dmg*(u.ult.v||1.5)*esc*power*PACE, 'atk', u, true); });
     }
   } else if(k==='rally'){
     // battlefield rally: surge nearby allies' attack speed (and a touch of damage), with a loud banner

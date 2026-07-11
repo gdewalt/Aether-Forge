@@ -117,6 +117,9 @@ export function showTitle(){
     </div>
     <p class="tip" style="margin-top:24px">17 factions, 149 units, 20 ultimate types, deterministic auto-combat.<br>
       <span style="color:#9c8fb0">Unlocked: <b>${META.unlocked.length}/${FACTIONS.length+1}</b> factions · 📜 <b>${META.lore}</b> Lore banked</span></p>
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button class="small danger" onclick="if(confirm('Reset ALL progress? This permanently erases unlocked factions, commanders, Lore, ascension, and Athenaeum upgrades.')){resetProgress();showTitle();}">🗑 Reset Progress</button>
+    </div>
   </div>`;
 }
 
