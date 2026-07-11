@@ -59,10 +59,10 @@ export const POOL=[
   // Leonin — bleed & speed (Rogue/Beast)
   U('Maned Brawler','Leonin','Warrior','m',1,700,65,1.15,1.5,'🦷',{k:'berserk',v:0.5,d:0.3,name:'Blood Rage'},'Common',{passive:{"_vs":{"bled":1.2}},tip:"Bloodscent: +20% AS vs any bleeding enemy."}),
   U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'execute',v:.3,name:'Heavy Throw'},'Uncommon',{passive:{"slow":true},tip:"Hamstring Shot: hits on bled targets slow them 20% 2s."}),
-  U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'nova',v:1.7,r:1,name:'Rapid Slashes'},'Common',{passive:{"bleed":true},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
+  U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'nova',v:1.7,r:1,name:'Rapid Slashes'},'Common',{passive:{"_firstAtkBleed":2},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
   U('Savannah Seer','Leonin','Cleric','r',3,450,46,0.9,1.16,'🐾',{k:'curse',v:1,r:2,name:'Bloodletting Curse'},'Uncommon',{passive:{"lifesteal":0.2,"_healAllyOnHit":0.2},tip:"Pridesong: attacks heal the lowest-HP ally for 20% of damage dealt."}),
   U('Sunmane Duelist','Leonin','Rogue','m',1,700,72,1.35,1.36,'🐆',{k:'blink',v:3.0,name:'Hundred Cuts'},'Rare',{passive:{"_counter":{"frac":0.5,"bleed":true}},tip:"Riposte: on being hit, counter for 50% + 1 Bleed."}),
-  U('Pride Matriarch','Leonin','Warrior','m',1,980,90,1.25,1.36,'🌾',{k:'drain',v:3.2,name:'Apex Predator'},'Legendary',{passive:{"bleed":true},tip:"Queen's Roar (periodic 5s): Leonin +1 max Bleed stack & +10% AS."}),
+  U('Pride Matriarch','Leonin','Warrior','m',1,980,90,1.25,1.36,'🌾',{k:'drain',v:3.2,name:'Apex Predator'},'Legendary',{passive:{"_periodicFactionBuff":{"fac":"Leonin","every":5,"bleedCap":1,"asAmt":0.10}},tip:"Queen's Roar (periodic 5s): Leonin +1 max Bleed stack & +10% AS."}),
   // Emberkin — burn AoE (Mage)
   U('Pyromancer','Emberkin','Mage','r',4,420,84,.85,1.1,'🌋',{k:'nova',v:2.0,r:2,name:'Firestorm'},'Uncommon',{passive:{"_vs":{"burning":1.3}},tip:"Conflagration: +30% to already-burning targets."}),
   U('Salamander Brave','Emberkin','Warrior','m',1,600,64,.95,1.3,'🦎',{k:'berserk',v:0.6,d:0.50,name:'Blazing Blows'},'Uncommon',{passive:{"burn":1,"burnDur":2,"reflect":0.2},tip:"Molten Skin: melee attackers take burn damage."}),
