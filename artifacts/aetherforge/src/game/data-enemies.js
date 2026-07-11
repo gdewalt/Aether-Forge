@@ -48,7 +48,7 @@ export const ENEMY_FACTIONS={
     EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.6,r:2,name:"Avalanche"},{passive:{"ccImmune":true},tip:"Immovable: cannot be knocked back."}),
   ]},
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
-    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"zone",v:2.4,r:2,name:"Firebomb"},{passive:{"burn":1,"burnDur":2},tip:"Incendiary: attacks apply burn."}),
+    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"zone",v:2.0,r:1,name:"Firebomb"},{passive:{"burn":1,"burnDur":2},tip:"Incendiary: attacks apply burn."}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"},{passive:{"reflect":0.25},tip:"Molten Skin: attackers take 25% reflected damage."}),
     EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"},{passive:{"burn":1,"burnDur":2},tip:"Searing: attacks apply burn."}),
     EU('Magma Adept','Mage','r',4,600,65,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"},{passive:{"_auraMagicResist":0.08},tip:"Heat Haze: nearby allies take -8% magic damage (ward field)."}),
