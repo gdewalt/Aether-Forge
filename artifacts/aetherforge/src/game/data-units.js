@@ -128,7 +128,7 @@ export const POOL=[
   // U('Fang Matriarch','Arachnari','Beast','m',1,940,76,1.0,1.2,'🕸',{k:'drain',v:3.0,name:'Devouring Brood'},'Rare'),
   U('Web Spinner','Arachnari','Rogue','m',1,380,40,1.2,1.43,'🕷️',{k:'freeze',v:1.5,r:1,name:'Ensnaring Burst'},'Common',{passive:{"_nthSpawn":{"n":3,"key":"swarmling"}},tip:"Spinneret: every 3rd attack spawns a Broodling."}),
   U('Silk Slinger','Arachnari','Archer','r',4,340,52,0.95,1.16,'🕸️',{k:'nova',v:1.7,r:2,name:'Sticky Volley'},'Common',{passive:{"web":true},tip:"Webshot: attacks apply 1 Web stack (slow 12%, stacks)."}),
-  U('Venomfang Lurker','Arachnari','Rogue','m',1,460,58,1.3,1.56,'🪺',{k:'blink',v:3.0,name:'Jumping Spider'},'Uncommon',{passive:{"_vs":{"slowed":1.3}},tip:"Pounce: +30% damage vs webbed/slowed targets."}),
+  U('Venomfang Lurker','Arachnari','Rogue','m',1,460,58,1.3,1.56,'🪺',{k:'blink',v:3.0,name:'Jumping Spider'},'Uncommon',{passive:{"_vs":{"slowed":1.3}},tip:"Ruthless: +30% damage vs webbed/slowed targets."}),
   U('Broodmother Acolyte','Arachnari','Cleric','r',3,480,42,0.85,1.09,'🥚',{k:'summon',v:1,n:3,token:'broodling',name:'Hatch Swarm'},'Rare',{passive:{"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Nurture (periodic 4s): heals lowest-HP ally + spawns a Broodling."}),
   // U('Weaver Mage','Arachnari','Mage','r',4,420,70,0.8,0.95,'🪳',{k:'zone',v:0.55,r:2,dur:4,zico:'🕸️',zcol:'#a1887f',name:'Web Prison'},'Uncommon'),
   U('Carapace Sentinel','Arachnari','Guardian','m',1,1050,64,0.7,0.88,'🜸',{k:'bulwark',v:420,r:2,name:'Living Web Wall'},'Uncommon',{passive:{"web":true},tip:"Web Anchor: adjacent enemies slowed 20%; immune to displacement."}),
