@@ -34,11 +34,11 @@ export const ENEMY_FACTIONS={
   ]},
   // ---- ACT II ----
   'Iron Legion':{ico:'🤖',col:'#7a7f88',units:[
-    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:180,r:2,name:"Bulwark Protocol"},{passive:{"aegis":0.12,"aegisCap":0.25},tip:"Plating: converts 12% of damage taken into armor (aegis)."}),
+    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:100,r:2,name:"Bulwark Protocol"},{passive:{"aegis":0.05,"aegisCap":0.25},tip:"Plating: converts 5% of damage taken into armor (aegis)."}),
     EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"},{passive:{"dr":0.06,"_condArmor":{"adjFaction":{"fac":"__enemy","amt":0.12}}},tip:"Phalanx: +12% armor while adjacent to another ally."}),
     EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"},{passive:{"armorPierce":0.1},tip:"Siege Protocol: attacks ignore 20% of target armor."}),
     EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Reactivate"},{passive:{"_auraAllyDmg":0.1},tip:"Command Aura: nearby allies +10% damage."}),
-    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"},{passive:{"_periodicHeal":{"amt":90,"range":3,"every":4},"_periodicShield":{"amt":90,"range":3,"every":5}},tip:"Field Repair: shields the nearest ally for 90 every 5s."}),
+    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"},{passive:{"_periodicHeal":{"amt":90,"range":3,"every":4},"_periodicShield":{"amt":50,"range":3,"every":5}},tip:"Field Repair: shields the nearest ally for 50 every 5s."}),
   ]},
   'Frostbound Clan':{ico:'🧊',col:'#6fa8c7',units:[
     EU('Frost Raider','Warrior','m',1,620,54,.95,1.2,'🪓',{k:"berserk",v:0.5,d:0.3,name:"Coldblood Fury"},{passive:{"_dmgAboveHP":{"amt":0.2,"thr":0.6}},tip:"Coldblood: +20% damage while above 60% HP."}),
