@@ -87,7 +87,7 @@ export function renderRecruit(){
   html+=`</div>`;
   html+=`<div class="row" style="margin-top:16px;justify-content:space-between">
       <button class="small" onclick="${isShop?'leaveShop()':'afterUnitReward()'}">${isShop?'Leave →':'Done →'}</button>
-      <button class="small" onclick="showEquip()">⚒ Manage Equipment</button></div></div>`;
+      <button class="small" onclick="showEquip('recruit')">⚒ Manage Equipment</button></div></div>`;
   SC.innerHTML=html; renderHUD();
 }
 export function leaveShop(){
