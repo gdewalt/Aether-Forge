@@ -40,7 +40,7 @@ export const RELICS=[
    desc:'Archers ignore 20% of target armor.',apply:(us)=>us.forEach(u=>{if(u.cls==='Archer')u.armorPierce=(u.armorPierce||0)+.20;})},
   {id:'barbedarrows',name:'Barbed Arrows',fam:'Class',ico:'🩸',rar:'Uncommon',
    desc:'Archers: attacks apply bleed.',apply:(us)=>us.forEach(u=>{if(u.cls==='Archer')u.bleed=true;})},
-  {id:'shadowstep',name:'Shadowstep Cloak',fam:'Class',ico:'🌑',rar:'Rare',
+  {id:'shadowstep',name:'Ambush Charm',fam:'Class',ico:'🌑',rar:'Rare',
    desc:'Rogues begin each battle behind the enemy line.',apply:(us)=>us.forEach(u=>{if(u.cls==='Rogue')u.infiltrate=true;})},
   {id:'gricharm',name:'Grimoire Charm',fam:'Class',ico:'📖',rar:'Uncommon',
    desc:'Mages: ultimates deal +25%.',apply:(us)=>us.forEach(u=>{if(u.cls==='Mage')u.ultMul=(u.ultMul||1)*1.25;})},
@@ -63,17 +63,12 @@ export const RELICS=[
   {id:'ruin',name:'Pact of Ruin',fam:'Game-Changer',ico:'💀',rar:'Legendary',
    desc:'All units +40% damage, but cannot be healed.',apply:(us)=>us.forEach(u=>{u.dmg*=1.4;u.noHeal=true;}),gc:true},
   // ---- Added Static ----
-  {id:'ironbark',name:'Ironbark Charm',fam:'Static',ico:'🪵',rar:'Common',
-   desc:'All units +8% damage reduction.',apply:(us)=>us.forEach(u=>u.dr=(u.dr||0)+0.08)},
   {id:'bloodidol',name:'Bloodbound Idol',fam:'Static',ico:'🩸',rar:'Uncommon',
    desc:'All units gain 10% lifesteal.',apply:(us)=>us.forEach(u=>u.lifesteal=(u.lifesteal||0)+0.10)},
   {id:'sentinel',name:"Sentinel's Aegis",fam:'Static',ico:'🛡️',rar:'Uncommon',
    desc:'Front-row units take -15% damage.',apply:(us)=>us.forEach(u=>{if(u.c!=null&&u.c<=1)u._frontWard=0.15;})},
   {id:'farseeker',name:'Farseeker Lens',fam:'Static',ico:'🔭',rar:'Uncommon',
    desc:'Ranged units gain +1 range and +10% damage.',apply:(us)=>us.forEach(u=>{if(u.t==='r'){u.rng=(u.rng||0)+1;u.dmg*=1.10;}})},
-  // ---- Added Synergy ----
-  {id:'standard',name:'Faction Standard',fam:'Synergy',ico:'🚩',rar:'Rare',
-   desc:'All faction synergy breakpoints trigger one unit earlier.',synBonus:1},
   // ---- Added Class ----
   {id:'warlord',name:"Warlord's Crest",fam:'Class',ico:'⚔️',rar:'Uncommon',
    desc:'Warriors deal +12% damage.',apply:(us)=>us.forEach(u=>{if(u.cls==='Warrior')u.dmg*=1.12;})},
