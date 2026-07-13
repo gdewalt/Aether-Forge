@@ -639,6 +639,7 @@ export function simTick(){
         if(u.hiveScale)dmg*=1+0.03*countHive(u.side);
         if(onHigh&&u.t==='r')dmg*=1.10;
         let isCrit=u.crit&&RNG()<u.crit; if(isCrit)dmg*=1.5;
+        if(isCrit) toast('✶ '+u.name+' lands a critical hit on '+tgt.name+'!');
         let rakkanBleed=false;
         if(u.rakkanN>0){ u.rakkanN--; dmg*=1.25; rakkanBleed=true; }
         if(u.t==='r' && u.rng>1){
