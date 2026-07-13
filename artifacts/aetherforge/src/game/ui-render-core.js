@@ -253,7 +253,7 @@ export function showArmy(){
   G.army.forEach((u,i)=>html+=`<div onclick="openUnitDetail(G.army[${i}])" style="cursor:pointer">${cardHTML(u,i,false)}</div>`);
   html+=`</div><div class="row" style="margin-top:14px;justify-content:space-between">
       <button class="small" onclick="showMap()">← Back to Map</button>
-      <button class="small" onclick="showEquip()">⚒ Manage Equipment (${G.stash.length})</button></div>
+      <button class="small" onclick="showEquip('army')">⚒ Manage Equipment (${G.stash.length})</button></div>
     <div style="margin-top:14px" class="tip">Synergies (when deployed) — faction is primary, class is a weaker cross-faction bonus.</div></div>`;
   SC.innerHTML=html;
 }

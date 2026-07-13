@@ -39,6 +39,7 @@ import {
   showTitle,
 } from "./ui-render-core.js";
 import {
+  equipBack,
   equipSlotClick,
   showEquip,
   stashClick,
@@ -74,6 +75,7 @@ Object.assign(window, {
   clearStats,
   closeModal,
   enterNode,
+  equipBack,
   equipSlotClick,
   eventChoice,
   exportStats,
