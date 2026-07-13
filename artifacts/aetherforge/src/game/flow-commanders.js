@@ -7,6 +7,7 @@ import { RNG, makeRNG, pick, setRNG } from "./rng.js";
 import { SC, renderHUD, showMap, showTitle } from "./ui-render-core.js";
 import { genMap } from "./engine-map.js";
 import { recruit } from "./ui-shop.js";
+import { recordFactionAdd, startRunStats } from "./stats.js";
 import { toast } from "./ui-tooltips.js";
 import aldricPortrait from "../assets/commanders/aldric.png";
 import myrraPortrait from "../assets/commanders/myrra.png";
@@ -130,6 +131,7 @@ export function newRun(commanderId){
   if(upgTier('exp_lore')){ G.lore += upgTier('exp_lore')*5; }          // Scholar's Stipend (banked at run end with the rest)
   for(let i=0;i<upgTier('exp_gear');i++){ G.stash.push(newEquip(pick(EQUIPMENT.filter(e=>e.rar!=='Legendary')).id)); }  // Field Kit
   G._scoutRows = upgTier('exp_scout');                                 // Forward Scouts (consumed by map reveal)
+  startRunStats(cmd);
   toast(cmd.ico+' '+cmd.name+' leads the banner');
   showMap();
 }
@@ -162,7 +164,7 @@ export function factionChoices(n){
   return shuffled.slice(0,n||3);
 }
 export function addActiveFaction(f){
-  if(!G.activeFactions.includes(f)){ G.activeFactions.push(f); toast((FACTION_INFO[f]?FACTION_INFO[f].ico:'')+' '+f+' joins your draft pool'); }
+  if(!G.activeFactions.includes(f)){ G.activeFactions.push(f); recordFactionAdd(f); toast((FACTION_INFO[f]?FACTION_INFO[f].ico:'')+' '+f+' joins your draft pool'); }
 }
 // shown after a node resolves if level-ups queued faction picks and options exist
 export function maybeFactionPick(then){

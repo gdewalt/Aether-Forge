@@ -150,7 +150,7 @@ export const EQUIPMENT=[
   {id:'t_battlestandard',name:'Battle Standard',slot:'trinket',ico:'🚩',rar:'Uncommon',
    desc:'Aura: allies within 2 hexes attack 12% faster.',apply:(u)=>{u._auraAS=(u._auraAS||0)+.12;}},
   {id:'t_shadowcloak',name:'Shadowstep Cloak',slot:'trinket',ico:'🥷',rar:'Rare',
-   desc:'This unit starts the battle behind the enemy line.',apply:(u)=>{u.infiltrate=true;}},
+   desc:'This unit starts the battle behind the enemy line, invisible to enemies for 1s.',apply:(u)=>{u.infiltrate=true;}},
   {id:'t_runestone',name:'Charged Runestone',slot:'trinket',ico:'🔋',rar:'Uncommon',
    desc:'Starts each battle with 35% magic charge.',apply:(u)=>{u._startMag=Math.max(u._startMag||0,35);}},
   {id:'t_sigil',name:'Sigil of the Bound',slot:'trinket',ico:'🧿',rar:'Legendary',

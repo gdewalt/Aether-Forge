@@ -11,6 +11,7 @@ import { recruit, showRest, showShop } from "./ui-shop.js";
 import { showEvent } from "./flow-events.js";
 import { showForge, showTown } from "./flow-forge.js";
 import { showMetaStore, winGame } from "./flow-battle-end.js";
+import { finishRunStats } from "./stats.js";
 import { startBattle } from "./engine-battle-setup.js";
 
 /* ============================================================
@@ -104,6 +105,7 @@ export function showRelicBar(e){
 
 /* ---------- title ---------- */
 export function showTitle(){
+  if(G&&G._stats&&!G._stats.done) finishRunStats('abandoned');   // leaving mid-run (Abandon button) still records the run
   setG(null);renderHUD();
   SC.innerHTML=`<div class="panel center" style="margin-top:30px;padding:40px">
     <h2 style="font-size:30px;color:var(--gold-bright)">Banners of the Broken Realm</h2>
@@ -114,6 +116,7 @@ export function showTitle(){
     <div class="row" style="justify-content:center;margin-top:18px">
       <button class="primary" onclick="showCommanderSelect()">Begin a Run</button>
       <button class="small" onclick="showMetaStore()">🏛 Athenaeum</button>
+      <button class="small" onclick="showStats()">📊 Stats</button>
     </div>
     <p class="tip" style="margin-top:24px">17 factions, 149 units, 20 ultimate types, deterministic auto-combat.<br>
       <span style="color:#9c8fb0">Unlocked: <b>${META.unlocked.length}/${FACTIONS.length+1}</b> factions · 📜 <b>${META.lore}</b> Lore banked</span></p>
@@ -250,7 +253,7 @@ export function showArmy(){
   G.army.forEach((u,i)=>html+=`<div onclick="openUnitDetail(G.army[${i}])" style="cursor:pointer">${cardHTML(u,i,false)}</div>`);
   html+=`</div><div class="row" style="margin-top:14px;justify-content:space-between">
       <button class="small" onclick="showMap()">← Back to Map</button>
-      <button class="small" onclick="showEquip()">⚒ Manage Equipment (${G.stash.length})</button></div>
+      <button class="small" onclick="showEquip('army')">⚒ Manage Equipment (${G.stash.length})</button></div>
     <div style="margin-top:14px" class="tip">Synergies (when deployed) — faction is primary, class is a weaker cross-faction bonus.</div></div>`;
   SC.innerHTML=html;
 }

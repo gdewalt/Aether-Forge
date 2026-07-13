@@ -39,6 +39,7 @@ import {
   showTitle,
 } from "./ui-render-core.js";
 import {
+  equipBack,
   equipSlotClick,
   showEquip,
   stashClick,
@@ -53,6 +54,11 @@ import {
 } from "./ui-shop.js";
 import { autoPlace } from "./ui-planning.js";
 import {
+  clearStats,
+  exportStats,
+  showStats,
+} from "./stats.js";
+import {
   closeModal,
   hideTip,
   openUnitDetail,
@@ -66,10 +72,13 @@ Object.assign(window, {
   autoPlace,
   beginCombat,
   buyUpgrade,
+  clearStats,
   closeModal,
   enterNode,
+  equipBack,
   equipSlotClick,
   eventChoice,
+  exportStats,
   forgeEssence,
   forgeTierUnit,
   hideTip,
@@ -93,6 +102,7 @@ Object.assign(window, {
   showMap,
   showMetaStore,
   showRelicBar,
+  showStats,
   showTitle,
   skipFaction,
   stashClick,
