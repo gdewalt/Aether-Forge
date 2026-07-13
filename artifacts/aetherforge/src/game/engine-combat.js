@@ -900,6 +900,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
     if(tgt.shield<=0){ tgt.shield=0; fx(tgt,'SHIELD BROKEN','#7cdcff'); }
   }
   tgt.hp-=dmg;
+  tgt._dmgTaken=(tgt._dmgTaken||0)+dmg;   // per-battle telemetry (run statistics)
   if(dmg>0&&G.battle){ tgt._hitFx=G.battle.t; if(kind==='atk'&&dmg>tgt.maxhp*0.12)tgt._bigHit=G.battle.t; }   // juice: flinch / big-hit shake
   // Batch 10: counter-attack — when struck in melee, retaliate
   if(kind==='atk'&&src&&src.alive&&tgt.alive&&tgt._counter&&src.rng<=1&&hexDist(src,tgt)<=1){

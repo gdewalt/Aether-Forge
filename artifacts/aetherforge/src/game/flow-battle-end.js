@@ -6,11 +6,13 @@ import { G } from "./engine-hex.js";
 import { SC, advanceRow, renderHUD, showTitle } from "./ui-render-core.js";
 import { buyUnit, freeRerollAllow, inspectRecruit, renderRecruit, rollUnitOffers } from "./ui-shop.js";
 import { checkFactionCommanderUnlocks, gainXp, showCommanderSelect } from "./flow-commanders.js";
+import { finishRunStats, recordBattleStats } from "./stats.js";
 import { pick } from "./rng.js";
 import { toast } from "./ui-tooltips.js";
 
 export function endBattle(won){
   clearInterval(G.battle.timer);
+  recordBattleStats(won);
   if(G._capSaved!=null){ G.cap=G._capSaved; G._capSaved=null; }   // undo Omen of Ruin cap bonus
   const status=document.getElementById('combatStatus');
   if(won){
@@ -27,6 +29,7 @@ export function endBattle(won){
     setTimeout(()=>showVictory(),700);
   } else {
     G.over=true;
+    finishRunStats('defeat');
     setTimeout(()=>showDefeat(),700);
   }
 }
@@ -110,6 +113,7 @@ export function showDefeat(){
   renderHUD();
 }
 export function winGame(){
+  finishRunStats('win');
   bankLore();
   // clearing a run unlocks the next ascension tier (up to 10)
   if((G.ascension||0)>=META.ascMax && META.ascMax<10){ META.ascMax++; saveMeta(META); }
