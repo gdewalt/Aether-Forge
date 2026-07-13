@@ -2,16 +2,24 @@
 import { CCOL, FCOL } from "./data-units.js";
 import { EQUIP_BY_ID, RAR_COL, equipIcoHTML, newEquip, unitRarity } from "./data-loot.js";
 import { G } from "./engine-hex.js";
-import { SC, showMap, spriteThumb } from "./ui-render-core.js";
-import { TIER_STARS } from "./ui-shop.js";
+import { SC, showArmy, showMap, spriteThumb } from "./ui-render-core.js";
+import { TIER_STARS, renderRecruit } from "./ui-shop.js";
 import { ensureGear } from "./flow-commanders.js";
 import { equipCardInner } from "./flow-battle-end.js";
 import { showPlan } from "./ui-planning.js";
 import { toast } from "./ui-tooltips.js";
 
 export let EQ_SEL=null; // {from:'stash',idx} or {from:'unit',ui,slot}
-export function showEquip(){
-  EQ_SEL=null; renderEquip();
+export let EQ_BACK='map'; // which screen opened the equip manager: 'map' | 'army' | 'recruit'
+export function showEquip(back){
+  EQ_BACK=back||'map'; EQ_SEL=null; renderEquip();
+}
+// Back returns to the screen the player came from. The recruit screen re-renders from
+// run state (G._offers / G._eqOffers / G._rerolls), so its exact contents are preserved.
+export function equipBack(){
+  if(EQ_BACK==='recruit') renderRecruit();
+  else if(EQ_BACK==='army') showArmy();
+  else showMap();
 }
 export function renderEquip(){
   const SLOTS=['weapon','armor','trinket'];const SLOT_ICO={weapon:'⚔',armor:'🛡',trinket:'💍'};
@@ -43,7 +51,8 @@ export function renderEquip(){
     const e=EQUIP_BY_ID[it.id]; const sel=EQ_SEL&&EQ_SEL.from==='stash'&&EQ_SEL.idx===si;
     html+=`<div class="card" style="cursor:pointer;border-color:${sel?'var(--gold-bright)':RAR_COL[e.rar]}" onclick="stashClick(${si})">${equipCardInner(e)}</div>`;
   });
-  html+=`</div><div class="row" style="margin-top:14px"><button class="small" onclick="showMap()">← Back to Map</button>
+  const backLbl = EQ_BACK==='recruit' ? (G._recruitMode==='shop'?'← Back to Camp':'← Back to Rewards') : EQ_BACK==='army' ? '← Back to Army' : '← Back to Map';
+  html+=`</div><div class="row" style="margin-top:14px"><button class="small" onclick="equipBack()">${backLbl}</button>
     <span class="tip">Tip: re-tool against the next foe — gear is fully movable between battles.</span></div></div>`;
   SC.innerHTML=html;
 }

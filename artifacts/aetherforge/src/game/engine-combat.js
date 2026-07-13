@@ -227,8 +227,9 @@ export function beginCombat(){
   if(b.mod){ b.mod.apply(P,E); [...P,...E].forEach(u=>{u.maxhp=u.hp;}); }
   // one-shot modifier granted by a narrative Event (Standing Stones etc.) — applies once, then clears
   if(G._eventMod){ try{ G._eventMod.apply(P,E); }catch(e){} [...P,...E].forEach(u=>{u.maxhp=u.hp;}); G._eventMod=null; }
-  // infiltrate (Shadowstep Cloak): move eligible rogues to the enemy back columns
-  P.forEach(u=>{ if(u.infiltrate){ const col=COLS-2-rint(2); let rr=u.r; while(occupiedIn([...P,...E],col,rr))rr=(rr+1)%ROWS; u.c=col;u.r=rr; }});
+  // infiltrate (Shadowstep Cloak): move eligible rogues to the enemy back columns,
+  // cloaked (invisible to enemy targeting) for the first second of combat
+  P.forEach(u=>{ if(u.infiltrate){ const col=COLS-2-rint(2); let rr=u.r; while(occupiedIn([...P,...E],col,rr))rr=(rr+1)%ROWS; u.c=col;u.r=rr; u._cloakT=1; }});
   b.P=P;b.E=E;b.t=0;b.log=[];b.phase='countdown';b.cd=3;b.acc=0;b.zones=[];
   showCombat();
   // RENDER loop ~33ms; SIM runs at fixed 30Hz inside, decoupled (spec: fixed timestep, render interpolates)
@@ -284,6 +285,8 @@ export function renderCombat(){
   [...G.battle.P,...G.battle.E].forEach(u=>{
     if(!u.alive)return;const ce=hexCenter(u.c,u.r);const fc=(u.side==='E'?(u.ecol||'#a5453a'):FCOL[u.faction])||'#888';
     const d=document.createElement('div');d.className='unit-tok live';d.style.cssText=`--hs:70px;left:${ce.x-35}px;top:${ce.y-35}px;pointer-events:auto`;
+    if(u._cloakT>0){ d.style.opacity=.45; d.style.filter='saturate(.4)'; }   // infiltrator cloak: shown as a ghost
+
     // --- combat juice: recent attack/hit drive transient animation classes ---
     const bt=G.battle?G.battle.t:0;
     if(u._atkFx!=null && bt-u._atkFx<0.28){ d.classList.add('jx-atk'); const L=8; d.style.setProperty('--lx',(u._atkVX*L).toFixed(1)+'px'); d.style.setProperty('--ly',(u._atkVY*L).toFixed(1)+'px'); }
@@ -498,6 +501,7 @@ export function simTick(){
     if(u._diveMoveBuff){ u._diveT=(u._diveT==null?4:u._diveT)-TICK; if(u._diveT<=0)u._diveMoveBuff=0; }
     if(u._constructRegen && u.hp<u.maxhp){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._constructRegen*TICK); }
     if(u._shockedT>0){ u._shockedT-=TICK; if(u._shockedT<=0)u._shocked=false; }
+    if(u._cloakT>0){ u._cloakT-=TICK; if(u._cloakT<=0){ u._cloakT=0; fx(u,'🌫','#b9c4d0'); } }   // infiltrator cloak wears off
     if(u.shieldT>0){ u.shieldT-=TICK; if(u.shieldT<=0){ u.shield=0; } }
     if(u._shieldFx>0)u._shieldFx-=TICK;
     if(u._healAST>0){ u._healAST-=TICK; if(u._healAST<=0)u._healAS=0; }
@@ -575,7 +579,7 @@ export function simTick(){
     if(u.stun>0)continue;                                   // (rooted could still attack; we keep simple)
     // ---- TARGET SELECTION with stickiness (units commit to a fight) ----
     u.retgt-=TICK;
-    const curOK = u.tgt && u.tgt.alive;
+    const curOK = u.tgt && u.tgt.alive && !(u.tgt._cloakT>0);   // a target that cloaks is dropped like a dead one
     const effR = u.rng + ((terrainAt(u.c,u.r)==='high'&&u.t==='r')?1:0);
     const inRange = curOK && hexDist(u,u.tgt)<=effR;
     if(!curOK){
@@ -635,6 +639,7 @@ export function simTick(){
         if(u.hiveScale)dmg*=1+0.03*countHive(u.side);
         if(onHigh&&u.t==='r')dmg*=1.10;
         let isCrit=u.crit&&RNG()<u.crit; if(isCrit)dmg*=1.5;
+        if(isCrit) toast('✶ '+u.name+' lands a critical hit on '+tgt.name+'!');
         let rakkanBleed=false;
         if(u.rakkanN>0){ u.rakkanN--; dmg*=1.25; rakkanBleed=true; }
         if(u.t==='r' && u.rng>1){
@@ -720,7 +725,7 @@ export function cleanseDebuffs(t){
   if(cleaned)fx(t,'✦ CLEANSED','#7fe0d0');
 }
 export function acquireTarget(u){
-  const foes=enemyOf(u); if(!foes.length)return null;
+  const foes=enemyOf(u).filter(f=>!(f._cloakT>0)); if(!foes.length)return null;   // cloaked infiltrators are invisible to targeting
   switch(u.arch){
     case 'lowhp':   return foes.reduce((a,c)=>c.hp<a.hp?c:a);
     case 'highhp':  return foes.reduce((a,c)=>c.hp>a.hp?c:a);
