@@ -48,11 +48,24 @@ export function showPlan(){
     <button class="primary" id="beginBtn" onclick="beginCombat()" disabled>Begin Battle ⚔</button></div></div>`;
   SC.innerHTML=html;
   b.placements={}; b.selIdx=null;
+  // restore last battle's deployment: units keep their hex if it's still a legal spot.
+  // Units are tracked by a run-scoped uid (assigned here) since army order can shift.
+  G.army.forEach(u=>{ if(!u._uid) u._uid=(G._uidSeq=(G._uidSeq||0)+1); });
+  if(G._lastPlace){
+    G.army.forEach((u,i)=>{
+      const s=G._lastPlace[u._uid]; if(!s)return;
+      if(Object.keys(b.placements).length>=G.cap)return;
+      if(s.c>3 || b.placements[s.c+','+s.r])return;
+      const tt=terrainAt(s.c,s.r); if(tt==='rubble'||tt==='lava')return;
+      b.placements[s.c+','+s.r]={idx:i,c:s.c,r:s.r};
+    });
+  }
   drawGrid('plan');
   if(hasRelic('scryingorb')) drawEnemyPreview();
   drawBench();
   updateSyn();
   fitGrid();
+  if(Object.keys(b.placements).length) afterPlace();   // render the restored tokens & enable Begin
   // bench is a drop target: dragging a placed unit here un-deploys it
   const bz=document.getElementById('benchZone');
   bz.addEventListener('dragover',e=>{if(DRAG&&DRAG.src==='hex'){e.preventDefault();bz.classList.add('dragover');}});

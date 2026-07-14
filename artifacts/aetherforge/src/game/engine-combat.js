@@ -202,6 +202,9 @@ export function beginCombat(){
   const b=G.battle;
   const mk=mkLive;
   let P=[], E=[];
+  // remember where each unit was deployed so the next battle's plan screen can prefill it
+  G._lastPlace=G._lastPlace||{};
+  for(const k in b.placements){ const p=b.placements[k]; const au=G.army[p.idx]; if(au&&au._uid) G._lastPlace[au._uid]={c:p.c,r:p.r}; }
   for(const k in b.placements){const p=b.placements[k];P.push(mk(ensureGear(G.army[p.idx]),'P',p.c,p.r));}
   placeEnemies(b.enemyTemplates, E, mk);
   applySyn(P,true); applySyn(E,false);
