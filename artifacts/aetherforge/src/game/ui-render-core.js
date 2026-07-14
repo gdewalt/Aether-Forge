@@ -18,10 +18,14 @@ import { startBattle } from "./engine-battle-setup.js";
    RENDER: HUD + screens
    ============================================================ */
 export const SC=document.getElementById('screen');
-// ---- Sprite system: load sprites/{exact unit name}.png, fall back to emoji ----
+// ---- Sprite system: load sprites/{art key}.png, fall back to emoji ----
 // Served by the api-server artifact from object storage (see artifacts/api-server/src/routes/storage.ts)
+// Every unit carries an `art` field (set by U()/EU()/TOKENS/bosses/transform forms; defaults to
+// the unit's name) that names its sprite file — so renaming a unit, or several units sharing
+// one sprite, doesn't break art resolution. Always resolve via artOf(u), not u.name.
 export const SPRITE_DIR='/api/storage/public-objects/sprites/';
-export const _sprStatus={};   // name -> 'ok' | 'fail' | undefined(loading)
+export function artOf(u){ return u.art||u.name||''; }
+export const _sprStatus={};   // art key -> 'ok' | 'fail' | undefined(loading)
 export function spriteURL(name){ return SPRITE_DIR+encodeURIComponent(name)+'.png'; }
 export function preloadSprite(name){
   if(_sprStatus[name]!==undefined) return;
@@ -58,14 +62,14 @@ function _patchLoadedSprites(name){
 }
 // small inline thumbnail for cards/tooltips/lists; falls back to the emoji glyph
 export function spriteThumb(u,px){
-  const name=u.name||''; preloadSprite(name); px=px||22;
+  const name=artOf(u); preloadSprite(name); px=px||22;
   if(hasSprite(name)) return _sprThumbHTML(name,px);
   return `<span class="spr-fallback" data-spr="${encodeURIComponent(name)}" data-spr-kind="thumb" data-spr-px="${px}">${u.ico}</span>`;
 }
 // Render the visual body of a unit: a standee sprite if available, else the emoji disc.
 // opts: {size, ring:'tok-p'|'tok-e', flip:bool, fc, extra:''(css), fs}
 export function unitBodyHTML(u,opts){
-  const name=u.name||'';
+  const name=artOf(u);
   preloadSprite(name);
   const ring=opts.ring||'';
   const flip=opts.flip?'transform:scaleX(-1);':'';

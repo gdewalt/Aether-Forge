@@ -4,7 +4,7 @@ import { CLASS_SYN, FAC_SYN } from "./synergies.js";
 import { COLS, G, GRIDH, GRIDW, HR, ROWS, hexCenter } from "./engine-hex.js";
 import { EQUIP_BY_ID, unitPower, unitRarity } from "./data-loot.js";
 import { RNG } from "./rng.js";
-import { SC, hasSprite, unitBodyHTML } from "./ui-render-core.js";
+import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TERRAIN_ICONS, TERRAIN_META, terrainAt } from "./engine-battle-setup.js";
 import { TT, ULT_DESC, armTipAutoHide, hideTip, positionTip, showTip, toast } from "./ui-tooltips.js";
 import { applyUnitAbility, beginCombat, computeEnemyPositions, hasRelic, occupied } from "./engine-combat.js";
@@ -348,7 +348,7 @@ export function renderTokensPlan(){
     const p=G.battle.placements[k];const u=G.army[p.idx];const ce=hexCenter(p.c,p.r);
     const fc=FCOL[u.faction];const key=k;
     const d=document.createElement('div');d.className='unit-tok plan';
-    const useSpr=hasSprite(u.name);
+    const useSpr=hasSprite(artOf(u));
     d.style.cssText=`--hs:70px;left:${ce.x-35}px;top:${ce.y-35}px;pointer-events:auto`;
     d.setAttribute('draggable','true');
     d.innerHTML=`<div class="tok-stack${useSpr?' has-spr':''}">${unitBodyHTML(u,{ring:'tok-p',fc,size:useSpr?82:48,extra:useSpr?'':'cursor:grab'})}</div>`;
@@ -455,7 +455,7 @@ export function mkLive(tpl,side,c,r){
   const u=clone(tpl);
   // base snapshot (from the template) for live buff/debuff coloring in tooltips
   u._base={hp:tpl.hp, dmg:tpl.dmg, as:tpl.as, mv:tpl.mv, rng:tpl.rng, dr:tpl.dr||0, crit:tpl.crit||0};
-  u.maxhp=u.hp; u.side=side; u.c=c; u.r=r; u.mag=0; u.alive=true;
+  u.maxhp=u.hp; u.side=side; u.c=c; u.r=r; u.mag=0; u.alive=true; u.art=u.art||u.name;
   u.dr=u.dr||0; u.crit=u.crit||0; u.ultMul=1; u.healMul=1; u.atkcd=0; u.stun=0; u.slowT=0; u.slowStacks=0;
   u.bleedStacks=0; u.poisonStacks=0; u.burnT=0; u.arch=archetypeOf(u); u.retgt=0; u.tgt=null;
   u.chargeMul=u.chargeMul||1; u.lifesteal=0; u.armorPierce=0; u.movecd=0; u.shield=0; u.shieldT=0;
