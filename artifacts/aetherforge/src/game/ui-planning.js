@@ -48,11 +48,24 @@ export function showPlan(){
     <button class="primary" id="beginBtn" onclick="beginCombat()" disabled>Begin Battle ⚔</button></div></div>`;
   SC.innerHTML=html;
   b.placements={}; b.selIdx=null;
+  // restore last battle's deployment: units keep their hex if it's still a legal spot.
+  // Units are tracked by a run-scoped uid (assigned here) since army order can shift.
+  G.army.forEach(u=>{ if(!u._uid) u._uid=(G._uidSeq=(G._uidSeq||0)+1); });
+  if(G._lastPlace){
+    G.army.forEach((u,i)=>{
+      const s=G._lastPlace[u._uid]; if(!s)return;
+      if(Object.keys(b.placements).length>=G.cap)return;
+      if(s.c>3 || b.placements[s.c+','+s.r])return;
+      const tt=terrainAt(s.c,s.r); if(tt==='rubble'||tt==='lava')return;
+      b.placements[s.c+','+s.r]={idx:i,c:s.c,r:s.r};
+    });
+  }
   drawGrid('plan');
   if(hasRelic('scryingorb')) drawEnemyPreview();
   drawBench();
   updateSyn();
   fitGrid();
+  if(Object.keys(b.placements).length) afterPlace();   // render the restored tokens & enable Begin
   // bench is a drop target: dragging a placed unit here un-deploys it
   const bz=document.getElementById('benchZone');
   bz.addEventListener('dragover',e=>{if(DRAG&&DRAG.src==='hex'){e.preventDefault();bz.classList.add('dragover');}});
@@ -444,7 +457,7 @@ export function mkLive(tpl,side,c,r){
   u._base={hp:tpl.hp, dmg:tpl.dmg, as:tpl.as, mv:tpl.mv, rng:tpl.rng, dr:tpl.dr||0, crit:tpl.crit||0};
   u.maxhp=u.hp; u.side=side; u.c=c; u.r=r; u.mag=0; u.alive=true;
   u.dr=u.dr||0; u.crit=u.crit||0; u.ultMul=1; u.healMul=1; u.atkcd=0; u.stun=0; u.slowT=0; u.slowStacks=0;
-  u.bleedStacks=0; u.burnT=0; u.arch=archetypeOf(u); u.retgt=0; u.tgt=null;
+  u.bleedStacks=0; u.poisonStacks=0; u.burnT=0; u.arch=archetypeOf(u); u.retgt=0; u.tgt=null;
   u.chargeMul=u.chargeMul||1; u.lifesteal=0; u.armorPierce=0; u.movecd=0; u.shield=0; u.shieldT=0;
   if(u.gear){ ['weapon','armor','trinket'].forEach(slot=>{const id=u.gear[slot];if(id){const e=EQUIP_BY_ID[id];if(e&&e.apply)e.apply(u);}}); }
   applyUnitAbility(u);

@@ -40,7 +40,7 @@ export const COMMANDERS=[
    passive:"Each unit's first 3 attacks per battle deal +25% damage and apply bleed.",
    startFactions:['Neutral','Ironhold','Sylvan','Leonin'],
    army:['Mercenary','Spearman','Archer','Footman']},
-  {id:'korven',name:'Korven Ashheart',ico:'🔥',theme:'Sacrifice & rebirth',unlockFaction:'Emberkin',
+  {id:'korven',name:'Korven Ashheart',ico:'🔥',theme:'Sacrifice & rebirth',unlockFaction:'Phoenix',
    passive:'The first ally to die each battle revives at 50% HP.',
    startFactions:['Neutral','Ironhold','Sylvan','Phoenix'],
    army:['Footman','Spearman','Crossbowman','Mercenary']},
