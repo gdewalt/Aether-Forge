@@ -190,7 +190,7 @@ export function buildEnemyArmy(node){
   if(node.t==='boss'){
     const B=BOSSES[fname]||BOSSES['Dread Dominion'];
     const boss=clone(fac.units[0]);
-    boss.name=B.name; boss.ico=B.ico; boss.cls=B.cls; boss.t='m'; boss.rng=1;
+    boss.name=B.name; boss.art=B.art||B.name; boss.ico=B.ico; boss.cls=B.cls; boss.t='m'; boss.rng=1;
     const bossActMul = G.act===2?1.06 : G.act===3?1.12 : 1.0;   // later bosses scale up modestly
     boss.hp=Math.round(B.hp*2.0*GLOBAL_DIFF*bossActMul*actHpMult()); boss.dmg=Math.round(B.dmg*GLOBAL_DIFF*bossActMul*actDmgMult()); boss.as=B.as; boss.mv=0.9; boss.ult=B.ult; boss.boss=true;   // tougher bosses: +35% HP, act-scaled
     if(asc()>=6) boss.hp=Math.round(boss.hp*1.15);   // A6: Cruel Bosses
@@ -201,7 +201,7 @@ export function buildEnemyArmy(node){
     if(fname==='Dread Dominion'){
       for(let k=0;k<2;k++){
         const dl=clone(fac.units[1]||fac.units[0]);
-        dl.name='Drake Lieutenant'; dl.ico='🐉'; dl.t='m'; dl.rng=1;
+        dl.name='Drake Lieutenant'; dl.art='Drake Lieutenant'; dl.ico='🐉'; dl.t='m'; dl.rng=1;
         dl.hp=Math.round(boss.hp*0.45); dl.dmg=Math.round(B.dmg*0.7); dl.as=B.as; dl.mv=1.0;
         dl.ult={k:'nova',v:2.0,r:1,name:'Searing Breath'}; dl.subboss=true;
         dl.efaction=fname; dl.ecol=fac.col;

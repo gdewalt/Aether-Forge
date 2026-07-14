@@ -15,12 +15,13 @@ export const CCOL={Warrior:'#c62828',Mage:'#7c4d96',Cleric:'#d9a521',Rogue:'#566
    rar: authored rarity — 'Common'|'Uncommon'|'Rare'|'Legendary'. Drives how often this unit
    is offered in recruit/shop/reward pools (see rarityWeights() in data-loot.js) and its
    recruit cost (UNIT_COST). Edit this value directly to rebalance a unit's availability.
-   ab: optional {passive, tip} bag — passive is structured mechanical data (merged onto the
-   live unit by applyUnitAbility in engine-combat.js), tip is the human-readable flavor line
-   shown in tooltips (see abilityFor() in ui-tooltips.js).
+   ab: optional {passive, tip, art} bag — passive is structured mechanical data (merged onto
+   the live unit by applyUnitAbility in engine-combat.js), tip is the human-readable flavor
+   line shown in tooltips (see abilityFor() in ui-tooltips.js), art overrides which sprite
+   the unit uses (defaults to the unit's name; see artOf() in ui-render-core.js).
 */
 export function U(name,faction,cls,t,rng,hp,dmg,as,mv,ico,ult,rar,ab){
-  return {name,faction,cls,t,rng,hp,dmg,as,mv,ico,ult,rar,passive:ab&&ab.passive,tip:ab&&ab.tip};
+  return {name,faction,cls,t,rng,hp,dmg,as,mv,ico,ult,rar,passive:ab&&ab.passive,tip:ab&&ab.tip,art:(ab&&ab.art)||name};
 }
 // ultimate kinds: nova(aoe), heal, shield, execute, rally(+as), freeze(stun)
 export const POOL=[

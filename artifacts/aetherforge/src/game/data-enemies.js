@@ -5,10 +5,11 @@ import { simTick } from "./engine-combat.js";
 /* ---------- ENEMY FACTIONS (9, three per act) ----------
    Each enemy unit: EU(name,cls,type,rng,hp,dmg,as,mv,ico,ultObj|null)
    Bosses are defined per act-III faction (and reused thematically for earlier boss nodes). */
-// ab: optional {passive, tip} bag — passive is structured mechanical data (merged onto the
+// ab: optional {passive, tip, art} bag — passive is structured mechanical data (merged onto the
 // live unit by applyUnitAbility in engine-combat.js), tip is the human-readable flavor line
-// shown in tooltips (see abilityFor() in ui-tooltips.js).
-export function EU(name,cls,t,rng,hp,dmg,as,mv,ico,ult,ab){return {name,faction:'__enemy',cls,t,rng,hp,dmg,as,mv,ico,ult:ult||{k:'none',name:'—'},passive:ab&&ab.passive,tip:ab&&ab.tip};}
+// shown in tooltips (see abilityFor() in ui-tooltips.js), art overrides which sprite the unit
+// uses (defaults to the unit's name; see artOf() in ui-render-core.js).
+export function EU(name,cls,t,rng,hp,dmg,as,mv,ico,ult,ab){return {name,faction:'__enemy',cls,t,rng,hp,dmg,as,mv,ico,ult:ult||{k:'none',name:'—'},passive:ab&&ab.passive,tip:ab&&ab.tip,art:(ab&&ab.art)||name};}
 export const ENEMY_FACTIONS={
   // ---- ACT I ----
   'Brigand Host':{ico:'🏴',col:'#8a6d3b',units:[
