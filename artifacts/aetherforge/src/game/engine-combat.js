@@ -5,7 +5,7 @@ import { COLS, G, GRIDH, GRIDW, HR, ROWS, hexCenter, hexDist } from "./engine-he
 import { ENEMY_FACTIONS, ENEMY_SYN } from "./data-enemies.js";
 import { FCOL } from "./data-units.js";
 import { RNG, pick, rint } from "./rng.js";
-import { SC, hasSprite, unitBodyHTML } from "./ui-render-core.js";
+import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { archetypeOf, calcSyn, drawGrid, fitGrid, mkLive } from "./ui-planning.js";
 import { clone } from "./flow-forge.js";
 import { endBattle } from "./flow-battle-end.js";
@@ -36,23 +36,23 @@ export function applyUnitAbility(u){
 // Transformed creatures: each transform ultimate swaps the unit into one of these full forms —
 // new name (so the sprite resolves by name), attack type/range, stat multipliers, and its OWN ultimate.
 export const TRANSFORM_FORMS={
-  'Seraph':            {ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.0,dmg:2.0,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
-  'Fire Drake':        {ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.0,dmg:2.2,as:1.15,ult:{k:'nova',v:2.4,r:2,name:'Dragonfire Breath'}},
-  'Living Flame':      {ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.0,dmg:2.2,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
-  'Leviathan':         {ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
-  'Thunder Beast':     {ico:'🐃',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:2.1,as:1.2, ult:{k:'chain',v:2.0,r:4,name:'Thunderstampede'}},
-  'Greater Phoenix':   {ico:'🦅',cls:'Beast',  t:'r',rng:3, hp:1.0,dmg:2.2,as:1.25,ult:{k:'nova',v:2.2,r:2,name:'Solar Flare'}},
-  'Mountain Titan':    {ico:'🗻',cls:'Guardian',t:'m',rng:1,hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.2,r:2,name:'Seismic Slam'}},
-  'Brood Queen':       {ico:'🦂',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:1.9,as:1.3, ult:{k:'summon',token:'swarmling',n:3,v:1,name:'Spawn Brood'}},
-  'Grizzly Bear':      {ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:2.4,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
+  'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.0,dmg:2.0,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
+  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.0,dmg:2.2,as:1.15,ult:{k:'nova',v:2.4,r:2,name:'Dragonfire Breath'}},
+  'Living Flame':      {art:'Living Flame',   ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.0,dmg:2.2,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
+  'Leviathan':         {art:'Leviathan',      ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
+  'Thunder Beast':     {art:'Thunder Beast',  ico:'🐃',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:2.1,as:1.2, ult:{k:'chain',v:2.0,r:4,name:'Thunderstampede'}},
+  'Greater Phoenix':   {art:'Greater Phoenix',ico:'🦅',cls:'Beast',  t:'r',rng:3, hp:1.0,dmg:2.2,as:1.25,ult:{k:'nova',v:2.2,r:2,name:'Solar Flare'}},
+  'Mountain Titan':    {art:'Mountain Titan', ico:'🗻',cls:'Guardian',t:'m',rng:1,hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.2,r:2,name:'Seismic Slam'}},
+  'Brood Queen':       {art:'Brood Queen',    ico:'🦂',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:1.9,as:1.3, ult:{k:'summon',token:'swarmling',n:3,v:1,name:'Spawn Brood'}},
+  'Grizzly Bear':      {art:'Grizzly Bear',   ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:2.4,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
 };
 export const TOKENS={
-  swarmling:{name:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
-  squirrel:{name:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
-  broodling:{name:'Broodling',cls:'Beast',t:'m',rng:1,hp:140,dmg:22,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
-  skeleton:{name:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:50,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
-  turret:{name:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:280,dmg:45,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
-  scrapbot:{name:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:180,dmg:22,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
+  swarmling:{name:'Swarmling',art:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
+  squirrel:{name:'Squirrel',art:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
+  broodling:{name:'Broodling',art:'Broodling',cls:'Beast',t:'m',rng:1,hp:140,dmg:22,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
+  skeleton:{name:'Skeleton',art:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:50,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
+  turret:{name:'Gun Turret',art:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:280,dmg:45,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
+  scrapbot:{name:'Scrap Bot',art:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:180,dmg:22,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
 };
 export const TOKEN_SIDE_CAP=12;
 export function spawnToken(side,key,nearC,nearR,mult){
@@ -300,7 +300,7 @@ export function renderCombat(){
     const bossSz=u.boss?(u.foot>=3?'122px':'100px'):null;
     const sz=u.boss?bossSz:u.subboss?'80px':u.token?'48px':'70px';const fs=u.boss?(u.foot>=3?'50px':'40px'):u.subboss?'38px':u.token?'24px':'34px';
     const sprH=u.boss?(u.foot>=3?158:130):u.subboss?112:u.token?62:98;  // standee heights (tokens are smaller minions)
-    const useSpr=hasSprite(u.name);
+    const useSpr=hasSprite(artOf(u));
     // Shield visuals: blue glow on the token + a cyan overlay on the HP bar sized to the shield fraction
     const shielded=u.shield>0;
     const shGlow=shielded?`box-shadow:0 0 ${6+ (u._shieldFx>0?10:0)}px ${2+(u._shieldFx>0?2:0)}px rgba(124,220,255,${0.55+(u._shieldFx>0?0.35:0)}), inset 0 0 6px rgba(124,220,255,.5);`:'';
@@ -1164,8 +1164,9 @@ export function castUlt(u,esc,_echo){
       const T=u.ult;                                   // {form, fico, hp, dmg, as, rng, name}
       const F=TRANSFORM_FORMS[T.form]||{};
       u._origName=u.name; u._origIco=u.ico; u._origCls=u.cls; u._origT=u.t; u._origRng=u.rng;
-      // identity → the transformed creature (sprite resolves by this new name)
+      // identity → the transformed creature (sprite resolves by the form's art key)
       u.name=T.form||'Beast';
+      u.art=F.art||T.form||'Beast';
       u.ico=F.ico||T.fico||'🐲';
       if(F.cls)u.cls=F.cls;
       if(F.t)u.t=F.t;                                  // melee/ranged can change (Drake→ranged, Leviathan→melee)
