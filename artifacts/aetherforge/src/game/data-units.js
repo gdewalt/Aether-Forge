@@ -43,7 +43,7 @@ export const POOL=[
   // Sylvan — ranged scaling (Archer)
   U('Greenwood Archer','Sylvan','Archer','r',4,380,64,1.05,1.3,'🏹',{k:'zone',v:0.55,r:2,dur:4,zico:'🏹',zcol:'#ff7a3a',name:'Hail of Arrows'},'Uncommon',{passive:{"_condRange":{"amt":1,"when":"noEnemyAdj"}},tip:"Keen Eye: +1 range while no enemy is adjacent."}),
   U('Hawkeye Ranger','Sylvan','Archer','r',5,420,86,.95,1.2,'🎯',{k:'beam',v:3.2,name:'Piercing Shot'},'Rare',{passive:{"_markAmp":0.15},tip:"Hunter's Mark: marked target takes +15% from all sources."}),
-  U('Thornblade Dancer','Sylvan','Rogue','m',1,440,60,1.25,1.5,'🍃',{k:'blink',v:3.0,name:'Thornstep'},'Common',{passive:{"dodge":0.2},tip:"Evasion: 20% chance to dodge an attack."}),
+  U('Thornblade Dancer','Sylvan','Rogue','m',1,440,60,1.25,2.0,'🍃',{k:'blink',v:3.0,name:'Thornstep'},'Common',{passive:{"dodge":0.2},tip:"Evasion: 20% chance to dodge an attack."}),
   U('Druid of the Grove','Sylvan','Cleric','r',3,500,44,.8,1.1,'🌿',{k:'transform',form:'Grizzly Bear',fico:'🐻',hp:1.6,dmg:2.4,as:1.1,name:'Wild Shape'},'Uncommon',{passive:{"chargeMul":1.6,"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Regrowth (periodic 4s): heals lowest-HP ally."}),
   U('Briar Scout','Sylvan','Archer','r',4,340,58,1.1,1.22,'🏹',{k:'nova',v:1.6,r:1,name:'Thorn Burst'},'Common',{passive:{"slow":true},tip:"Tangleshot: hits slow the target 15% 2s."}),
   U('Lady Aelwyn, Voice of the Wild','Sylvan','Archer','r',6,760,98,1.1,1.09,'🦌',{k:'summon',v:1,n:4,token:'squirrel',name:'Call of the Wild'},'Legendary',{passive:{"_pierce":{"extra":1}},tip:"Court's Blessing: all Sylvan attacks pierce 1 extra target."}),
@@ -59,9 +59,9 @@ export const POOL=[
   // Leonin — bleed & speed (Rogue/Beast)
   U('Maned Brawler','Leonin','Warrior','m',1,700,65,1.15,1.5,'🦷',{k:'berserk',v:0.5,d:0.3,name:'Blood Rage'},'Common',{passive:{"_vs":{"bled":1.2}},tip:"Bloodscent: +20% AS vs any bleeding enemy."}),
   U('Pridehunter','Leonin','Archer','r',3,420,60,1.1,1.4,'🌾',{k:'chain',v:1.8,j:3,name:'Bouncing Chakram'},'Uncommon',{passive:{"slow":true},tip:"Hamstring Shot: hits on bled targets slow them 20% 2s."}),
-  U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,1.43,'🦁',{k:'burst', r:1, n:3, v:1.2, name:'Rapid Slashes'},'Common',{passive:{"_firstAtkBleed":2},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
+  U('Cub Skirmisher','Leonin','Rogue','m',1,420,44,1.35,2.0,'🦁',{k:'burst', r:1, n:3, v:1.2, name:'Rapid Slashes'},'Common',{passive:{"_firstAtkBleed":2},tip:"Quick Claws: first attack each fight applies 2 Bleed."}),
   U('Savannah Seer','Leonin','Cleric','r',3,450,46,0.9,1.16,'🐾',{k:'curse',v:1,r:2,name:'Bloodletting Curse'},'Uncommon',{passive:{"lifesteal":0.2,"_healAllyOnHit":0.2},tip:"Pridesong: attacks heal the lowest-HP ally for 20% of damage dealt."}),
-  U('Sunmane Duelist','Leonin','Rogue','m',1,700,72,1.35,1.36,'🐆',{k:'blink',v:3.0,name:'Hundred Cuts'},'Rare',{passive:{"_counter":{"frac":0.5,"bleed":true}},tip:"Riposte: on being hit, counter for 50% + 1 Bleed."}),
+  U('Sunmane Duelist','Leonin','Rogue','m',1,700,72,1.35,2.2,'🐆',{k:'blink',v:3.0,name:'Hundred Cuts'},'Rare',{passive:{"_counter":{"frac":0.5,"bleed":true}},tip:"Riposte: on being hit, counter for 50% + 1 Bleed."}),
   U('Pride Matriarch','Leonin','Warrior','m',1,980,90,1.25,1.36,'🌾',{k:'drain',v:3.2,name:'Apex Predator'},'Legendary',{passive:{"_periodicFactionBuff":{"fac":"Leonin","every":5,"bleedCap":1,"asAmt":0.10}},tip:"Queen's Roar (periodic 5s): Leonin +1 max Bleed stack & +10% AS."}),
   
   // Emberkin — burn AoE (Mage)
@@ -84,13 +84,13 @@ export const POOL=[
   U('Thunderhide Bull','Stormherd','Beast','m',1,620,56,1.2,1.6,'🐃',{k:'transform',form:'Thunder Beast',fico:'🐃',hp:1.0,dmg:1.0,as:2.0,name:'Storm Avatar'},'Common'),
   U('Sky Shaman','Stormherd','Mage','r',4,420,66,.95,1.2,'🌩️',{k:'zone',v:0.6,r:1,dur:4,zico:'🌩️',zcol:'#ff7a3a',name:'Summon Storm'},'Uncommon',{passive:{"_vs":{"shocked":1.25}},tip:"Conduction: bonus damage to enemies already hit by lightning this fight."}),
   U('Thunder Patriarch','Stormherd','Beast','m',1,900,76,1.0,1.3,'🦬',{k:'quake',v:1.4,name:'Stampede'},'Rare',{passive:{"_auraAS":0.08},tip:"Stormcaller: nearby allies gain +8% attack speed."}),
-  U('Galeclaw Skirmisher','Stormherd','Rogue','m',1,440,54,1.3,1.63,'🌩️',{k:'chain',v:1.7,j:5,name:'Chain Lightning'},'Common',{passive:{"_asPerTravel":true},tip:"Windrunner: +AS the further it traveled before attacking."}),
+  U('Galeclaw Skirmisher','Stormherd','Rogue','m',1,440,54,1.3,2.1,'🌩️',{k:'chain',v:1.7,j:5,name:'Chain Lightning'},'Common',{passive:{"_asPerTravel":true},tip:"Windrunner: +AS the further it traveled before attacking."}),
   U('Totem Warden','Stormherd','Cleric','r',3,520,44,0.8,1.02,'🪶',{k:'rally',v:1.1,name:'Storm Totem'},'Uncommon',{passive:{"_auraAS":0.12},tip:"Spirit Totem (periodic 4s): nearby allies +12% AS."}),
   U('Kharz, Stormhorn Chieftain','Stormherd','Warrior','m',1,1050,100,1.1,1.5,'🐂',{k:'quake',v:2.0,name:'Thunderstomp'},'Legendary',{passive:{"crit":0.15},tip:"Heart of the Storm: all crits chain lightning to 2 foes."}),
   
   // Voidtouched — demons & warlocks: lifesteal & execute (Warrior/Mage/Rogue)
   U('Void Cultist','Voidtouched','Mage','r',4,400,70,.9,1.1,'👁️',{k:'charm',v:4,name:'Corrupt Mind'},'Common',{passive:{"_markAmp":0.1},tip:"Corruption: marked foes take +10% damage from all sources for 3s."}),
-  U('Soul Leech','Voidtouched','Rogue','m',1,520,62,1.25,1.5,'🦇',{k:'drain',v:3.2,name:'Blood Frenzy'},'Common',{passive:{"lifesteal":0.12},tip:"Siphon: basic attacks heal for 12% of damage dealt."}),
+  U('Soul Leech','Voidtouched','Rogue','m',1,520,62,1.25,1.8,'🦇',{k:'drain',v:3.2,name:'Blood Frenzy'},'Common',{passive:{"lifesteal":0.12},tip:"Siphon: basic attacks heal for 12% of damage dealt."}),
   U('Pit Tyrant','Voidtouched','Guardian','m',1,1100,82,.8,1.0,'😈',{k:'bulwark',v:300,r:2,name:'Abyssal Aegis'},'Rare',{passive:{"_healOnEnemyDeath":0.05},tip:"Devour: heals 5% max HP whenever a nearby enemy dies."}),
   U('Dread Reaver','Voidtouched','Warrior','m',1,780,76,0.9,1.02,'🔮',{k:'drain',v:2.8,name:'Reaping Sweep'},'Uncommon',{passive:{"lifesteal":0.3},tip:"Unholy Vigor: lifesteals 30%."}),
   U('Pact Priest','Voidtouched','Cleric','r',3,470,56,0.8,1.02,'🌑',{k:'zone',v:0.55,r:1,dur:4,zico:'🔥',zcol:'#ff7a3a',name:'Dark Communion'},'Uncommon',{passive:{"_periodicHeal":{"amt":80,"range":3,"every":4},"_periodicTeamHeal":{"amt":0.12,"fac":null,"every":4,"lowest":true}},tip:"Blood Tithe (periodic 4s): heals the lowest-HP ally, paying a little of its own HP."}),
@@ -113,7 +113,7 @@ export const POOL=[
   U('The Eternal Bulwark','Gravewardens','Guardian','m',1,2000,55,0.45,0.8,'🤖',{k:'bulwark',v:600,r:3,name:'Unbreakable'},'Legendary',{passive:{"_rangedWard":0.1},tip:"Living Wall: all friendly units take -10% ranged damage."}),
   
   // Hivemind — insect swarm, spawns Swarmlings
-  U('Mantis Striker','Hivemind','Rogue','m',1,460,54,1.35,1.6,'🦗',{k:'blink',v:3.0,name:'Ambush'},'Uncommon',{passive:{"_vs":{"full":1.25}},tip:"Scything: attacks against full-HP foes deal +25%."}),
+  U('Mantis Striker','Hivemind','Rogue','m',1,460,54,1.35,2.3,'🦗',{k:'blink',v:3.0,name:'Ambush'},'Uncommon',{passive:{"_vs":{"full":1.25}},tip:"Scything: attacks against full-HP foes deal +25%."}),
   U('Beetle Bulwark','Hivemind','Guardian','m',1,900,50,.8,1.0,'🪲',{k:'bulwark',v:280,r:2,name:'Carapace Wall'},'Uncommon',{passive:{"dr":0.03,"_condArmor":{"perFaction":{"fac":"Hivemind","amt":0.06,"cap":0.36}}},tip:"Carapace: gains +6% armor for each living Hivemind ally."}),
   U('Drone Tender','Hivemind','Cleric','r',3,440,36,.85,1.2,'🐝',{k:'heal',v:200,name:'Royal Jelly'},'Rare',{passive:{"_periodicSummon":{"key":"swarmling","every":5,"mult":1,"healHive":true}},tip:"Royal Jelly (periodic 4s): heals lowest-HP Hivemind + spawns a Swarmling."}),
   U('Skitterer','Hivemind','Beast','m',1,260,24,1.5,1.63,'🐝',{k:'summon',v:1,n:2,token:'swarmling',name:'Multiply'},'Common',{passive:{"_nthSpawn":{"n":3,"key":"swarmling"}},tip:"Breed: every 3rd attack spawns a Swarmling."}),
@@ -129,9 +129,9 @@ export const POOL=[
   U('The Cosmic Oracle','Stargazers','Mage','r',5,760,95,0.7,0.95,'🌌',{k:'rally',v:1.0,name:'Convergence'},'Legendary',{passive:{"_ultEcho":true},tip:"Echoing Cosmos: friendly ultimates have a 25% chance to fire a second time."}),
   
   // Arachnari — webs that root, amplified damage on webbed foes
-  U('Web Spinner','Arachnari','Rogue','m',1,380,40,1.2,1.43,'🕷️',{k:'freeze',v:1.5,r:1,name:'Ensnaring Burst'},'Common',{passive:{"_nthSpawn":{"n":3,"key":"swarmling"}},tip:"Spinneret: every 3rd attack spawns a Broodling."}),
+  U('Web Spinner','Arachnari','Rogue','m',1,380,40,1.2,1.9,'🕷️',{k:'freeze',v:1.5,r:1,name:'Ensnaring Burst'},'Common',{passive:{"_nthSpawn":{"n":3,"key":"swarmling"}},tip:"Spinneret: every 3rd attack spawns a Broodling."}),
   U('Silk Slinger','Arachnari','Archer','r',4,340,52,0.95,1.16,'🕸️',{k:'nova',v:1.7,r:2,name:'Sticky Volley'},'Common',{passive:{"web":true},tip:"Webshot: attacks apply 1 Web stack (slow 12%, stacks)."}),
-  U('Venomfang Lurker','Arachnari','Rogue','m',1,460,58,1.3,1.56,'🪺',{k:'blink',v:3.0,name:'Jumping Spider'},'Uncommon',{passive:{"_vs":{"slowed":1.3}},tip:"Ruthless: +30% damage vs webbed/slowed targets."}),
+  U('Venomfang Lurker','Arachnari','Rogue','m',1,460,58,1.3,2.2,'🪺',{k:'blink',v:3.0,name:'Jumping Spider'},'Uncommon',{passive:{"_vs":{"slowed":1.3}},tip:"Ruthless: +30% damage vs webbed/slowed targets."}),
   U('Broodmother Acolyte','Arachnari','Cleric','r',3,480,42,0.85,1.09,'🥚',{k:'summon',v:1,n:3,token:'broodling',name:'Hatch Swarm'},'Rare',{passive:{"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Nurture (periodic 4s): heals lowest-HP ally + spawns a Broodling."}),
   U('Carapace Sentinel','Arachnari','Guardian','m',1,1050,64,0.7,0.88,'🜸',{k:'bulwark',v:420,r:2,name:'Living Web Wall'},'Uncommon',{passive:{"web":true},tip:"Web Anchor: adjacent enemies slowed 20%; immune to displacement."}),
   U('Queen Atraxa, the Brood Empress','Arachnari','Mage','r',3,1150,98,0.9,1.02,'👑',{k:'summon',v:1,n:4,token:'broodling',name:'Tangleweb Cataclysm'},'Legendary',{passive:{"web":true},tip:"Living Hive: Broodlings never expire and apply +1 Web stack."}),
