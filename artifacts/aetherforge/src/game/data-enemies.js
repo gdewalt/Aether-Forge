@@ -21,7 +21,7 @@ export const ENEMY_FACTIONS={
   ]},
   'Wildwood Pack':{ico:'🐺',col:'#5b7b3a',units:[
     EU('Dire Wolf','Beast','m',1,420,46,1.25,1.7,'🐺',{k:"berserk",v:0.45,d:0.25,name:"Frenzy"},{passive:{"_auraAS":0.08},tip:"Pack Hunter: nearby allies +8% attack speed."}),
-    EU('Boar','Beast','m',1,620,42,.8,1.3,'🐗',{k:"banish",name:"Gore Toss"},{passive:{"reflect":0.2},tip:"Thick Hide: attackers take 20% reflected damage."}),
+    EU('Boar','Beast','m',1,620,42,.8,1.3,'🐗',{k:"banish",name:"Gore Toss"},{passive:{"reflect":0.2},tip:"Bristled: attackers take 20% reflected damage."}),
     EU('Treant Sapling','Guardian','m',1,820,34,.6,0.8,'🌲',{k:"bulwark",v:100,r:2,name:"Bark Ward"},{passive:{"_regenIdle":0.02},tip:"Rooted: regenerates 2% max HP/sec while stationary."}),
     EU('Spitting Viper','Beast','r',3,260,40,1.3,1.9,'🐍',{k:"curse",name:"Venom Spray"},{passive:{"spore":true},tip:"Venomous: attacks apply poison."}),
     EU('Pack Alpha','Beast','m',1,540,54,1.1,1.6,'🐾',{k:"rally",v:0.6,name:"Howl"},{passive:{"_auraAS":0.08},tip:"Alpha: nearby allies +8% attack speed."}),
@@ -35,11 +35,11 @@ export const ENEMY_FACTIONS={
   ]},
   // ---- ACT II ----
   'Iron Legion':{ico:'🤖',col:'#7a7f88',units:[
-    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:180,r:2,name:"Bulwark Protocol"},{passive:{"aegis":0.12,"aegisCap":0.25},tip:"Plating: converts 12% of damage taken into armor (aegis)."}),
+    EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:100,r:2,name:"Bulwark Protocol"},{passive:{"aegis":0.05,"aegisCap":0.25},tip:"Plating: converts 5% of damage taken into armor (aegis)."}),
     EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"},{passive:{"dr":0.06,"_condArmor":{"adjFaction":{"fac":"__enemy","amt":0.12}}},tip:"Phalanx: +12% armor while adjacent to another ally."}),
     EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"},{passive:{"armorPierce":0.1},tip:"Siege Protocol: attacks ignore 20% of target armor."}),
     EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Reactivate"},{passive:{"_auraAllyDmg":0.1},tip:"Command Aura: nearby allies +10% damage."}),
-    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"},{passive:{"_periodicHeal":{"amt":90,"range":3,"every":4},"_periodicShield":{"amt":90,"range":3,"every":5}},tip:"Field Repair: shields the nearest ally for 90 every 5s."}),
+    EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"},{passive:{"_periodicHeal":{"amt":90,"range":3,"every":4},"_periodicShield":{"amt":50,"range":3,"every":5}},tip:"Field Repair: shields the nearest ally for 50 every 5s."}),
   ]},
   'Frostbound Clan':{ico:'🧊',col:'#6fa8c7',units:[
     EU('Frost Raider','Warrior','m',1,620,54,.95,1.2,'🪓',{k:"berserk",v:0.5,d:0.3,name:"Coldblood Fury"},{passive:{"_dmgAboveHP":{"amt":0.2,"thr":0.6}},tip:"Coldblood: +20% damage while above 60% HP."}),
@@ -49,7 +49,7 @@ export const ENEMY_FACTIONS={
     EU('Frost Giant','Guardian','m',1,1320,82,.6,0.9,'🗿',{k:"freeze",v:1.6,r:2,name:"Avalanche"},{passive:{"ccImmune":true},tip:"Immovable: cannot be knocked back."}),
   ]},
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
-    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:'doubleaxe',v:3.0,n:4,name:'Grapeshot'},{passive:{"burn":1,"burnDur":2},tip:"Incendiary: attacks apply burn."}),
+    EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"doubleaxe",v:2.0,n:4,name:"Grapeshot"},{passive:{"burn":1,"burnDur":2},tip:"Incendiary: attacks apply burn."}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"},{passive:{"reflect":0.25},tip:"Molten Skin: attackers take 25% reflected damage."}),
     EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"},{passive:{"burn":1,"burnDur":2},tip:"Searing: attacks apply burn."}),
     EU('Magma Adept','Mage','r',4,600,65,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"},{passive:{"_auraMagicResist":0.08},tip:"Heat Haze: nearby allies take -8% magic damage (ward field)."}),
@@ -65,10 +65,10 @@ export const ENEMY_FACTIONS={
   ]},
   'Stormhalla':{ico:'⚡',col:'#d8b13a',units:[
     EU('Valkyrie','Beast','r',4,560,72,1.0,1.8,'🪽',{k:"blink",name:"Diving Strike"},{passive:{"crit":0.15},tip:"Winged: +15% crit chance."}),
-    EU('Thunder Lord','Mage','r',4,520,84,.9,1.1,'⚡',{k:"chain",v:2,j:4,name:"Chain Lightning"},{passive:{"chargeMul":1.2},tip:"Storm-Charged: ultimate charges 20% faster."}),
-    EU('Storm Cavalry','Warrior','m',1,760,68,1.0,1.7,'🐎',{k:"rally",v:0.5,name:"Charge"},{passive:{"_dmgAboveHP":{"amt":0.2,"thr":0.6}},tip:"Lancer: +20% damage while above 60% HP."}),
+    EU('Thunder Lord','Mage','r',4,520,84,.9,1.1,'⚡',{k:"chain",v:2,j:4,name:"Chain Lightning"},{passive:{"chargeMul":1.2},tip:"Imbued: ultimate charges 20% faster."}),
+    EU('Storm Cavalry','Warrior','m',1,760,68,1.0,1.7,'🐎',{k:"rally",v:0.5,name:"Charge"},{passive:{"_dmgAboveHP":{"amt":0.2,"thr":0.6}},tip:"Charge: +20% damage while above 60% HP."}),
     EU('Sky Warden','Guardian','m',1,1080,64,.7,1.0,'🛡️',{k:"bulwark",v:300,r:2,name:"Storm Ward"},{passive:{"aegis":0.12,"aegisCap":0.25},tip:"Aegis: converts 12% of damage taken into armor."}),
-    EU('Tempest Rider','Beast','m',1,620,66,1.2,1.8,'🌩️',{k:"blink",name:"Sky Dive"},{passive:{"_auraAS":0.08},tip:"Gale: nearby allies +8% attack speed."}),
+    EU('Tempest Rider','Beast','m',1,620,66,1.2,1.8,'🌩️',{k:"blink",name:"Sky Dive"},{passive:{"_auraAS":0.08},tip:"Tailwind: nearby allies +8% attack speed."}),
   ]},
   'Dread Dominion':{ico:'👑',col:'#9e2b25',units:[
     EU('Tyrant Guard','Guardian','m',1,1200,80,.7,0.9,'🛡️',{k:"bulwark",v:240,r:2,name:"Iron Will"},{passive:{"ccImmune":true},tip:"Unbreakable: cannot be knocked back."}),
@@ -83,11 +83,11 @@ export const ENEMY_FACTIONS={
 export const ELITES={
   'Brigand Host':[
     EU('Brigand Captain','Warrior','m',1,820,84,1.0,1.1,'🗡️',{k:'berserk',v:0.5,d:0.35,name:'Warcry'},{passive:{"_auraAllyDmg":0.1},tip:"Warlord: nearby allies +10% damage."}),
-    EU('Master Outlaw','Rogue','r',3,640,96,1.1,1.2,'🏹',{k:'beam',v:1.8,name:'Death Volley'},{passive:{"crit":0.2},tip:"Deadeye: +20% crit chance."}),
+    EU('Master Outlaw','Rogue','r',3,640,96,1.1,1.2,'🏹',{k:"doubleaxe",v:1.0,n:6,name:"Fusillade"},{passive:{"crit":0.2},tip:"Deadeye: +20% crit chance."}),
   ],
   'Wildwood Pack':[
     EU('Dire Alpha','Beast','m',1,900,90,1.15,1.7,'🐺',{k:'berserk',v:0.55,d:0.3,name:'Blood Frenzy'},{passive:{"_auraAS":0.08},tip:"Apex Predator: nearby allies +8% attack speed."}),
-    EU('Elder Treant','Guardian','m',1,1500,76,0.6,0.7,'🌳',{k:'bulwark',v:320,r:2,name:'Grovekeeper'},{passive:{"reflect":0.25},tip:"Ancient Bark: attackers take 25% reflected damage."}),
+    EU('Elder Treant','Guardian','m',1,1500,76,0.6,0.7,'🌳',{k:'bulwark',v:220,r:2,name:'Grovekeeper'},{passive:{"reflect":0.25},tip:"Ancient Bark: attackers take 25% reflected damage."}),
   ],
   'Bog Cult':[
     EU('Plague Matron','Mage','r',4,760,92,0.9,1.0,'🧫',{k:'zone',v:1.8,r:2,name:'Pestilence'},{passive:{"spore":true},tip:"Contagion: attacks apply poison."}),
@@ -128,10 +128,10 @@ export const ENEMY_SYN={
   'Brigand Host':(E,n)=>{ E.forEach(u=>{u._plunder=0.04; u._plunderMax=0.6;}); },        // Plunder: +dmg per kill (wired below)
   'Wildwood Pack':(E,n)=>{ const as=n>=4?1.18:1.10; E.forEach(u=>{u.as*=as; if(u.t==='r'||u.cls==='Beast')u.target='backline';}); }, // pack speed + dive backline
   'Bog Cult':(E,n)=>{ E.forEach(u=>{u.spore=true;}); },                                    // poison clouds on hit (reuses spore)
-  'Iron Legion':(E,n)=>{ const dr=n>=4?0.18:0.12; E.forEach(u=>{u.dr=(u.dr||0)+dr;}); },   // shared armor wall
-  'Frostbound Clan':(E,n)=>{ E.forEach(u=>{u.slow=true; u.deepfreeze=true; u.freezeAt=4;}); }, // stacking slow→freeze (reuses Tidecaller mechanic)
+  'Iron Legion':(E,n)=>{ const dr=n>=4?0.12:0.10; E.forEach(u=>{u.dr=(u.dr||0)+dr;}); },   // shared armor wall
+  'Frostbound Clan':(E,n)=>{ E.forEach(u=>{u.slow=true; u.deepfreeze=true; u.freezeAt=5;}); }, // stacking slow→freeze (reuses Tidecaller mechanic)
   'Emberforge Syndicate':(E,n)=>{ E.forEach(u=>{u.burn=1.0; u.burnDur=2.5; if(u.t==='r')u.dmg=Math.round(u.dmg*1.12);}); }, // burn + artillery (reuses Emberkin)
-  'Void Choir':(E,n)=>{ E.forEach(u=>{u.lifesteal=(u.lifesteal||0)+0.12; u._killEmpower=0.05;}); }, // lifesteal + empower on kill
+  'Void Choir':(E,n)=>{ E.forEach(u=>{u.lifesteal=(u.lifesteal||0)+0.15; u._killEmpower=0.05;}); }, // lifesteal + empower on kill
   'Stormhalla':(E,n)=>{ const as=n>=4?1.15:1.08; E.forEach(u=>{u.as*=as; u.mv*=1.12; u.lightning=true;}); }, // speed + chain lightning (reuses Stormherd)
   'Dread Dominion':(E,n)=>{ E.forEach(u=>{u.hp=Math.round(u.hp*1.12); u.dmg=Math.round(u.dmg*1.12); u._killEmpower=0.04;}); }, // overwhelming stats + empower
 };
@@ -145,7 +145,7 @@ export const BOSSES={
     desc:'Plunder: grows stronger with every kill his host scores.'},
   'Wildwood Pack':{name:'Old Gnashroot',ico:'🐺',cls:'Beast',hp:1650,dmg:74,as:1.0,foot:2,
     ult:{k:'nova',v:1.8,r:1,name:'Feral Howl'},mech:'summon',
-    desc:'Summons a wolf pack at 50% HP; punishes slow clears.'},
+    desc:'Summons a wolf pack at 50% HP.'},
   'Bog Cult':{name:'Mother Mireveil',ico:'🧪',cls:'Mage',hp:1400,dmg:70,as:.85,foot:2,
     ult:{k:'nova',v:2.2,r:2,name:'Pox Cloud'},mech:'plague',
     desc:'Below 50% HP, doubles all poison on the field.'},
@@ -167,7 +167,7 @@ export const BOSSES={
     ult:{k:'nova',v:2.4,r:2,name:'Chain Tempest'},mech:'stormcall',
     desc:'Summons board-wide chain-lightning storms; flies over your front line.'},
   'Dread Dominion':{name:'Vorkagar the World-Ender',ico:'🐲',cls:'Warrior',hp:4000,dmg:128,as:.9,foot:3,
-    ult:{k:'nova',v:2.8,r:2,name:'Annihilation'},mech:'worldender',
+    ult:{k:'quake',v:2.8,r:2,name:'Annihilation'},mech:'worldender',
     desc:'A multi-phase elder dragon flanked by Drake Lieutenants; full-board fire breath.'},
 };
 
