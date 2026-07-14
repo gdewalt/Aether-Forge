@@ -202,6 +202,9 @@ export function beginCombat(){
   const b=G.battle;
   const mk=mkLive;
   let P=[], E=[];
+  // remember where each unit was deployed so the next battle's plan screen can prefill it
+  G._lastPlace=G._lastPlace||{};
+  for(const k in b.placements){ const p=b.placements[k]; const au=G.army[p.idx]; if(au&&au._uid) G._lastPlace[au._uid]={c:p.c,r:p.r}; }
   for(const k in b.placements){const p=b.placements[k];P.push(mk(ensureGear(G.army[p.idx]),'P',p.c,p.r));}
   placeEnemies(b.enemyTemplates, E, mk);
   applySyn(P,true); applySyn(E,false);
@@ -327,7 +330,7 @@ export function activeDebuffs(u){
   if(u.slowT>0||u.slowStacks>0){ const st=Math.max(1,u.slowStacks||0); const mv=Math.round((1-slowMoveRate(u))*100), at=Math.round((1-slowAtkRate(u))*100); d.push({icon:'🐌',label:'Slowed (−'+mv+'% move, −'+at+'% attack)',color:'#9fd0ff',detail:u.slowStacks>0?'×'+u.slowStacks:(u.slowT).toFixed(1)+'s'}); }
   if(u.bleedStacks>0) d.push({icon:'🩸',label:'Bleeding',color:'#e8736b',detail:'×'+u.bleedStacks});
   if(u.burnT>0)       d.push({icon:'🔥',label:'Burning',color:'#ffa14a',detail:(u.burnT).toFixed(1)+'s'});
-  if(u.poisonT>0)     d.push({icon:'🟢',label:'Poisoned',color:'#9ccc65',detail:(u.poisonT).toFixed(1)+'s'});
+  if(u.poisonT>0)     d.push({icon:'🟢',label:'Poisoned',color:'#9ccc65',detail:(u.poisonStacks>1?'×'+u.poisonStacks+' · ':'')+(u.poisonT).toFixed(1)+'s'});
   if(u.curseT>0)      d.push({icon:'☠',label:'Cursed (+25% dmg taken)',color:'#b07cd8',detail:(u.curseT).toFixed(1)+'s'});
   if(u._charmT>0)     d.push({icon:'💗',label:'Charmed (fighting for the enemy)',color:'#ff7ab0',detail:(u._charmT).toFixed(1)+'s'});
   return d;
@@ -530,7 +533,7 @@ export function simTick(){
     if(u._periodicHeal){ u._phT=(u._phT||0)-TICK; if(u._phT<=0){ u._phT=u._periodicHeal.every; let pool=living(u.side).filter(m=>m!==u&&hexDist(m,u)<=u._periodicHeal.range); if(!u._cleanse)pool=pool.filter(m=>m.hp<m.maxhp); if(pool.length){ let t; if(u._cleanse){ const debuffed=pool.filter(m=>m.slowT>0||m.burnT>0||m.poisonT>0||m.bleedStacks>0||m.curseT>0); t=debuffed.length?debuffed.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]:pool.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; } else t=pool.sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; if(t.hp<t.maxhp)t.hp=Math.min(t.maxhp,t.hp+u._periodicHeal.amt*healScale(u)*(1-(t._healCut||0))); if(u._cleanse)cleanseDebuffs(t); healRingAt(t); if(u._periodicHealCharge)t.mag=Math.min(100,t.mag+u._periodicHealCharge); if(u._healGrantsAS){t._healAS=u._healGrantsAS;t._healAST=3;} if(u._healShield)applyShield(t,u._periodicHeal.amt*0.5*healScale(u)); } } }
     if(u._periodicShield){ u._psT=(u._psT||0)-TICK; if(u._psT<=0){ u._psT=u._periodicShield.every; if(u._periodicShield.self){ [u,...living(u.side).filter(m=>m!==u&&hexDist(m,u)<=1)].forEach(t=>{applyShield(t,u._periodicShield.amt*healScale(u));}); } else { const allies=living(u.side).filter(m=>m!==u&&hexDist(m,u)<=u._periodicShield.range); if(allies.length){ const t=allies.sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; applyShield(t,u._periodicShield.amt*healScale(u)); } } } }
     if(u.burnT>0){ u.burnT-=TICK; const vael=[...b.P,...b.E].find(a=>a.alive&&a._burnFieldAmp&&a.side!==u.side); const amp=vael?(1+vael._burnFieldAmp):1; applyDamage(u, u.maxhp*0.0018*(u.burnMul||1)*amp, 'dot'); }
-    if(u.poisonT>0){ u.poisonT-=TICK; applyDamage(u, u.maxhp*0.0015, 'poison'); }
+    if(u.poisonT>0){ u.poisonT-=TICK; applyDamage(u, u.maxhp*0.0015*Math.max(1,u.poisonStacks||0), 'poison'); if(u.poisonT<=0)u.poisonStacks=0; }   // stacks (from spore clouds) scale the DoT; on-hit poison stays 1×
     if(u.regen>0&&u.hp<u.maxhp&&u.alive){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u.regen*TICK*healScale(u)); }   // Verdant Cuirass regen
     if(u.curseT>0)u.curseT-=TICK;
     if(u.stun>0)u.stun-=TICK;
@@ -547,7 +550,9 @@ export function simTick(){
       if(z.tick>=0.5){ z.tick=0;
         for(const u of all){ if(u.side===z.side)continue;
           if(z.tiles.some(t=>t.c===u.c&&t.r===u.r)){
-            applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
+            // spore clouds poison instead of dealing direct damage: each tick inside adds a stack (cap 5)
+            if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } }
+            else applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
             if(z.spore && cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); }
           }
         }
@@ -639,7 +644,7 @@ export function simTick(){
         if(u.hiveScale)dmg*=1+0.03*countHive(u.side);
         if(onHigh&&u.t==='r')dmg*=1.10;
         let isCrit=u.crit&&RNG()<u.crit; if(isCrit)dmg*=1.5;
-        if(isCrit) toast('✶ '+u.name+' lands a critical hit on '+tgt.name+'!');
+        if(isCrit) fx(u,'CRIT!','#ffd375','crit');   // floats up from the attacker; the target shows the ✶ damage number
         let rakkanBleed=false;
         if(u.rakkanN>0){ u.rakkanN--; dmg*=1.25; rakkanBleed=true; }
         if(u.t==='r' && u.rng>1){
@@ -718,7 +723,7 @@ export function cleanseDebuffs(t){
   let cleaned=false;
   if(t.slowT>0){t.slowT=0;t.slowStacks=0;cleaned=true;}
   if(t.burnT>0){t.burnT=0;cleaned=true;}
-  if(t.poisonT>0){t.poisonT=0;cleaned=true;}
+  if(t.poisonT>0||t.poisonStacks>0){t.poisonT=0;t.poisonStacks=0;cleaned=true;}
   if(t.bleedStacks>0){t.bleedStacks=0;cleaned=true;}
   if(t.curseT>0){t.curseT=0;cleaned=true;}
   if(t._marked){t._marked=false;t._markT=0;cleaned=true;}
