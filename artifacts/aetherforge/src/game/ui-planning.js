@@ -444,7 +444,7 @@ export function mkLive(tpl,side,c,r){
   u._base={hp:tpl.hp, dmg:tpl.dmg, as:tpl.as, mv:tpl.mv, rng:tpl.rng, dr:tpl.dr||0, crit:tpl.crit||0};
   u.maxhp=u.hp; u.side=side; u.c=c; u.r=r; u.mag=0; u.alive=true;
   u.dr=u.dr||0; u.crit=u.crit||0; u.ultMul=1; u.healMul=1; u.atkcd=0; u.stun=0; u.slowT=0; u.slowStacks=0;
-  u.bleedStacks=0; u.burnT=0; u.arch=archetypeOf(u); u.retgt=0; u.tgt=null;
+  u.bleedStacks=0; u.poisonStacks=0; u.burnT=0; u.arch=archetypeOf(u); u.retgt=0; u.tgt=null;
   u.chargeMul=u.chargeMul||1; u.lifesteal=0; u.armorPierce=0; u.movecd=0; u.shield=0; u.shieldT=0;
   if(u.gear){ ['weapon','armor','trinket'].forEach(slot=>{const id=u.gear[slot];if(id){const e=EQUIP_BY_ID[id];if(e&&e.apply)e.apply(u);}}); }
   applyUnitAbility(u);
