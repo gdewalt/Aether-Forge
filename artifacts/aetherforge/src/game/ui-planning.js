@@ -4,7 +4,7 @@ import { CLASS_SYN, FAC_SYN } from "./synergies.js";
 import { COLS, G, GRIDH, GRIDW, HR, ROWS, hexCenter } from "./engine-hex.js";
 import { EQUIP_BY_ID, unitPower, unitRarity } from "./data-loot.js";
 import { RNG } from "./rng.js";
-import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
+import { SC, artOf, hasSprite, preloadUnitSprites, unitBodyHTML } from "./ui-render-core.js";
 import { TERRAIN_ICONS, TERRAIN_META, terrainAt } from "./engine-battle-setup.js";
 import { TT, ULT_DESC, armTipAutoHide, hideTip, positionTip, showTip, toast } from "./ui-tooltips.js";
 import { applyUnitAbility, beginCombat, computeEnemyPositions, hasRelic, occupied } from "./engine-combat.js";
@@ -14,6 +14,8 @@ import { unitTier } from "./ui-shop.js";
 
 export function showPlan(){
   const b=G.battle;
+  // warm this battle's roster sprites now so tokens paint decoded (no emoji→sprite pop-in)
+  preloadUnitSprites(G.army); preloadUnitSprites(b.enemyTemplates||[]);
   let html=`<div class="panel"><div class="lbl">Deploy — ${b.node.nm} (vs ${b.enemyIco||''} ${b.enemyTheme})</div>`;
   if(b.mod) html+=`<div class="row" style="margin-bottom:8px;padding:7px 10px;border:1px solid var(--violet);border-radius:6px;background:#1d1430">
     <span style="font-size:18px">${b.mod.ico}</span><div><b style="font-family:Cinzel;color:#c9a7e8">${b.mod.name}</b>
