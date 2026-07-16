@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "R9y9fWxEVT5H-OTWJI38G"
@@ -492,3 +491,9 @@ id = "XvPEF34ibntdjy9KYq5J8"
 uri = "file://artifacts/aetherforge/src/assets/equipment/t_sigil.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "5kC9-T_3oYS2Zk8prSJvj"
+uri = "file://unit-sprites.zip"
+type = "unspecified"
+title = "Unit Sprites (166 PNGs, 63.7 MB)"
