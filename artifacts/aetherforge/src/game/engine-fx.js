@@ -223,7 +223,9 @@ export function spawnProjectile(src,tgt,opts){
   const p=document.createElement('div');p.className='proj'+(opts&&opts.spin?' spin':'');
   p.style.left=a.x+'px';p.style.top=a.y+'px';p.textContent=glyph;p.style.color=color;
   g.appendChild(p);
-  const dur=opts&&opts.dur || 260; const t0=performance.now();
+  // flight time scales with playback speed so the projectile lands in step with its
+  // sim-clock impact (which now fires SPEED× sooner in wall-clock at 2×/4×).
+  const dur=(opts&&opts.dur || 260)/(SPEED||1); const t0=performance.now();
   // leave a little fading trail
   let lastTrail=0;
   function step(now){
