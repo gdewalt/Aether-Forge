@@ -315,13 +315,17 @@ function runImpacts(b){
   q.length=i;                 // keep only not-yet-due impacts, preserving order
   for(const fn of fire) fn();
 }
+const _tickUnits=[];   // reused per-tick scratch: the alive-unit snapshot, rebuilt each simTick
+                       // (avoids allocating [...P,...E].filter() 30×/sec). Never escapes the tick.
 export function simTick(){
   const b=G.battle; b.t+=TICK;
   if(b.phase==='advance' && b.t>=2) b.phase='clash';       // contact window
   const esc=escFactor(b.t);
   if(esc>1 && b.phase==='clash') b.phase='escalation';
   runImpacts(b);                                            // resolve due impacts before units act
-  const all=[...b.P,...b.E].filter(u=>u.alive);
+  const all=_tickUnits; all.length=0;
+  for(const u of b.P) if(u.alive) all.push(u);
+  for(const u of b.E) if(u.alive) all.push(u);
 
   // (1) STATUS EFFECTS tick first
   for(const u of all){
