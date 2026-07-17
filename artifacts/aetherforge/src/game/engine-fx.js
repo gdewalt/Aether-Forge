@@ -200,13 +200,22 @@ export function deathBurst(u){
     g.appendChild(p);setTimeout(()=>p.remove(),650);
   }
 }
+// Floating combat text (damage numbers, status glyphs, crit banners) is the most frequent FX —
+// a hit spawns one every attack. Pool the DOM nodes instead of createElement/remove per hit to
+// cut GC churn in busy fights (esp. at 4×). A node is detached back into the pool 1s after it
+// fires; re-appending a pooled node restarts the `floatup` CSS animation (removal→reinsertion
+// resets it), so no forced reflow is needed. The RNG jitter draw is kept exactly where it was
+// so the sim's seeded RNG stream — and thus deterministic outcomes — is unchanged.
+const _fxPool=[]; const _FX_MAX=80;
 export function fx(u,txt,color,cls){
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
-  const d=document.createElement('div');d.className='fx'+(cls?' '+cls:'');
   // small horizontal jitter so stacked numbers don't perfectly overlap
   const jx=(RNG?RNG()*16-8:Math.random()*16-8);
+  const d=_fxPool.pop()||document.createElement('div');
+  d.className='fx'+(cls?' '+cls:'');
   d.style.cssText=`left:${ce.x-10+jx}px;top:${ce.y-24}px;color:${color||'#fff'}`;
-  d.textContent=txt;g.appendChild(d);setTimeout(()=>d.remove(),1000);
+  d.textContent=txt;g.appendChild(d);
+  setTimeout(()=>{ d.remove(); d.textContent=''; if(_fxPool.length<_FX_MAX)_fxPool.push(d); },1000);
 }
 export function ultFx(u){
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
