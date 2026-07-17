@@ -7,6 +7,7 @@ import { SC, advanceRow, renderHUD, showTitle } from "./ui-render-core.js";
 import { buyUnit, freeRerollAllow, inspectRecruit, renderRecruit, rollUnitOffers } from "./ui-shop.js";
 import { checkFactionCommanderUnlocks, gainXp, showCommanderSelect } from "./flow-commanders.js";
 import { finishRunStats, recordBattleStats } from "./stats.js";
+import { clearRun } from "./flow-save.js";
 import { pick } from "./rng.js";
 import { toast } from "./ui-tooltips.js";
 
@@ -103,6 +104,7 @@ export function bankLore(){
 }
 export function showDefeat(){
   bankLore();
+  clearRun();   // run over — discard the saved-run checkpoint
   SC.innerHTML=`<div class="panel center"><div class="win-banner" style="color:var(--bad)">The Banners Fall</div>
     <p class="tip" style="margin:14px auto;max-width:480px">Your army was wiped. A run ends with a single defeat — but you banked
       <b>+${G.lore} Lore</b> toward permanent faction unlocks.</p>
@@ -115,6 +117,7 @@ export function showDefeat(){
 export function winGame(){
   finishRunStats('win');
   bankLore();
+  clearRun();   // run complete — discard the saved-run checkpoint
   // clearing a run unlocks the next ascension tier (up to 10)
   if((G.ascension||0)>=META.ascMax && META.ascMax<10){ META.ascMax++; saveMeta(META); }
   SC.innerHTML=`<div class="panel center"><div class="win-banner" style="color:var(--gold-bright)">The Realm Restored</div>
