@@ -234,7 +234,7 @@ export function beginCombat(){
   // infiltrate (Shadowstep Cloak): move eligible rogues to the enemy back columns,
   // cloaked (invisible to enemy targeting) for the first second of combat
   P.forEach(u=>{ if(u.infiltrate){ const col=COLS-2-rint(2); let rr=u.r; while(occupiedIn([...P,...E],col,rr))rr=(rr+1)%ROWS; u.c=col;u.r=rr; u._cloakT=1; }});
-  b.P=P;b.E=E;b.t=0;b.log=[];b.phase='countdown';b.cd=3;b.acc=0;b.zones=[];
+  b.P=P;b.E=E;b.t=0;b.log=[];b.phase='countdown';b.cd=3;b.acc=0;b.zones=[];b.impacts=[];
   showCombat();
   // RENDER loop ~33ms; SIM runs at fixed 30Hz inside, decoupled (spec: fixed timestep, render interpolates)
   b.timer=setInterval(()=>frame(),33);
@@ -302,12 +302,30 @@ export function frame(){
 export function escFactor(t){ return t>30 ? 1+(t-30)*0.05 : 1; }  // Bloodlust ramp (prototype: from 30s)
 
 // ----- one fixed 30Hz tick, following the GDD order of operations -----
+// Timed combat impacts ride the SIM clock, not wall-clock: ranged projectiles, delayed ult
+// blasts, and staggered AoE all land after a fixed number of ticks regardless of playback
+// speed. Previously scheduled with setTimeout, they lagged the sim at 2×/4× (an arrow still
+// took 240ms real-time to land while the sim advanced 4× as far), quietly skewing melee-vs-
+// ranged and ult timing. Queuing on the tick keeps damage timing deterministic at any speed.
+export function queueImpact(delaySec, fn){ const b=G.battle; if(!b)return; (b.impacts=b.impacts||[]).push({t:delaySec, fn}); }
+function runImpacts(b){
+  const q=b.impacts; if(!q||!q.length)return;
+  let i=0; const fire=[];
+  for(const im of q){ im.t-=TICK; if(im.t<=0) fire.push(im.fn); else q[i++]=im; }
+  q.length=i;                 // keep only not-yet-due impacts, preserving order
+  for(const fn of fire) fn();
+}
+const _tickUnits=[];   // reused per-tick scratch: the alive-unit snapshot, rebuilt each simTick
+                       // (avoids allocating [...P,...E].filter() 30×/sec). Never escapes the tick.
 export function simTick(){
   const b=G.battle; b.t+=TICK;
   if(b.phase==='advance' && b.t>=2) b.phase='clash';       // contact window
   const esc=escFactor(b.t);
   if(esc>1 && b.phase==='clash') b.phase='escalation';
-  const all=[...b.P,...b.E].filter(u=>u.alive);
+  runImpacts(b);                                            // resolve due impacts before units act
+  const all=_tickUnits; all.length=0;
+  for(const u of b.P) if(u.alive) all.push(u);
+  for(const u of b.E) if(u.alive) all.push(u);
 
   // (1) STATUS EFFECTS tick first
   for(const u of all){
@@ -466,7 +484,7 @@ export function simTick(){
           // ranged: fly a projectile, damage lands on impact
           const T=tgt, A=u, D=dmg, CR=isCrit, RB=rakkanBleed;
           spawnProjectile(u,tgt,{});
-          setTimeout(()=>{ if(T.alive&&A.alive!==undefined){ applyDamage(T,D,'atk',A,CR); if(RB&&T.alive)T.bleedStacks=Math.min(5,(T.bleedStacks||0)+1); if(A._splash)splashHit(A,T,D); if(A._chainBolt)chainBolt(A,T,D); if(A._pierce)pierceHit(A,T,D); if(A._shockChance&&T.alive&&RNG()<A._shockChance){T.stun=Math.max(T.stun||0,0.4);T._shocked=true;T._shockedT=3;fx(T,'⚡','#ffe97a');} if(A._decayTouch&&T.alive&&!(T._decayStacks>0)){T._decayStacks=1;fx(T,'☠','#9c7fb0');} } },240);
+          queueImpact(0.24, ()=>{ if(T.alive&&A.alive!==undefined){ applyDamage(T,D,'atk',A,CR); if(RB&&T.alive)T.bleedStacks=Math.min(5,(T.bleedStacks||0)+1); if(A._splash)splashHit(A,T,D); if(A._chainBolt)chainBolt(A,T,D); if(A._pierce)pierceHit(A,T,D); if(A._shockChance&&T.alive&&RNG()<A._shockChance){T.stun=Math.max(T.stun||0,0.4);T._shocked=true;T._shockedT=3;fx(T,'⚡','#ffe97a');} if(A._decayTouch&&T.alive&&!(T._decayStacks>0)){T._decayStacks=1;fx(T,'☠','#9c7fb0');} } });
         } else {
           applyDamage(tgt,dmg,'atk',u,isCrit);
           if(rakkanBleed&&tgt.alive)tgt.bleedStacks=Math.min(5,(tgt.bleedStacks||0)+1);
@@ -832,7 +850,7 @@ export function castUlt(u,esc,_echo){
   // The Cosmic Oracle — friendly ultimates have a 25% chance to fire a second time
   if(!_echo && u.side){
     const oracle=living(u.side).some(a=>a!==u&&a.alive&&a._ultEcho);
-    if(oracle && RNG()<0.25){ fx(u,'✦ ECHO','#c8a6ff','big'); setTimeout(()=>{ if(u.alive&&G.battle&&!G.battle.done) castUlt(u,esc,true); },180); }
+    if(oracle && RNG()<0.25){ fx(u,'✦ ECHO','#c8a6ff','big'); queueImpact(0.18, ()=>{ if(u.alive&&G.battle&&!G.battle.done) castUlt(u,esc,true); }); }
   }
   // Batch 15: allies that charge when a friendly ult fires; foes that punish enemy ults
   living(u.side).forEach(a=>{ if(a!==u&&a._chargeOnAllyUlt) a.mag=Math.min(100,a.mag+a._chargeOnAllyUlt); });
@@ -848,8 +866,8 @@ export function castUlt(u,esc,_echo){
     fx(u,'✸ '+(u.ult.name||'NOVA').toUpperCase(),col,'big');
     // a projectile arcs to the cluster, then the blast lands
     spawnProjectile(u,center,{glyph:u.ico,color:col,dur:300,spin:true});
-    setTimeout(()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),col);
-      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1))applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u);}); },300);
+    queueImpact(0.30, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),col);
+      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1))applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u);}); });
   } else if(k==='heal'){
     fx(u,'✚ '+(u.ult.name||'HEAL').toUpperCase(),'#5bbf6a','big'); blastAt(u.c,u.r,(u.ult.r||3),'#5bbf6a');
     mates.forEach(m=>{if(hexDist(m,u)<=3 && !m.noHeal){const h=u.ult.v*(u.healMul||1)*healScale(u);m.hp=Math.min(m.maxhp,m.hp+h);healRingAt(m);fx(m,'+'+Math.round(h),'#5bbf6a');}});
@@ -894,8 +912,8 @@ export function castUlt(u,esc,_echo){
     let center=densestTarget(u,foes);if(!center)return;
     fx(u,'❄ '+(u.ult.name||'FREEZE').toUpperCase(),'#7cdcff','big');
     spawnProjectile(u,center,{glyph:'❄',color:'#7cdcff',dur:300,spin:true});
-    setTimeout(()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),'#7cdcff');
-      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); },300);
+    queueImpact(0.30, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),'#7cdcff');
+      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); });
   } else if(k==='chain'){
     // lightning arcs from the nearest foe to successive nearby foes, falling off each jump
     let cur=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!cur)return;
@@ -922,9 +940,9 @@ export function castUlt(u,esc,_echo){
       const aligned = (dx===0?Math.abs(fdx)<=1:Math.sign(fdx)===Math.sign(dx)) && (dy===0?Math.abs(fdy)<=1:true);
       return aligned && hexDist(u,f)<=hexDist(u,far)+1;
     }).sort((a,b)=>hexDist(u,a)-hexDist(u,b));
-    hitList.forEach((f,i)=>{ setTimeout(()=>{ if(!G.battle||G.battle.done||!f.alive)return;
+    hitList.forEach((f,i)=>{ queueImpact((60+i*70)/1000, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
       applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); fx(f,'☄','#fff'); blastAt(f.c,f.r,0,bcol); blastAt(f.c,f.r,1,bcol);
-    }, 60+i*70); });
+    }); });
   } else if(k==='summon'){
     // raise ally tokens beside the caster (necromancer / swarm payoff)
     const key=u.ult.token||'skeleton'; const n=u.ult.n||3;
@@ -946,8 +964,8 @@ export function castUlt(u,esc,_echo){
     let center=densestTarget(u,foes); if(!center)return;
     fx(u,'☠ '+(u.ult.name||'CURSE').toUpperCase(),'#9b59b6','big');
     spawnProjectile(u,center,{glyph:'☠',color:'#9b59b6',dur:280,spin:true});
-    setTimeout(()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||2),'#9b59b6');
-      foes.forEach(f=>{ if(f.alive&&hexDist(f,center)<=(u.ult.r||2)){ f.curseT=4; f.poisonT=Math.max(f.poisonT||0,3); fx(f,'CURSED','#9b59b6'); } }); },280);
+    queueImpact(0.28, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||2),'#9b59b6');
+      foes.forEach(f=>{ if(f.alive&&hexDist(f,center)<=(u.ult.r||2)){ f.curseT=4; f.poisonT=Math.max(f.poisonT||0,3); fx(f,'CURSED','#9b59b6'); } }); });
   } else if(k==='berserk'){
     // self-buff: surge of attack speed and damage for the rest of the fight
     u.as*=(1+(u.ult.v||0.5)); u.dmg=Math.round(u.dmg*(1+(u.ult.d||0.3))); u.lifesteal=(u.lifesteal||0)+0.15;
@@ -962,10 +980,10 @@ export function castUlt(u,esc,_echo){
     shockwaveAt(u.c,u.r,5.0,'#8a5628',240);
     foes.forEach(f=>{ if(f.alive){
       // stagger each foe's hit slightly by distance so the wave visibly sweeps across the board
-      const d=hexDist(u,f); setTimeout(()=>{ if(!G.battle||G.battle.done||!f.alive)return;
+      const d=hexDist(u,f); queueImpact(Math.min(300, d*45)/1000, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
         applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); if(RNG()<0.5)f.stun=Math.max(f.stun||0,0.6);
         blastAt(f.c,f.r,0,'#b9772e'); debrisBurst(f.c,f.r,4);
-      }, Math.min(300, d*45));
+      });
     } });
   } else if(k==='transform'){
     // Swap the unit into a distinct creature: new name (drives the sprite), attack type, and its own ultimate.
@@ -1044,7 +1062,7 @@ export function castUlt(u,esc,_echo){
     G.battle.zones=G.battle.zones||[];
     G.battle.zones.push({tiles, side:u.side, dmg:u.dmg*(u.ult.v||0.5), life:u.ult.dur||4, color:u.ult.zcol||'#ff7a3a', glyph:u.ult.zico||'🔥', tick:0, spore:(u.faction==='Myconid')});
     spawnProjectile(u,center,{glyph:u.ult.zico||'🔥',color:u.ult.zcol||'#ff7a3a',dur:260,spin:true});
-    setTimeout(()=>{ if(G.battle&&!G.battle.done) blastAt(center.c,center.r,rad,u.ult.zcol||'#ff7a3a'); },260);
+    queueImpact(0.26, ()=>{ if(G.battle&&!G.battle.done) blastAt(center.c,center.r,rad,u.ult.zcol||'#ff7a3a'); });
     fx(u,'ZONE','#ff7a3a','big');
   }
 }

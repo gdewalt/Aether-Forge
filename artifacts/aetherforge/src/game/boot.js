@@ -30,9 +30,11 @@ import {
   unlockFaction,
 } from "./flow-battle-end.js";
 import {
+  abandonRun,
   advanceRow,
   enterNode,
   mapTip,
+  resumeRun,
   showArmy,
   showMap,
   showRelicBar,
@@ -66,6 +68,7 @@ import {
 
 /* ---------- expose inline HTML event-handler functions on window ---------- */
 Object.assign(window, {
+  abandonRun,
   advanceRow,
   afterRelicReward,
   afterUnitReward,
@@ -92,6 +95,7 @@ Object.assign(window, {
   rerollOffers,
   resetProgress,
   restChoice,
+  resumeRun,
   sellPrompt,
   setAscension,
   setSpeed,

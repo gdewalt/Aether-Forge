@@ -12,6 +12,7 @@ import { showEvent } from "./flow-events.js";
 import { showForge, showTown } from "./flow-forge.js";
 import { showMetaStore, winGame } from "./flow-battle-end.js";
 import { finishRunStats } from "./stats.js";
+import { clearRun, hasSavedRun, loadRun, saveRun } from "./flow-save.js";
 import { startBattle } from "./engine-battle-setup.js";
 
 /* ============================================================
@@ -99,9 +100,18 @@ export function showRelicBar(e){
 }
 
 /* ---------- title ---------- */
+export function resumeRun(){
+  // guard against a corrupt/incompatible save leaving the player stuck: on any restore failure,
+  // discard it and fall back to the title.
+  try{ if(loadRun()){ renderHUD(); showMap(); return; } }catch(e){ setG(null); }
+  clearRun(); showTitle();
+}
+// Abandon = discard the in-progress run (distinct from just navigating to the title).
+export function abandonRun(){ clearRun(); showTitle(); }
 export function showTitle(){
   if(G&&G._stats&&!G._stats.done) finishRunStats('abandoned');   // leaving mid-run (Abandon button) still records the run
   setG(null);renderHUD();
+  const resumable=hasSavedRun();
   SC.innerHTML=`<div class="panel center" style="margin-top:30px;padding:40px">
     <h2 style="font-size:30px;color:var(--gold-bright)">Banners of the Broken Realm</h2>
     <p class="tip" style="margin:14px auto;max-width:560px;font-size:14px;line-height:1.6">
@@ -109,7 +119,8 @@ export function showTitle(){
       Win to climb the map and recruit more units; chase faction &amp; class synergies and unleash
       ultimates. <b>Lose one battle and the run ends.</b></p>
     <div class="row" style="justify-content:center;margin-top:18px">
-      <button class="primary" onclick="showCommanderSelect()">Begin a Run</button>
+      ${resumable?`<button class="primary" onclick="resumeRun()">▶ Resume Run</button>`:''}
+      <button class="${resumable?'small':'primary'}" onclick="showCommanderSelect()">Begin a Run</button>
       <button class="small" onclick="showMetaStore()">🏛 Athenaeum</button>
       <button class="small" onclick="showStats()">📊 Stats</button>
     </div>
@@ -200,9 +211,10 @@ export function showMap(){
   html+=`<div class="row" style="margin-top:14px;justify-content:space-between">
       <button class="small" onclick="showArmy()">View Army (${G.army.length})</button>
       <button class="small" onclick="showEquip()">⚒ Equipment (${G.stash.length})</button>
-      <button class="small danger" onclick="if(confirm('Abandon run?'))showTitle()">Abandon</button>
+      <button class="small danger" onclick="if(confirm('Abandon run?'))abandonRun()">Abandon</button>
     </div></div>`;
   SC.innerHTML=html;
+  saveRun();   // the map is the safe between-nodes checkpoint — persist the run for Resume
 }
 export const MAP_TIP={battle:'A standard enemy host. Win to recruit a survivor.',
   elite:'A tougher fight — but it drops a Relic.',shop:'Recruit a new unit and browse gear.',
