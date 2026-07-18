@@ -35,6 +35,7 @@ export function recordBattleStats(won){
   G._stats.battles.push({
     act:G.act, node:b.node&&b.node.t, enemy:b.enemyTheme||null, won:!!won, dur:Math.round(b.t*10)/10,
     units:b.P.filter(u=>!u.token).map(u=>({n:u.name,tier:u.tier||1,dmg:Math.round(u._dmgDealt||0),taken:Math.round(u._dmgTaken||0),ults:u._ults||0,alive:!!u.alive})),
+    enemyUnits:b.E.filter(u=>!u.token).map(u=>({n:u.name,fac:u.efaction||b.enemyTheme||null,boss:!!u.boss||!!u.subboss,dmg:Math.round(u._dmgDealt||0),taken:Math.round(u._dmgTaken||0),ults:u._ults||0,alive:!!u.alive})),
     tokens:b.P.filter(u=>u.token).length, enemies:b.E.length,
   });
 }

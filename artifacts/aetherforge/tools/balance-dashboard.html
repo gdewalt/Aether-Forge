@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AetherForge — Balance Dashboard</title>
+<style>
+  /* dark, self-contained; no external assets (mirrors the game's parchment-on-dark look) */
+  :root{
+    --surface:#171317; --panel:#1e1a24; --panel-2:#241f2c; --line:#3a3348;
+    --ink:#f2ecdf; --ink-2:#c9bbe0; --muted:#9c8fb0;
+    --gold:#e0a020; --gold-bright:#ffd375;
+    --good:#5bbf6a; --bad:#e0736b; --neutral:#6b6478;
+    --player:#3987e5; --enemy:#d95926;   /* validated categorical pair (CVD ΔE 26.8) */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;line-height:1.5}
+  h1{font-family:Georgia,"Times New Roman",serif;color:var(--gold-bright);margin:0;font-size:22px;letter-spacing:.3px}
+  h2{font-family:Georgia,serif;color:var(--gold);font-size:15px;margin:0 0 10px;font-weight:600}
+  a{color:var(--gold-bright)}
+  .wrap{max-width:1160px;margin:0 auto;padding:20px 18px 60px}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:12px}
+  /* drop / load */
+  #drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--ink-2);
+    background:var(--panel);margin:16px 0;cursor:pointer;transition:border-color .15s,background .15s}
+  #drop.hot{border-color:var(--gold);background:var(--panel-2)}
+  #drop b{color:var(--gold-bright)}
+  #drop input{display:none}
+  .btn{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);
+    color:var(--ink);cursor:pointer;font-size:12px}
+  .btn:hover{border-color:var(--gold)}
+  .err{color:var(--bad);margin-top:8px;font-size:12px}
+  /* layout */
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .tile{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .tile .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .tile .v{font-size:24px;color:var(--gold-bright);font-family:Georgia,serif;margin-top:2px}
+  .tile .v small{font-size:13px;color:var(--ink-2)}
+  /* tables */
+  .tbl-wrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{text-align:right;padding:6px 9px;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;
+    position:sticky;top:0;background:var(--panel);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  thead th.sorted::after{content:" ▾";color:var(--gold)}
+  thead th.sorted.asc::after{content:" ▴"}
+  tbody tr:nth-child(even){background:#ffffff05}
+  tbody tr:hover{background:#ffffff0d}
+  td.name{color:var(--ink)}
+  .dim{color:var(--muted)}
+  .lowN{opacity:.55}
+  /* inline SVG bars */
+  .bar{vertical-align:middle}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--ink-2);font-size:11.5px;margin-bottom:8px}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .note{color:var(--muted);font-size:11.5px;margin-top:8px}
+  .pill{display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line);margin-left:6px}
+  .hidden{display:none}
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;z-index:50;background:#0c0a10;border:1px solid var(--line);
+    border-radius:6px;padding:6px 9px;font-size:11.5px;color:var(--ink);box-shadow:0 4px 16px #000a;opacity:0;transition:opacity .08s;max-width:260px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>⚔️ AetherForge — Balance Dashboard</h1>
+      <div class="sub">Load an exported <code>aetherforge-stats.json</code> (Title → 📊 Stats → ⬇ Export JSON).</div>
+    </div>
+    <div class="sub" id="meta"></div>
+  </header>
+
+  <label id="drop" for="file">
+    <div><b>Drop</b> your <code>aetherforge-stats.json</code> here, or <span class="btn">choose a file</span>
+      &nbsp;·&nbsp; <span class="btn" id="pasteBtn">paste JSON</span></div>
+    <div class="sub" style="margin-top:6px">Everything runs locally in your browser — nothing is uploaded.</div>
+    <input type="file" id="file" accept="application/json,.json">
+    <div class="err" id="err"></div>
+  </label>
+
+  <div id="app" class="hidden"></div>
+</div>
+<div id="tip"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const pct = (a,b)=> b? (a/b*100) : 0;
+const fpct = (a,b)=> b? Math.round(a/b*100)+'%' : '—';
+const r0 = n => Math.round(n);
+const r1 = n => Math.round(n*10)/10;
+
+/* ---------- data loading ---------- */
+const drop=$('#drop'), fileInput=$('#file'), errBox=$('#err');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('hot');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('hot'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');
+  const f=e.dataTransfer.files[0]; if(f) readFile(f);});
+fileInput.addEventListener('change',e=>{ const f=e.target.files[0]; if(f) readFile(f); });
+$('#pasteBtn').addEventListener('click',e=>{e.preventDefault();
+  const t=prompt('Paste the contents of aetherforge-stats.json:'); if(t) ingest(t);});
+function readFile(f){ const r=new FileReader(); r.onload=()=>ingest(r.result); r.readAsText(f); }
+function ingest(text){
+  errBox.textContent='';
+  let data; try{ data=JSON.parse(text); }catch(e){ errBox.textContent='Not valid JSON: '+e.message; return; }
+  const runs = Array.isArray(data)?data : (data&&Array.isArray(data.runs))?data.runs : null;
+  if(!runs){ errBox.textContent='Expected the stats export ({ runs: [...] }) or a runs array.'; return; }
+  render(runs);
+}
+// auto-load if this file is served from the same origin as the game (localStorage key)
+try{ const s=localStorage.getItem('aetherforge_stats_v1'); if(s){ ingest(s); } }catch(e){}
+
+/* ---------- SVG bar helpers ---------- */
+function magBar(val, max, color, w=120, h=12){
+  const frac = max>0 ? Math.max(0,Math.min(1,val/max)) : 0;
+  const bw = Math.max(frac>0?3:0, frac*w);
+  return `<svg class="bar" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <rect x="0" y="${(h-8)/2}" width="${w}" height="8" rx="4" fill="#ffffff10"/>
+    <rect x="0" y="${(h-8)/2}" width="${bw.toFixed(1)}" height="8" rx="4" fill="${color}"/></svg>`;
+}
+// diverging bar centered at 0 (red left / green right)
+function divBar(val, absMax, w=120, h=12){
+  const half=w/2, frac = absMax>0 ? Math.max(-1,Math.min(1,val/absMax)) : 0;
+  const bw = Math.abs(frac)*half, color = val>=0?'var(--good)':'var(--bad)';
+  const x = val>=0? half : half-bw;
+  return `<svg class="bar" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <rect x="0" y="${(h-8)/2}" width="${w}" height="8" rx="4" fill="#ffffff0d"/>
+    <line x1="${half}" y1="1" x2="${half}" y2="${h-1}" stroke="#ffffff2e" stroke-width="1"/>
+    <rect x="${x.toFixed(1)}" y="${(h-8)/2}" width="${Math.max(bw>0?2:0,bw).toFixed(1)}" height="8" rx="4" fill="${color}"/></svg>`;
+}
+
+/* ---------- sortable table ---------- */
+// cols: [{key,label,val(row)->number|string, cell(row)->html, num:bool, tip(row)->str}]
+function makeTable(rows, cols, initialSortKey, desc=true){
+  const wrap=el('div','tbl-wrap');
+  const t=el('table'); const thead=el('thead'); const trh=el('tr');
+  let sortKey=initialSortKey, sortDesc=desc;
+  cols.forEach(c=>{ const th=el('th',null,c.label); if(c.num!==false) th.title='click to sort';
+    th.addEventListener('click',()=>{ if(sortKey===c.key) sortDesc=!sortDesc; else {sortKey=c.key; sortDesc=true;} draw(); });
+    th.dataset.key=c.key; trh.appendChild(th); });
+  thead.appendChild(trh); t.appendChild(thead);
+  const tbody=el('tbody'); t.appendChild(tbody); wrap.appendChild(t);
+  function draw(){
+    const col=cols.find(c=>c.key===sortKey)||cols[0];
+    const sorted=rows.slice().sort((a,b)=>{
+      const va=col.val(a), vb=col.val(b);
+      if(typeof va==='string'||typeof vb==='string') return sortDesc? String(vb).localeCompare(String(va)):String(va).localeCompare(String(vb));
+      return sortDesc? vb-va : va-vb;
+    });
+    tbody.innerHTML='';
+    for(const row of sorted){
+      const tr=el('tr'); if(row._lowN) tr.classList.add('lowN');
+      cols.forEach(c=>{ const td=el('td',c.cls||null, c.cell?c.cell(row):c.val(row));
+        if(c.tip){ td.dataset.tip=c.tip(row); }
+        tr.appendChild(td); });
+      tbody.appendChild(tr);
+    }
+    thead.querySelectorAll('th').forEach(th=>{ th.classList.toggle('sorted',th.dataset.key===sortKey);
+      th.classList.toggle('asc',th.dataset.key===sortKey&&!sortDesc); });
+  }
+  draw();
+  return wrap;
+}
+
+/* ---------- tooltip ---------- */
+const tip=$('#tip');
+document.addEventListener('mousemove',e=>{
+  const t=e.target.closest('[data-tip]');
+  if(t){ tip.textContent=t.dataset.tip; tip.style.opacity='1';
+    let x=e.clientX+14, y=e.clientY+14;
+    if(x+tip.offsetWidth>innerWidth-8) x=e.clientX-tip.offsetWidth-14;
+    if(y+tip.offsetHeight>innerHeight-8) y=e.clientY-tip.offsetHeight-14;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  } else tip.style.opacity='0';
+});
+
+/* ---------- analytics + render ---------- */
+function render(runs){
+  drop.classList.add('hidden'); const app=$('#app'); app.classList.remove('hidden'); app.innerHTML='';
+  $('#meta').textContent = `${runs.length} run${runs.length===1?'':'s'} loaded` +
+    (runs[0]&&runs[0].start? ` · ${new Date(runs.reduce((m,r)=>Math.min(m,r.start||Infinity),Infinity)).toLocaleDateString()}–${new Date(runs.reduce((m,r)=>Math.max(m,r.end||r.start||0),0)).toLocaleDateString()}`:'');
+
+  const decisive = runs.filter(r=>r.result==='win'||r.result==='defeat');
+  const wins = decisive.filter(r=>r.result==='win').length;
+  const baseWR = pct(wins, decisive.length);   // baseline win-rate over decisive runs
+  const allBattles = runs.flatMap(r=>r.battles||[]);
+  const LOWN = 5;   // sample-size threshold below which a rate is greyed as noisy
+
+  /* ---- overview tiles ---- */
+  const s1=el('section'); s1.appendChild(el('h2',null,'Overview'));
+  const tiles=el('div','tiles');
+  const add=(k,v)=>{ const t=el('div','tile'); t.appendChild(el('div','k',k)); t.appendChild(el('div','v',v)); tiles.appendChild(t); };
+  add('Runs', runs.length);
+  add('Win rate', `${r0(baseWR)}% <small>(${wins}/${decisive.length} decisive)</small>`);
+  add('Abandoned', runs.filter(r=>r.result==='abandoned').length);
+  add('Avg act reached', r1(runs.reduce((a,r)=>a+(r.actReached||1),0)/(runs.length||1)));
+  add('Battles', allBattles.length);
+  add('Battle win rate', fpct(allBattles.filter(b=>b.won).length, allBattles.length));
+  s1.appendChild(tiles); app.appendChild(s1);
+
+  /* ---- helpers to aggregate over runs by key ---- */
+  function aggBy(list, keyFn){
+    const m=new Map();
+    list.forEach(r=>{ const k=keyFn(r); if(k==null)return; const e=m.get(k)||{n:0,w:0,acts:0}; e.n++; if(r.result==='win')e.w++; if(r.result==='defeat'||r.result==='win'){} e.acts+=(r.actReached||1); m.set(k,e); });
+    return [...m.entries()].map(([k,e])=>({key:k,...e}));
+  }
+
+  /* ---- commanders ---- */
+  {
+    const rows=aggBy(decisive, r=>r.commanderName||r.commander).map(e=>({...e, wr:pct(e.w,e.n), _lowN:e.n<LOWN}));
+    const sec=el('section'); sec.appendChild(el('h2',null,'By commander'));
+    sec.appendChild(makeTable(rows,[
+      {key:'key',label:'Commander',num:false,val:r=>r.key,cell:r=>`<span class="name">${r.key}</span>`+(r._lowN?`<span class="pill">n=${r.n}</span>`:'')},
+      {key:'n',label:'Runs',val:r=>r.n},
+      {key:'wr',label:'Win rate',val:r=>r.wr,cell:r=>`${r0(r.wr)}% ${magBar(r.wr,100,'var(--gold)')}`,tip:r=>`${r.w}/${r.n} decisive runs won`},
+      {key:'acts',label:'Avg act',val:r=>r.acts/r.n,cell:r=>r1(r.acts/r.n)},
+    ],'n'));
+    app.appendChild(sec);
+  }
+
+  /* ---- ascension ---- */
+  {
+    const rows=aggBy(decisive, r=>'A'+(r.ascension||0)).map(e=>({...e,wr:pct(e.w,e.n),_lowN:e.n<LOWN}))
+      .sort((a,b)=>(+a.key.slice(1))-(+b.key.slice(1)));
+    const sec=el('section'); sec.appendChild(el('h2',null,'By ascension tier'));
+    sec.appendChild(makeTable(rows,[
+      {key:'key',label:'Tier',num:false,val:r=>r.key},
+      {key:'n',label:'Runs',val:r=>r.n},
+      {key:'wr',label:'Win rate',val:r=>r.wr,cell:r=>`${r0(r.wr)}% ${magBar(r.wr,100,'var(--gold)')}`,tip:r=>`${r.w}/${r.n}`},
+    ],'key',false));
+    app.appendChild(sec);
+  }
+
+  /* ---- PLAYER UNIT BALANCE (the headline) ---- */
+  {
+    // per unit: which decisive runs fielded it (win-rate delta), plus per-battle-appearance damage aggregates
+    const runsWith=new Map();   // unit -> {n, w}
+    decisive.forEach(r=>{
+      const names=new Set(); (r.battles||[]).forEach(b=>(b.units||[]).forEach(u=>names.add(u.n)));
+      names.forEach(n=>{ const e=runsWith.get(n)||{n:0,w:0}; e.n++; if(r.result==='win')e.w++; runsWith.set(n,e); });
+    });
+    const perf=new Map();   // unit -> {ap, dmg, taken, ults, deaths}
+    allBattles.forEach(b=>(b.units||[]).forEach(u=>{ const e=perf.get(u.n)||{ap:0,dmg:0,taken:0,ults:0,deaths:0}; e.ap++; e.dmg+=u.dmg||0; e.taken+=u.taken||0; e.ults+=u.ults||0; if(!u.alive)e.deaths++; perf.set(u.n,e); }));
+    const rows=[...new Set([...runsWith.keys(),...perf.keys()])].map(name=>{
+      const rw=runsWith.get(name)||{n:0,w:0}; const pf=perf.get(name)||{ap:0,dmg:0,taken:0,ults:0,deaths:0};
+      const wr=pct(rw.w,rw.n), delta=rw.n?wr-baseWR:0;
+      return {name, runN:rw.n, pick:pct(rw.n,decisive.length), wr, delta,
+        ap:pf.ap, dmg:pf.ap?pf.dmg/pf.ap:0, taken:pf.ap?pf.taken/pf.ap:0, ults:pf.ap?pf.ults/pf.ap:0,
+        deathRate:pf.ap?pct(pf.deaths,pf.ap):0, _lowN:rw.n<LOWN};
+    });
+    const absMax=Math.max(10,...rows.map(r=>Math.abs(r.delta)));
+    const sec=el('section'); sec.appendChild(el('h2','','Player unit balance'));
+    sec.appendChild(el('div','legend',
+      `<span><span class="swatch" style="background:var(--good)"></span>win-rate above baseline</span>`+
+      `<span><span class="swatch" style="background:var(--bad)"></span>below baseline</span>`+
+      `<span class="dim">baseline = ${r0(baseWR)}% (all decisive runs)</span>`));
+    sec.appendChild(makeTable(rows,[
+      {key:'name',label:'Unit',num:false,val:r=>r.name,cell:r=>`<span class="name">${r.name}</span>`+(r._lowN?`<span class="pill">n=${r.runN}</span>`:'')},
+      {key:'pick',label:'Pick rate',val:r=>r.pick,cell:r=>`${r0(r.pick)}% ${magBar(r.pick,100,'var(--player)')}`,tip:r=>`fielded in ${r.runN} of ${decisive.length} decisive runs`},
+      {key:'wr',label:'Win rate',val:r=>r.wr,cell:r=>r.runN?`${r0(r.wr)}%`:'—'},
+      {key:'delta',label:'WR Δ vs base',val:r=>r.delta,cell:r=>`${r.delta>=0?'+':''}${r0(r.delta)}% ${divBar(r.delta,absMax)}`,tip:r=>`${r.runN?('runs with it win '+r0(r.wr)+'% vs '+r0(baseWR)+'% baseline'):'no decisive runs'}`},
+      {key:'dmg',label:'Avg dmg dealt',val:r=>r.dmg,cell:r=>r.ap?r0(r.dmg):'—'},
+      {key:'taken',label:'Avg dmg taken',val:r=>r.taken,cell:r=>r.ap?r0(r.taken):'—'},
+      {key:'ults',label:'Avg ults',val:r=>r.ults,cell:r=>r.ap?r1(r.ults):'—'},
+      {key:'deathRate',label:'Death rate',val:r=>r.deathRate,cell:r=>r.ap?r0(r.deathRate)+'%':'—',tip:r=>`died in ${r0(r.deathRate)}% of ${r.ap} battles fielded`},
+    ],'delta'));
+    sec.appendChild(el('div','note','Damage figures are per battle the unit was fielded. Win-rate Δ needs a decent sample — rows with n&lt;'+LOWN+' decisive runs are dimmed.'));
+    app.appendChild(sec);
+  }
+
+  /* ---- faction performance ---- */
+  {
+    const runsWith=new Map();
+    decisive.forEach(r=>{ (r.factions||[]).forEach(f=>{ if(f==='Neutral')return; const e=runsWith.get(f)||{n:0,w:0}; e.n++; if(r.result==='win')e.w++; runsWith.set(f,e); }); });
+    const rows=[...runsWith.entries()].map(([f,e])=>({name:f,n:e.n,pick:pct(e.n,decisive.length),wr:pct(e.w,e.n),delta:e.n?pct(e.w,e.n)-baseWR:0,_lowN:e.n<LOWN}));
+    const absMax=Math.max(10,...rows.map(r=>Math.abs(r.delta)));
+    const sec=el('section'); sec.appendChild(el('h2','','Faction performance <span class="dim" style="font-size:11px">(faction in the final draft pool)</span>'));
+    sec.appendChild(makeTable(rows,[
+      {key:'name',label:'Faction',num:false,val:r=>r.name,cell:r=>`<span class="name">${r.name}</span>`+(r._lowN?`<span class="pill">n=${r.n}</span>`:'')},
+      {key:'pick',label:'Pick rate',val:r=>r.pick,cell:r=>`${r0(r.pick)}% ${magBar(r.pick,100,'var(--player)')}`,tip:r=>`in ${r.n} of ${decisive.length} decisive runs`},
+      {key:'wr',label:'Win rate',val:r=>r.wr,cell:r=>`${r0(r.wr)}%`},
+      {key:'delta',label:'WR Δ vs base',val:r=>r.delta,cell:r=>`${r.delta>=0?'+':''}${r0(r.delta)}% ${divBar(r.delta,absMax)}`},
+    ],'delta'));
+    app.appendChild(sec);
+  }
+
+  /* ---- enemy units (needs enemyUnits in the export; older runs omit it) ---- */
+  {
+    const perf=new Map();
+    allBattles.forEach(b=>(b.enemyUnits||[]).forEach(u=>{ const e=perf.get(u.n)||{ap:0,dmg:0,taken:0,ults:0,surv:0,fac:u.fac,boss:u.boss}; e.ap++; e.dmg+=u.dmg||0; e.taken+=u.taken||0; e.ults+=u.ults||0; if(u.alive)e.surv++; if(u.boss)e.boss=true; perf.set(u.n,e); }));
+    const sec=el('section'); sec.appendChild(el('h2','','Enemy units'));
+    if(perf.size===0){
+      sec.appendChild(el('div','note','No per-enemy data in this export. Enemy damage tracking was added recently — play some battles after updating and re-export to populate this.'));
+    } else {
+      const rows=[...perf.entries()].map(([name,e])=>({name,fac:e.fac||'—',boss:e.boss,ap:e.ap,
+        dmg:e.dmg/e.ap,taken:e.taken/e.ap,ults:e.ults/e.ap,survRate:pct(e.surv,e.ap)}));
+      sec.appendChild(el('div','legend',`<span><span class="swatch" style="background:var(--enemy)"></span>enemy damage dealt</span><span class="dim">survive rate = how often it was still alive when the battle ended</span>`));
+      sec.appendChild(makeTable(rows,[
+        {key:'name',label:'Enemy',num:false,val:r=>r.name,cell:r=>`<span class="name">${r.name}</span>`+(r.boss?`<span class="pill">boss/elite</span>`:'')},
+        {key:'fac',label:'Faction',num:false,val:r=>r.fac,cell:r=>`<span class="dim">${r.fac}</span>`},
+        {key:'ap',label:'Appearances',val:r=>r.ap},
+        {key:'dmg',label:'Avg dmg dealt',val:r=>r.dmg,cell:r=>`${r0(r.dmg)} ${magBar(r.dmg,Math.max(...rows.map(x=>x.dmg)),'var(--enemy)',90)}`,tip:r=>`avg damage this enemy dealt per battle it appeared in`},
+        {key:'taken',label:'Avg dmg taken',val:r=>r.taken,cell:r=>r0(r.taken)},
+        {key:'ults',label:'Avg ults',val:r=>r.ults,cell:r=>r1(r.ults)},
+        {key:'survRate',label:'Survive rate',val:r=>r.survRate,cell:r=>r0(r.survRate)+'%',tip:r=>`still alive at battle end in ${r0(r.survRate)}% of ${r.ap} appearances`},
+      ],'dmg'));
+    }
+    app.appendChild(sec);
+  }
+
+  /* ---- what ends runs ---- */
+  {
+    const m=new Map();
+    decisive.filter(r=>r.result==='defeat').forEach(r=>{ const last=(r.battles||[]).filter(b=>!b.won).slice(-1)[0]; if(!last)return;
+      const k=`${last.enemy||'?'} · ${last.node||'?'} · Act ${last.act||'?'}`; m.set(k,(m.get(k)||0)+1); });
+    const rows=[...m.entries()].map(([k,n])=>({key:k,n}));
+    const sec=el('section'); sec.appendChild(el('h2','','What ends runs'));
+    if(!rows.length) sec.appendChild(el('div','note','No defeats recorded yet.'));
+    else{ const max=Math.max(...rows.map(r=>r.n));
+      sec.appendChild(makeTable(rows,[
+        {key:'key',label:'Losing battle',num:false,val:r=>r.key},
+        {key:'n',label:'Defeats',val:r=>r.n,cell:r=>`${r.n} ${magBar(r.n,max,'var(--bad)')}`},
+      ],'n')); }
+    app.appendChild(sec);
+  }
+
+  /* ---- recent runs ---- */
+  {
+    const sec=el('section'); sec.appendChild(el('h2','','Recent runs'));
+    const rows=runs.slice(-40).reverse().map(r=>({
+      date:r.start?new Date(r.start).toLocaleDateString():'—', cmd:r.commanderName||r.commander||'—',
+      asc:'A'+(r.ascension||0), result:r.result||'—', act:r.actReached||1, lvl:r.level||1,
+      battles:(r.battles||[]).length, _sortDate:r.start||0}));
+    const rc={win:'var(--good)',defeat:'var(--bad)',abandoned:'var(--muted)'};
+    sec.appendChild(makeTable(rows,[
+      {key:'_sortDate',label:'Date',num:false,val:r=>r.date,cell:r=>`<span class="dim">${r.date}</span>`},
+      {key:'cmd',label:'Commander',num:false,val:r=>r.cmd},
+      {key:'asc',label:'Asc',num:false,val:r=>r.asc},
+      {key:'result',label:'Result',num:false,val:r=>r.result,cell:r=>`<b style="color:${rc[r.result]||'var(--ink)'}">${r.result}</b>`},
+      {key:'act',label:'Act',val:r=>r.act},
+      {key:'lvl',label:'Level',val:r=>r.lvl},
+      {key:'battles',label:'Battles',val:r=>r.battles},
+    ],'_sortDate'));
+    app.appendChild(sec);
+  }
+}
+</script>
+</body>
+</html>

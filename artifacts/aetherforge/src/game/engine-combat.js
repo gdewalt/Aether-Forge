@@ -758,7 +758,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
     tgt.bleedStacks=Math.min(5+(src.bleedBonus||0),(tgt.bleedStacks||0)+src._firstAtkBleed);
   }
   if(kind==='atk'&&src){
-    if(src.side==='P') src._dmgDealt=(src._dmgDealt||0)+dmg;
+    src._dmgDealt=(src._dmgDealt||0)+dmg;   // per-battle telemetry (both sides — run statistics)
     // lifesteal (Soulreaver / Voidtouched)
     if(src.lifesteal&&src.alive){src.hp=Math.min(src.maxhp,src.hp+dmg*src.lifesteal*healScale(src));}
     // thorns reflect (melee only)
