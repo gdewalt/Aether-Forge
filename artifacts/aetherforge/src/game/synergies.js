@@ -25,7 +25,7 @@ export const CLASS_SYN={ // weaker, cross-faction, bp 3/6
   Archer:{bp:[3,6],desc:['+1 range','+1 range & +8% AS'],apply:(u,l)=>{u.rng=(u.rng||0)+1;if(l>=2)u.as*=1.08;}},
   Mage:{bp:[3,6],desc:['ability/ult power +7%','+12% ult power & charge faster'],apply:(u,l)=>{u.ultMul=(u.ultMul||1)*(l>=2?1.12:1.07);if(l>=2)u.chargeMul=(u.chargeMul||1)*1.08;}},
   Cleric:{bp:[3,6],desc:['healing +10%','+18% healing & healed allies get a shield'],apply:(u,l)=>{u.healMul=(u.healMul||1)*(l>=2?1.18:1.10);if(l>=2)u._healShield=true;}},
-  Rogue:{bp:[3,6],desc:['+8% crit','+14% crit'],apply:(u,l)=>{u.crit=(u.crit||0)+(l>=2?0.14:0.08);}},
+  Rogue:{bp:[3,6],desc:['+10% crit · crits ×1.75','+18% crit · ultimates can crit'],apply:(u,l)=>{u.crit=(u.crit||0)+(l>=2?0.18:0.10);u.critMul=1.75;if(l>=2)u.ultCrit=true;}},
   Guardian:{bp:[3,6],desc:['+8% armor','+14% armor & nearby allies -8% dmg'],apply:(u,l)=>{u.dr=(u.dr||0)+(l>=2?0.14:0.08);if(l>=2)u._guardianWard=true;}},
   Beast:{bp:[3,6],desc:['+6% AS & move','+10% AS & move'],apply:(u,l)=>{const m=(l>=2?1.10:1.06);u.as*=m;u.mv*=m;}},
 };
