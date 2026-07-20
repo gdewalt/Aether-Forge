@@ -234,6 +234,11 @@ export function beginCombat(){
   // infiltrate (Shadowstep Cloak): move eligible rogues to the enemy back columns,
   // cloaked (invisible to enemy targeting) for the first second of combat
   P.forEach(u=>{ if(u.infiltrate){ const col=COLS-2-rint(2); let rr=u.r; while(occupiedIn([...P,...E],col,rr))rr=(rr+1)%ROWS; u.c=col;u.r=rr; u._cloakT=1; }});
+  // Rogue "assassin's approach": melee Rogues are the squishiest units yet their AI dives the enemy backline,
+  // so they melt on the long walk while being focus-fired. Give them a brief cloak at battle start — untargetable
+  // while the enemy commits to the front line — so they slip in to strike instead of being sacrificed. A tankless
+  // rogue line still gets focused once the cloak drops, so this rewards a proper front line rather than trivializing.
+  [...P,...E].forEach(u=>{ if(u.cls==='Rogue'&&u.t==='m'&&!u.token) u._cloakT=Math.max(u._cloakT||0, 1.0); });
   b.P=P;b.E=E;b.t=0;b.log=[];b.phase='countdown';b.cd=3;b.acc=0;b.zones=[];b.impacts=[];
   showCombat();
   // RENDER loop ~33ms; SIM runs at fixed 30Hz inside, decoupled (spec: fixed timestep, render interpolates)
@@ -476,7 +481,7 @@ export function simTick(){
         if(u._markAmp){ if(tgt._marked)dmg*=(1+u._markAmp); tgt._marked=true; tgt._markT=4; }
         if(u.hiveScale)dmg*=1+0.03*countHive(u.side);
         if(onHigh&&u.t==='r')dmg*=1.10;
-        let isCrit=u.crit&&RNG()<u.crit; if(isCrit)dmg*=1.5;
+        let isCrit=u.crit&&RNG()<u.crit; if(isCrit)dmg*=(u.critMul||1.5);   // Rogue synergy raises the crit multiplier above the 1.5 base
         if(isCrit) fx(u,'CRIT!','#ffd375','crit');   // floats up from the attacker; the target shows the ✶ damage number
         let rakkanBleed=false;
         if(u.rakkanN>0){ u.rakkanN--; dmg*=1.25; rakkanBleed=true; }
@@ -758,7 +763,7 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
     tgt.bleedStacks=Math.min(5+(src.bleedBonus||0),(tgt.bleedStacks||0)+src._firstAtkBleed);
   }
   if(kind==='atk'&&src){
-    if(src.side==='P') src._dmgDealt=(src._dmgDealt||0)+dmg;
+    src._dmgDealt=(src._dmgDealt||0)+dmg;   // per-battle telemetry (both sides — run statistics)
     // lifesteal (Soulreaver / Voidtouched)
     if(src.lifesteal&&src.alive){src.hp=Math.min(src.maxhp,src.hp+dmg*src.lifesteal*healScale(src));}
     // thorns reflect (melee only)
@@ -858,7 +863,7 @@ export function castUlt(u,esc,_echo){
   const k=u.ult.k, foes=enemyOf(u), mates=living(u.side);
   let power=u.ultMul||1;
   { const seer=living(u.side).find(a=>a!==u&&a._allyUltAmp&&hexDist(a,u)<=a._allyUltAmp.range); if(seer)power*=(1+seer._allyUltAmp.amt); }
-  if(u.ultCrit&&RNG()<0.25){ power*=1.5; fx(u,'ASTRAL CRIT','#c8a6ff','big'); }
+  if(u.ultCrit&&RNG()<0.25){ power*=1.5; fx(u,u.faction==='Stargazers'?'ASTRAL CRIT':'✶ ULT CRIT','#c8a6ff','big'); }
   if(k==='none')return;
   if(k==='nova'){ // aoe around densest cluster
     let center=densestTarget(u,foes); if(!center)return;
