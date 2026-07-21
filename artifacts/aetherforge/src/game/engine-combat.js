@@ -376,7 +376,6 @@ export function simTick(){
     if(u.regen>0&&u.hp<u.maxhp&&u.alive){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u.regen*TICK*healScale(u)); }   // Verdant Cuirass regen
     if(u.curseT>0)u.curseT-=TICK;
     if(u.stun>0)u.stun-=TICK;
-    if(u._charmT>0){ u._charmT-=TICK; if(u._charmT<=0 && u._charmHome){ u.side=u._charmHome; u._charmHome=null; u.tgt=null; u.retgt=0; fx(u,'freed','#9c8fb0'); } }
     if(u.token&&u.tokenLife!=null){ u.tokenLife-=TICK; if(u.tokenLife<=0){ u.alive=false; fx(u,'✦','#9c8fb0'); } }
     tickStatuses(u);   // Phase 2 status registry (taunt/silence/phase/warcry/confuse/polymorph/whirlwind/bond)
     u._field=fieldMods(u);   // Phase 3 field stat-mods, cached once per tick (read by the dmg/as/dr calcs)
@@ -998,7 +997,7 @@ export function castUlt(u,esc,_echo){
   if(u.ultCrit&&RNG()<0.25){ power*=1.5; fx(u,u.faction==='Stargazers'?'ASTRAL CRIT':'✶ ULT CRIT','#c8a6ff','big'); }
   if(k==='none')return;
   if(k==='nova'){ // aoe around densest cluster
-    let center=densestTarget(u,foes); if(!center)return;
+    let center=pickTarget(u,'densest'); if(!center)return;
     const col=u.faction==='Emberkin'?'#ff7a3a':'#f0d375';
     fx(u,'✸ '+(u.ult.name||'NOVA').toUpperCase(),col,'big');
     // a projectile arcs to the cluster, then the blast lands
@@ -1011,9 +1010,9 @@ export function castUlt(u,esc,_echo){
   } else if(k==='shield'){
     {const sh=Math.round(u.ult.v*healScale(u));applyShield(u,sh);healRingAt(u);blastAt(u.c,u.r,0,'#7cdcff');fx(u,'🛡 '+(u.ult.name||'SHIELD').toUpperCase(),'#7cdcff','big');}
   } else if(k==='execute'){
-    let t=foes.reduce((a,c)=>c.hp<a.hp?c:a,foes[0]); if(!t)return;
+    let t=pickTarget(u,'lowhp'); if(!t)return;
     spawnProjectile(u,t,{glyph:'⚡',color:'#fff',dur:200});
-    if(t.hp/t.maxhp<=u.ult.v){t.hp=0;t.alive=false;fx(t,'EXECUTE','#d4534a','big');onDeath(t);}
+    if(t.hp/t.maxhp<=u.ult.v){fx(t,'EXECUTE','#d4534a','big');slay(t,u);}
     else applyDamage(t,u.dmg*2.5*power*PACE,'atk',u,true);
   } else if(k==='doubleaxe'){
     // Barrage: a volley of axes cycles through enemies within range (repeating targets if the volley outnumbers them)
@@ -1046,11 +1045,11 @@ export function castUlt(u,esc,_echo){
     fx(u,'⚑ RALLY','#f0d375','big'); blastAt(u.c,u.r,(u.ult.r||3),'#f0d375');
     mates.forEach(m=>{ if(hexDist(m,u)<=(u.ult.r||3)){ m.as*=(1+(u.ult.v||0.5)); m.dmg=Math.round(m.dmg*(1+(u.ult.v||0.5)*0.3)); healRingAt(m); fx(m,'⚑','#f0d375'); } });
   } else if(k==='freeze'){
-    let center=densestTarget(u,foes);if(!center)return;
+    let center=pickTarget(u,'densest');if(!center)return;
     fx(u,'❄ '+(u.ult.name||'FREEZE').toUpperCase(),'#7cdcff','big');
     spawnProjectile(u,center,{glyph:'❄',color:'#7cdcff',dur:300,spin:true});
     queueImpact(0.30, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),'#7cdcff');
-      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); });
+      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){if(!f.ccImmune)f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); });
   } else if(k==='chain'){
     // lightning arcs from the nearest foe to successive nearby foes, falling off each jump
     let cur=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!cur)return;
@@ -1066,7 +1065,7 @@ export function castUlt(u,esc,_echo){
     }
   } else if(k==='beam'){
     // piercing line toward the most distant foe — a searing beam lances across the board, hitting everything on its path
-    let far=foes.slice().sort((a,b)=>hexDist(u,b)-hexDist(u,a))[0]; if(!far)return;
+    let far=pickTarget(u,'farthest'); if(!far)return;
     const bcol=u.faction==='Emberkin'?'#ff7a3a':'#ff9d5c';
     fx(u,'☄ '+(u.ult.name||'BEAM').toUpperCase(),bcol,'big');
     beamLine(u,far,bcol);   // the glowing beam itself, with muzzle flash at the caster
@@ -1087,7 +1086,7 @@ export function castUlt(u,esc,_echo){
     for(let i=0;i<n;i++) spawnToken(u.side,key,u.c,u.r,u.ult.v||1);
   } else if(k==='drain'){
     // vampiric strike: heavy single-target hit that heals the caster
-    let t=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!t)return;
+    let t=pickTarget(u,'nearest'); if(!t)return;
     fx(u,'🩸 '+(u.ult.name||'DRAIN').toUpperCase(),'#c0392b','big');
     spawnProjectile(u,t,{glyph:'🩸',color:'#c0392b',dur:200});
     const dmg=u.dmg*u.ult.v*power*PACE; applyDamage(t,dmg,'atk',u,true);
@@ -1098,7 +1097,7 @@ export function castUlt(u,esc,_echo){
     mates.forEach(m=>{ if(hexDist(m,u)<=(u.ult.r||2)){ const sv=Math.round(u.ult.v*(u.healMul||1)*healScale(u)); applyShield(m,sv); m.dr=Math.min(.85,(m.dr||0)+0.15); healRingAt(m); } });
   } else if(k==='curse'){
     // hex a cluster: damage-amp debuff + lingering poison (a setup ultimate)
-    let center=densestTarget(u,foes); if(!center)return;
+    let center=pickTarget(u,'densest'); if(!center)return;
     fx(u,'☠ '+(u.ult.name||'CURSE').toUpperCase(),'#9b59b6','big');
     spawnProjectile(u,center,{glyph:'☠',color:'#9b59b6',dur:280,spin:true});
     queueImpact(0.28, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||2),'#9b59b6');
@@ -1118,7 +1117,7 @@ export function castUlt(u,esc,_echo){
     foes.forEach(f=>{ if(f.alive){
       // stagger each foe's hit slightly by distance so the wave visibly sweeps across the board
       const d=hexDist(u,f); queueImpact(Math.min(300, d*45)/1000, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
-        applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); if(RNG()<0.5)f.stun=Math.max(f.stun||0,0.6);
+        applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); if(RNG()<0.5&&!f.ccImmune)f.stun=Math.max(f.stun||0,0.6);
         blastAt(f.c,f.r,0,'#b9772e'); debrisBurst(f.c,f.r,4);
       });
     } });
@@ -1152,7 +1151,7 @@ export function castUlt(u,esc,_echo){
     }
   } else if(k==='blink'){
     // teleport behind the chosen enemy and land a devastating strike
-    let t=foes.slice().sort((a,b)=>(b.hp)-(a.hp))[0]; // hit the juiciest target (highest HP/backline carry)
+    let t=pickTarget(u,'highhp'); // hit the juiciest target (highest HP/backline carry)
     if(u.arch==='backline') t=foes.slice().sort((a,b)=>b.c-a.c)[0]||t; // divers prefer the far backline
     if(!t)return;
     // find an empty hex "behind" the target (further from the caster's side)
@@ -1168,27 +1167,30 @@ export function castUlt(u,esc,_echo){
     u.tgt=t; u.retgt=2;
   } else if(k==='banish'){
     // hurl an enemy to the far edge of the board (removes a threat from the fight for a while)
-    let t=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!t)return;
-    const edgeC = t.side==='E' ? COLS-1 : 0;  // shove toward its own back edge
-    let dest=null;
-    for(let dc=0;dc<COLS&&!dest;dc++){
-      const cc = t.side==='E' ? COLS-1-dc : dc;
-      for(const r of [t.r,t.r-1,t.r+1,0,ROWS-1]){
-        if(r>=0&&r<ROWS&&!occupied(cc,r)){ dest={c:cc,r}; break; }
-      }
-    }
+    let t=pickTarget(u,'nearest'); if(!t)return;
     spawnProjectile(u,t,{glyph:'🌀',color:'#7cdcff',dur:200});
     fx(t,'BANISHED','#7cdcff','big');
-    if(dest){ t.c=dest.c; t.r=dest.r; }
-    t.stun=Math.max(t.stun||0,u.ult.v||1.5); t.slowT=2; t.tgt=null; t.retgt=2;
+    if(!t.ccImmune){   // ccImmune ("cannot be knocked back") resists the displacement + CC
+      let dest=null;
+      for(let dc=0;dc<COLS&&!dest;dc++){
+        const cc = t.side==='E' ? COLS-1-dc : dc;
+        for(const r of [t.r,t.r-1,t.r+1,0,ROWS-1]){
+          if(r>=0&&r<ROWS&&!occupied(cc,r)){ dest={c:cc,r}; break; }
+        }
+      }
+      if(dest){ t.c=dest.c; t.r=dest.r; }
+      t.stun=Math.max(t.stun||0,u.ult.v||1.5); t.slowT=2; t.tgt=null; t.retgt=2;
+    }
   } else if(k==='charm'){
-    // temporarily turn an enemy unit to fight for you
-    let t=foes.filter(f=>!f.boss&&!f._charmT).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    // temporarily turn an enemy unit to fight for you — MOVE it between the P/E arrays so .side and
+    // array membership agree (fixes the old half-changed-allegiance bug), and revert via the registry.
+    let t=enemyOf(u).filter(f=>!f.boss&&!f.ccImmune&&!hasStatus(f,'charm')).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
     spawnProjectile(u,t,{glyph:'💗',color:'#ff7ab0',dur:220});
-    t._charmT=u.ult.v||4;          // duration in seconds
-    t._charmHome=t.side;           // remember original side
-    t.side=u.side;                 // switch allegiance
-    t.tgt=null; t.retgt=0;
+    const home=t.side, homeArr=G.battle[home], newArr=G.battle[u.side];
+    const idx=homeArr.indexOf(t); if(idx>=0)homeArr.splice(idx,1); newArr.push(t);
+    t.side=u.side; t.tgt=null; t.retgt=0;
+    applyStatus(t,{key:'charm',dur:u.ult.v||4,onEnd:(x)=>{ const cur=G.battle[x.side]||[], hArr=G.battle[home]||[];
+      const j=cur.indexOf(x); if(j>=0)cur.splice(j,1); if(!hArr.includes(x))hArr.push(x); x.side=home; x.tgt=null; x.retgt=0; fx(x,'freed','#9c8fb0'); }});
     fx(t,'CHARMED','#ff7ab0','big'); healRingAt(t);
   } else if(k==='throw'){
     // grab the nearest enemy and hurl it into the farthest one — both take damage and are briefly stunned
