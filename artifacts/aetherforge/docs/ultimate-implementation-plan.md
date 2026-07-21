@@ -106,6 +106,53 @@ Total: **14 self-contained · 8 status · 5 field · 4 death/data = 31.**
 
 ---
 
+## Rework existing ults onto the shared subsystems
+
+Migrating the current 26 ults onto the Phase 0 plumbing is not a tax on top of
+the new work — it is the **cheapest way to get the new ults**, because the shared
+code then ships already proven against known-good behavior. It also collapses
+duplicated logic and fixes two latent inconsistencies. Do each migration
+*before* the phase that depends on it.
+
+### Migration table
+
+| Rework | Existing ults touched | Unblocks / shares with | Payoff |
+|---|---|---|---|
+| **Target selection → `pickTarget(u, mode)`** | 15 inline selectors: `densestTarget` (nova, freeze, curse, zone), lowhp (execute), nearest (drain, banish, chain), farthest (beam), highest-HP + backline (blink), `dmg*as` highthreat (charm) | `hook`, `overload`, `doom`, `rend`, `throw`, `vortex` | one definition of each mode instead of 15 subtly-varying copies |
+| **Status revert → `applyStatus` registry (0.3)** | `charm` (tick-loop revert), `_cloakT` | `taunt`, `silence`, `phase`, `confuse`, `warcry`, `whirlwind`, `polymorph`, `bond` | tick loop stops accreting ~8 bespoke timer blocks; charm/cloak set the template |
+| **Zone → generalized field (0.2)** | `zone`, spore clouds, `_deathPoisonCloud` | `buffzone`, `debuffzone`, `timewarp`, `trap`, `wall` | one zone codepath, not two in parallel; existing behavior is the regression check |
+| **Displacement → `placeNear` / `pushUnit`** | `blink`, `banish` (each hand-rolls an occupancy search) | `hook`, `knockback`, `throw`, `swap`, `vortex` | collision-avoidance written and tested once |
+| **Kill path → `slay(target, src)`** | `execute` (inlines `hp=0; alive=false; fx; onDeath`) | `doom`, `feast`, `selfdestruct`, `swallow` | one clean-kill-and-fire-onDeath for five callers |
+| **`transform` → target-able + revertible** | `transform` (currently self-only, permanent) | `polymorph` (enemy → critter form → revert) | polymorph becomes nearly free |
+
+### Two latent inconsistencies the centralization fixes (intended behavior changes)
+
+- **Uneven CC immunity.** Basic-attack CC checks `!tgt.ccImmune` everywhere
+  (`applyDamage`, the on-hit burn/slow/web/spore lines), but **ultimate CC does
+  not** — `freeze`'s stun, `banish`'s stun, `curse`, and `quake`'s stun all
+  ignore `ccImmune`. A CC-immune boss shrugs off an auto-attack slow yet eats an
+  ult stun. Routing all CC through `applyPayload` forces one **deliberate
+  policy** (e.g. "ults pierce immunity, attacks don't") instead of an accident of
+  which branch applied it.
+- **`charm`'s revert is fragile** — it only restores `side` when `_charmHome` is
+  set and doesn't cleanly handle the unit dying mid-charm. A registry `onEnd`
+  handles expiry, death, and battle-end uniformly.
+
+### Determinism-check protocol (keeps migrations safe)
+
+Every migration except the two fixes above must be **behavior-preserving**. Use
+the seeded sim as the guard:
+
+1. Pin a fixed battle (fixed seed, army, enemy line).
+2. Record the full tick trace (per-unit HP / position / `mag`) **before** the
+   migration.
+3. Apply the migration, re-run the same seed, and diff the trace — it must be
+   **byte-identical** tick-for-tick. If it diverges, the rework changed behavior.
+4. The two intended fixes (ccImmune, charm) get their **own** before/after
+   measurement (win-rate / death deltas) rather than an identical-trace check.
+
+---
+
 ## Cross-cutting
 
 - **Wiring is free:** every ult is `ult:{k, …, desc}` data on a unit / token /
@@ -119,8 +166,16 @@ Total: **14 self-contained · 8 status · 5 field · 4 death/data = 31.**
   *before* adding it to live drop tables.
 
 ## Recommended sequence
-1. **0.1 helpers** → **Phase 1** (fastest value; exercises the helpers).
-2. **0.3 registry** → **Phase 2**.
-3. **0.2 field system** → **Phase 3**.
-4. **Phase 4** data / summon.
-5. Balance pass via sim, then wire into factions / commanders.
+Each subsystem ships with its existing-ult migration in the same step, so the
+shared code is proven against known-good behavior before the new ults ride on it.
+
+1. **0.1 helpers** + migrate `pickTarget` / `placeNear` / `slay` selectors on the
+   current ults (determinism-checked) → **Phase 1** (fastest value; exercises the
+   helpers).
+2. **0.3 registry** + migrate `charm` / `_cloakT` onto it → **Phase 2**.
+3. **0.2 field system** + migrate `zone` / spore / `_deathPoisonCloud` onto it →
+   **Phase 3**.
+4. **`transform` rework** → **Phase 4** data / summon.
+5. Apply the two intended fixes (ccImmune policy, charm revert) with their own
+   before/after measurement.
+6. Balance pass via sim, then wire into factions / commanders.
