@@ -297,6 +297,34 @@ inverted.
   (−damage), `dr` (−armor), `as` (−attack speed), or a per-tick DoT / stack apply.
 - **Shape:** `ult:{k:'debuffzone', r:1, dur:5, debuff:{dmg:0.25, as:0.20}, name:'Blight'}`
 
+### 21. `bombard` — Bombardment
+Call in a barrage of projectiles from *off the board* that rain down on a defined
+number of squares.
+
+- **Gap:** every damage ult today originates from the caster's tile (`nova`,
+  `beam`, `chain`, `quake` all radiate outward from it). This one comes from
+  *outside* the field entirely — an artillery/meteor-shower flavor (Gangplank's
+  barrage, TFT's aerial bombardments) that ignores the caster's position, so a
+  backline unit can strike the enemy backline directly.
+- **Reuses:** `spawnProjectile` (already carries a `glyph`/sprite + travel) fired
+  from an off-board origin computed from `dir`, `queueImpact` to stagger the
+  landings into the chosen `order`, and `blastAt` + `applyDamage` on impact.
+- **Targeting:** hits up to `n` squares — default to the `n` enemy-occupied tiles
+  (densest first), or a random spread if fewer are occupied.
+- **Variables:**
+  - `n` — number of squares struck.
+  - `v` — damage multiplier per hit.
+  - `sprite` / `glyph` — the projectile's art (arrow, meteor, cannonball, …).
+  - `dir` — which edge they fly in from, one of the eight compass points:
+    `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (sets each projectile's off-board
+    spawn point and travel vector).
+  - `order` — the sequence the hits land in:
+    - `all` — every square struck simultaneously.
+    - `random` — shuffled, staggered.
+    - `col-left` / `col-right` — swept column by column from that side.
+    - `row-top` / `row-bottom` — swept row by row from that edge.
+- **Shape:** `ult:{k:'bombard', n:5, v:1.6, dir:'N', order:'row-top', glyph:'☄', name:'Bombardment'}`
+
 ---
 
 ## Recommended build order
