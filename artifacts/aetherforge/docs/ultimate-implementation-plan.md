@@ -131,12 +131,21 @@ duplicated logic and fixes two latent inconsistencies. Do each migration
   (`applyDamage`, the on-hit burn/slow/web/spore lines), but **ultimate CC does
   not** — `freeze`'s stun, `banish`'s stun, `curse`, and `quake`'s stun all
   ignore `ccImmune`. A CC-immune boss shrugs off an auto-attack slow yet eats an
-  ult stun. Routing all CC through `applyPayload` forces one **deliberate
-  policy** (e.g. "ults pierce immunity, attacks don't") instead of an accident of
-  which branch applied it.
-- **`charm`'s revert is fragile** — it only restores `side` when `_charmHome` is
-  set and doesn't cleanly handle the unit dying mid-charm. A registry `onEnd`
-  handles expiry, death, and battle-end uniformly.
+  ult stun. **Decision: ultimate CC respects `ccImmune`, consistent with
+  attacks.** Route all CC through `applyPayload`, which checks `ccImmune` in one
+  place, so a CC-immune target ignores control from ults and attacks alike.
+- **`charm` half-changes allegiance.** Charm flips `t.side` but leaves the unit
+  in the `b.E` array. The engine has two notions of team — `.side` (used by
+  `enemyOf`) and array membership (used by `living`, the foe lists, and the
+  win check) — so they diverge: your own units still see the charmed unit in
+  `living('E')` and attack it, it can target itself, its former allies ignore it,
+  and the win check still counts it as an enemy. The revert (`u.side=_charmHome`)
+  also only flips the property, and only runs in the tick loop for a *living*
+  unit — so a unit that dies mid-charm fires `onDeath` on the wrong side
+  (mis-crediting kill/death triggers) and side-gated revives bring it back
+  permanently stolen. **Fix:** make charm move the unit between `b.P`/`b.E` (one
+  source of truth), and route its expiry through the `applyStatus` registry so
+  `onEnd` restores it on expiry, death, and battle-end alike.
 
 ### Determinism-check protocol (keeps migrations safe)
 
