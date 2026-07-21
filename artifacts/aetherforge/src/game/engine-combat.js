@@ -379,24 +379,34 @@ export function simTick(){
     if(u._charmT>0){ u._charmT-=TICK; if(u._charmT<=0 && u._charmHome){ u.side=u._charmHome; u._charmHome=null; u.tgt=null; u.retgt=0; fx(u,'freed','#9c8fb0'); } }
     if(u.token&&u.tokenLife!=null){ u.tokenLife-=TICK; if(u.tokenLife<=0){ u.alive=false; fx(u,'✦','#9c8fb0'); } }
     tickStatuses(u);   // Phase 2 status registry (taunt/silence/phase/warcry/confuse/polymorph/whirlwind/bond)
+    u._field=fieldMods(u);   // Phase 3 field stat-mods, cached once per tick (read by the dmg/as/dr calcs)
+    if(u._field){ if(u._field.regen&&u.hp<u.maxhp)u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._field.regen*TICK);
+      if(u._field.charge)u.mag=Math.min(100,u.mag+u._field.charge*TICK); }
     if(hasStatus(u,'whirlwind')){ u._wwT=(u._wwT||0)-TICK; if(u._wwT<=0){ u._wwT=0.3; const v=statusData(u,'whirlwind')||0.8;
       enemyOf(u).forEach(f=>{ if(f.alive&&hexDist(f,u)<=1) applyDamage(f,u.dmg*v*PACE,'atk',u); }); blastAt(u.c,u.r,1,'#cfe8ff'); } }
   }
-  // (1b) DAMAGING ZONES — units standing on a hostile zone tile take damage; zones decay
+  // (1b) FIELDS — damage/spore zones, trap tiles, and debuff DoT/slow. Buff/debuff stat mods and walls
+  // are applied elsewhere (fieldMods at use-time; occupied() for walls). Zones decay via z.life.
   if(b.zones&&b.zones.length){
     for(const z of b.zones){
       // Mycelia — while she lives, her side's spore clouds don't decay; otherwise normal decay
       const cloudMaster = z.spore && living(z.side).some(a=>a._cloudMaster&&a.alive);
       if(!cloudMaster) z.life-=TICK;
+      // TRAP: single-fire the moment an enemy of the owner steps onto any tile
+      if(z.trap){
+        const victim=all.find(x=>x.side!==z.side && z.tiles.some(t=>t.c===x.c&&t.r===x.r));
+        if(victim){ if(z.dmg)applyDamage(victim,z.dmg,'atk',null); if(z.payload)applyPayload(victim,z.payload,null);
+          if(z.payload&&z.payload.teleport)teleportRandom(victim); fx(victim,'💥','#ffb300'); blastAt(victim.c,victim.r,0,z.color||'#ffb300'); z.life=0; }
+        continue;
+      }
       z.tick=(z.tick||0)+TICK;
       if(z.tick>=0.5){ z.tick=0;
         for(const u of all){ if(u.side===z.side)continue;
-          if(z.tiles.some(t=>t.c===u.c&&t.r===u.r)){
-            // spore clouds poison instead of dealing direct damage: each tick inside adds a stack (cap 5)
-            if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } }
-            else applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
-            if(z.spore && cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); }
-          }
+          if(!z.tiles.some(t=>t.c===u.c&&t.r===u.r))continue;
+          if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } if(cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); } }
+          else if(z.dmg) applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
+          if(z.debuff&&z.debuff.dot) applyDamage(u, z.debuff.dot*0.5*PACE, 'dot', null);   // debuffzone DoT
+          if(z.slowOnTile && !u.ccImmune){ u.slowT=Math.max(u.slowT||0,z.slowOnTile); u.slowStacks=Math.max(u.slowStacks||0,1); }   // timewarp movement slow
         }
       }
     }
@@ -485,12 +495,12 @@ export function simTick(){
     }
     // (5) ATTACK if in range
     if(d<=effRng){
-      u.atkcd-=TICK*slowAtkRate(u)*auraAtkSpeed(u)*selfAtkSpeedMul(u);
+      u.atkcd-=TICK*slowAtkRate(u)*auraAtkSpeed(u)*selfAtkSpeedMul(u)*(u._field?u._field.as:1);
       if(u.atkcd<=0){
         u.atkcd=1/u.as;
         u._idleT=0;   // attacked this tick — reset idle timer (for regen-while-idle abilities)
         if(u._asPerTravel)u._travelDist=0;   // Galeclaw: reset travel charge after attacking
-        let dmg=u.dmg*esc*PACE*auraBonus(u)*condDamageMul(u);
+        let dmg=u.dmg*esc*PACE*auraBonus(u)*condDamageMul(u)*(u._field?u._field.dmg:1);
         if(u._selfBurnDmg)dmg*=(1+u._selfBurnDmg);
         if(u.token){ const aura=living(u.side).find(a=>a._tokenDmgAura&&!a.token&&hexDist(a,u)<=a._tokenDmgAura.range); if(aura)dmg*=(1+aura._tokenDmgAura.amt); }
         if(u._tokenDmgAura && u.token)dmg*=1;
@@ -714,7 +724,9 @@ export function neighbors(c,r){
    :[[+1,+1],[+1,0],[0,-1],[-1,0],[-1,+1],[0,+1]];
   return dirs.map(([dc,dr])=>({c:c+dc,r:r+dr})).filter(n=>n.c>=0&&n.c<COLS&&n.r>=0&&n.r<ROWS);
 }
-export function occupied(c,r){ if(terrainAt(c,r)==='rubble')return true; return [...G.battle.P,...G.battle.E].some(u=>u.alive&&u.c===c&&u.r===r);}
+export function occupied(c,r){ if(terrainAt(c,r)==='rubble')return true;
+  const zs=G.battle&&G.battle.zones; if(zs)for(const z of zs){ if(z.wall && z.tiles.some(t=>t.c===c&&t.r===r))return true; }   // Barricade walls block movement
+  return [...G.battle.P,...G.battle.E].some(u=>u.alive&&u.c===c&&u.r===r);}
 
 /* ---------- Phase 0.1 — shared ultimate helpers ----------
    One implementation of the selectors / displacement / status logic that ult
@@ -788,11 +800,34 @@ export function endStatuses(u){
   const st=u._status; if(!st||!st.length)return; u._status=[];
   for(const s of st){ if(s.onEnd)try{s.onEnd(u);}catch(e){} }
 }
+
+/* ---------- Phase 3 — generalized field system ----------
+   Fields are entries in G.battle.zones. Beyond the existing damage/spore zones they carry a typed
+   payload: buff (ally stat mods), debuff (enemy stat mods), wall (impassable), trap (single-fire).
+   Stat mods are computed at use-time (like auraBonus) — cached once per unit per tick as u._field —
+   so there is no enter/leave bookkeeping or revert to strand. */
+export function fieldMods(u){
+  const zs=G.battle&&G.battle.zones; if(!zs||!zs.length)return null;
+  let dmg=1, as=1, dr=0, charge=0, regen=0, has=false;
+  for(const z of zs){
+    if(!z.buff&&!z.debuff)continue;
+    if(!z.tiles.some(t=>t.c===u.c&&t.r===u.r))continue;
+    if(z.buff && u.side===z.side){ const b=z.buff; has=true; if(b.dmg)dmg*=(1+b.dmg); if(b.as)as*=(1+b.as); if(b.dr)dr+=b.dr; if(b.charge)charge+=b.charge; if(b.regen)regen+=b.regen; }
+    if(z.debuff && u.side!==z.side){ const d=z.debuff; has=true; if(d.dmg)dmg*=(1-d.dmg); if(d.as)as*=(1-d.as); if(d.dr)dr-=d.dr; }
+  }
+  return has?{dmg,as,dr,charge,regen}:null;
+}
+// teleportRandom: fling a unit to a random open board tile (trap payload).
+export function teleportRandom(u){
+  const opts=[]; for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){ if(!occupied(c,r))opts.push({c,r}); }
+  if(opts.length){ const d=opts[Math.floor(RNG()*opts.length)]; u.c=d.c; u.r=d.r; u.tgt=null; u.retgt=0; }
+}
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
   if(hasStatus(tgt,'phase')){ fx(tgt,'✧','#b48ae8'); return; }   // Stasis: untargetable + damage-immune
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
-  let drEff=tgt.dr||0;
+  let drEff=(tgt.dr||0)+(tgt._field?tgt._field.dr:0);   // field buff/debuff shifts armor (debuff can push it negative → bonus damage)
+  if(drEff>0.95)drEff=0.95;
   if(src&&src.armorPierce)drEff=Math.max(0,drEff-src.armorPierce);
   let dmg=amt*(1-drEff);
   if(kind==='atk'&&src){ const emp=(src._plunderAcc||0)+(src._empAcc||0); if(emp>0)dmg*=(1+emp); } // enemy Plunder/empower stacks
@@ -1344,5 +1379,38 @@ export function castUlt(u,esc,_echo){
     spawnProjectile(u,center,{glyph:u.ult.zico||'🔥',color:u.ult.zcol||'#ff7a3a',dur:260,spin:true});
     queueImpact(0.26, ()=>{ if(G.battle&&!G.battle.done) blastAt(center.c,center.r,rad,u.ult.zcol||'#ff7a3a'); });
     fx(u,'ZONE','#ff7a3a','big');
+  } else if(k==='buffzone'){
+    // empower allies standing on a patch of tiles around the caster
+    const rad=u.ult.r||1, dur=u.ult.dur||5, col=u.ult.zcol||'#8fe3c0';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(u,rad), side:u.side, buff:(u.ult.buff||{dmg:0.25,dr:0.15}), life:dur, color:col, glyph:u.ult.zico||'✚', tick:0}]);
+    blastAt(u.c,u.r,rad,col); fx(u,'✚ '+(u.ult.name||'SANCTUARY').toUpperCase(),col,'big');
+  } else if(k==='debuffzone'){
+    // sap enemies standing on a patch around the densest cluster
+    const center=densestTarget(u,foes)||u, rad=u.ult.r||1, dur=u.ult.dur||5, col=u.ult.zcol||'#7e6b8a';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, debuff:(u.ult.debuff||{dmg:0.25,as:0.20}), life:dur, color:col, glyph:u.ult.zico||'☠', tick:0}]);
+    spawnProjectile(u,center,{glyph:u.ult.zico||'☠',color:col,dur:240,spin:true}); blastAt(center.c,center.r,rad,col); fx(u,'☠ '+(u.ult.name||'BLIGHT').toUpperCase(),col,'big');
+  } else if(k==='timewarp'){
+    // a field that slows enemies (attack speed + movement) while hastening allies inside it
+    const center=densestTarget(u,foes)||u, rad=u.ult.r||2, dur=u.ult.dur||4, v=u.ult.v||0.4, col='#c8a6ff';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, buff:{as:v}, debuff:{as:v}, slowOnTile:1.0, life:dur, color:col, glyph:'⏳', tick:0}]);
+    spawnProjectile(u,center,{glyph:'⏳',color:col,dur:240,spin:true}); blastAt(center.c,center.r,rad,col); fx(u,'⏳ '+(u.ult.name||'CHRONOFIELD').toUpperCase(),col,'big');
+  } else if(k==='trap'){
+    // arm a tile near the densest cluster; the first enemy to step on it triggers the payload
+    const center=densestTarget(u,foes)||pickTarget(u,'nearest'); if(!center)return;
+    const rad=u.ult.r||0, col=u.ult.zcol||'#ffb300';
+    const payload={}; if(u.ult.stacks)payload.bleed=u.ult.stacks; if(u.ult.root){payload.stun=u.ult.root;} if(u.ult.teleport)payload.teleport=true; if(u.ult.slow)payload.slow=u.ult.slow;
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, trap:true, dmg:u.dmg*(u.ult.v||2.0)*power*PACE, payload, life:u.ult.dur||10, color:col, glyph:'🎯', tick:0}]);
+    fx(u,'🎯 '+(u.ult.name||'SNARE').toUpperCase(),col,'big');
+  } else if(k==='wall'){
+    // conjure a short line of impassable tiles to cut a lane
+    const n=u.ult.n||3, dur=u.ult.dur||5, col=u.ult.zcol||'#8a7f74';
+    // build the wall just ahead of the caster, spanning rows around it
+    const wc=u.side==='P'?Math.min(COLS-1,u.c+2):Math.max(0,u.c-2);
+    const tiles=[]; for(let dr=-(n>>1);tiles.length<n&&dr<=ROWS;dr++){ const r=u.r+dr; if(r>=0&&r<ROWS&&!occupied(wc,r))tiles.push({c:wc,r}); }
+    if(!tiles.length)return;
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles, side:u.side, wall:true, life:dur, color:col, glyph:'🧱', tick:0}]);
+    tiles.forEach(t=>blastAt(t.c,t.r,0,col)); fx(u,'🧱 '+(u.ult.name||'BARRICADE').toUpperCase(),col,'big');
   }
 }
+// fieldTiles: every in-bounds tile within `rad` hexes of a center (rad 0 = just the center tile).
+export function fieldTiles(center,rad){ const tiles=[]; for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){ if(hexDist({c,r},center)<=rad)tiles.push({c,r}); } return tiles; }

@@ -49,7 +49,12 @@ export const ULT_DESC={
   confuse:'Maddens nearby enemies into attacking their own side',
   polymorph:'Hexes a dangerous foe into a harmless critter',
   whirlwind:'A spinning melee storm that damages adjacent foes while moving',
-  bond:'Tethers to an ally, sharing incoming damage between them'
+  bond:'Tethers to an ally, sharing incoming damage between them',
+  buffzone:'Creates tiles that empower allies standing on them',
+  debuffzone:'Creates tiles that weaken enemies standing on them',
+  timewarp:'A field that slows enemies and hastens allies inside it',
+  trap:'Arms a tile that triggers on the first enemy to step on it',
+  wall:'Conjures a line of impassable tiles to block a lane'
 };
 export const TT=document.getElementById('tooltip');
 
