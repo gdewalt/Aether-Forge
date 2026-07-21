@@ -282,6 +282,21 @@ Create a zone of tiles that grants buffs to allies standing on them.
   `dr`, `as`, `charge`, or `regen`.
 - **Shape:** `ult:{k:'buffzone', r:1, dur:5, buff:{dmg:0.25, dr:0.15}, name:'Sanctuary'}`
 
+### 20. `debuffzone` — Blight
+Create a zone of tiles that *weaken* enemies standing on them — `buffzone`
+inverted.
+
+- **Gap:** the mirror of #19. Where `sacred` ground and `buffzone` empower whoever
+  stands there, this saps enemies who do — a persistent, positional debuff field
+  distinct from `curse` (a one-shot cluster hex) and `timewarp` (which only slows
+  attack speed / movement). Denies chokes and forces the enemy to path around it.
+- **Reuses:** the same `zones` tile system + per-tick position check as
+  `buffzone`; while an enemy stands on a tile it takes the debuff (negated
+  stat mods, and/or `bleedStacks`/`poisonT`/`slowT`), cleared when it steps off.
+- **Variables:** `r` radius, `dur` lifetime, and a `debuff` bag — any of `dmg`
+  (−damage), `dr` (−armor), `as` (−attack speed), or a per-tick DoT / stack apply.
+- **Shape:** `ult:{k:'debuffzone', r:1, dur:5, debuff:{dmg:0.25, as:0.20}, name:'Blight'}`
+
 ---
 
 ## Recommended build order
