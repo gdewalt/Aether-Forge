@@ -378,6 +378,9 @@ export function simTick(){
     if(u.stun>0)u.stun-=TICK;
     if(u._charmT>0){ u._charmT-=TICK; if(u._charmT<=0 && u._charmHome){ u.side=u._charmHome; u._charmHome=null; u.tgt=null; u.retgt=0; fx(u,'freed','#9c8fb0'); } }
     if(u.token&&u.tokenLife!=null){ u.tokenLife-=TICK; if(u.tokenLife<=0){ u.alive=false; fx(u,'✦','#9c8fb0'); } }
+    tickStatuses(u);   // Phase 2 status registry (taunt/silence/phase/warcry/confuse/polymorph/whirlwind/bond)
+    if(hasStatus(u,'whirlwind')){ u._wwT=(u._wwT||0)-TICK; if(u._wwT<=0){ u._wwT=0.3; const v=statusData(u,'whirlwind')||0.8;
+      enemyOf(u).forEach(f=>{ if(f.alive&&hexDist(f,u)<=1) applyDamage(f,u.dmg*v*PACE,'atk',u); }); blastAt(u.c,u.r,1,'#cfe8ff'); } }
   }
   // (1b) DAMAGING ZONES — units standing on a hostile zone tile take damage; zones decay
   if(b.zones&&b.zones.length){
@@ -441,8 +444,21 @@ export function simTick(){
       u.retgt=RETGT_TIME;
     }
 
-    // (2) ULTIMATE if bar full
-    if(u.mag>=100){ castUlt(u,esc); u.mag=0; continue; }
+    // ---- Phase 2 status behaviors: neutralize / retarget / cast-gate ----
+    if(hasStatus(u,'polymorph')) continue;                          // hexed: cannot act
+    if(hasStatus(u,'warcry')){                                      // feared: flee, cannot attack or cast
+      const foe=enemyOf(u).sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0];
+      if(foe){ u.movecd=(u.movecd||0)-TICK; if(u.movecd<=0){ u.movecd=MOVE_BASE/Math.max(0.5,u.mv); pushUnit(u,foe,1); } }
+      continue;
+    }
+    if(hasStatus(u,'taunt')){ const by=statusData(u,'taunt'); if(by&&by.alive)u.tgt=by; }        // provoked: attack the taunter
+    else if(hasStatus(u,'confuse')){                                                              // maddened: attack own side
+      const allies=living(u.side).filter(a=>a!==u);
+      if(allies.length) u.tgt=allies.reduce((a,c)=>hexDist(u,c)<hexDist(u,a)?c:a);
+    }
+
+    // (2) ULTIMATE if bar full — silence blocks the cast
+    if(u.mag>=100 && !hasStatus(u,'silence')){ castUlt(u,esc); u.mag=0; continue; }
 
     // (3)/(4) SUPPORT ability: clerics prefer healing a wounded ally over attacking
     if(u.arch==='support'){
@@ -654,7 +670,7 @@ export function condDamageMul(u){
   return m;
 }
 export function onDeath(u){
-  // hook for on-death triggers (Phoenix rebirth, Hivemind spawns, etc. — stubbed for prototype slice)
+  endStatuses(u);   // fire any status reverts (e.g. polymorph identity restore) on hard-kill / fallback deaths
 }
 export function colDepth(u){return u.side==='P'?u.c:(COLS-u.c);} // how deep into enemy territory (for rogue dive we want their backline = high enemy col)
 export function totalHP(s){return living(s).reduce((a,u)=>a+u.hp,0);}
@@ -749,8 +765,32 @@ export function pushUnit(u, from, dist){
 export function swapPos(a,b){ const c=a.c,r=a.r; a.c=b.c; a.r=b.r; b.c=c; b.r=r; }
 // slay: finalize a kill immediately (mirrors the tick death-sweep) and fire on-death triggers.
 export function slay(t, src){ if(!t||!t.alive)return; t.hp=0; t.alive=false; fx(t,'☠','#d4534a'); onDeath(t); }
+
+/* ---------- Phase 0.3 — status registry ----------
+   Timed statuses with an onEnd revert, so ults like confuse/polymorph/bond don't each
+   accrete a bespoke timer + restore block in the tick loop. onEnd runs on natural expiry
+   AND on death/battle-end (via endStatuses), so reverts always fire. */
+export function applyStatus(u, s){
+  u._status=u._status||[];
+  const ex=u._status.find(x=>x.key===s.key);
+  if(ex){ ex.t=Math.max(ex.t, s.dur); if(s.onEnd)ex.onEnd=s.onEnd; if(s.data!==undefined)ex.data=s.data; return ex; }
+  const st={key:s.key, t:s.dur, onEnd:s.onEnd||null, data:s.data};
+  u._status.push(st); return st;
+}
+export function hasStatus(u,key){ const st=u._status; if(!st)return false; for(const s of st){ if(s.key===key&&s.t>0)return true; } return false; }
+export function statusData(u,key){ const st=u._status; if(!st)return null; for(const s of st){ if(s.key===key&&s.t>0)return s.data; } return null; }
+export function tickStatuses(u){
+  const st=u._status; if(!st||!st.length)return;
+  for(let i=st.length-1;i>=0;i--){ const s=st[i]; s.t-=TICK; if(s.t<=0){ st.splice(i,1); if(s.onEnd)try{s.onEnd(u);}catch(e){} } }
+}
+// endStatuses: fire remaining onEnds immediately (death / battle-end) so reverts never get stranded.
+export function endStatuses(u){
+  const st=u._status; if(!st||!st.length)return; u._status=[];
+  for(const s of st){ if(s.onEnd)try{s.onEnd(u);}catch(e){} }
+}
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
+  if(hasStatus(tgt,'phase')){ fx(tgt,'✧','#b48ae8'); return; }   // Stasis: untargetable + damage-immune
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
   let drEff=tgt.dr||0;
   if(src&&src.armorPierce)drEff=Math.max(0,drEff-src.armorPierce);
@@ -793,6 +833,9 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
     fx(tgt,'-'+Math.round(absorbed),'#7cdcff');
     if(tgt.shield<=0){ tgt.shield=0; fx(tgt,'SHIELD BROKEN','#7cdcff'); }
   }
+  // Soul Tether: a bonded pair shares incoming damage (half redirected to the partner)
+  if(dmg>0 && hasStatus(tgt,'bond')){ const partner=statusData(tgt,'bond');
+    if(partner&&partner.alive&&partner!==tgt){ const share=dmg*0.5; dmg-=share; partner.hp-=share; partner._dmgTaken=(partner._dmgTaken||0)+share; fx(partner,'🔗','#8fd0ff'); } }
   tgt.hp-=dmg;
   tgt._dmgTaken=(tgt._dmgTaken||0)+dmg;   // per-battle telemetry (run statistics)
   if(dmg>0&&G.battle){ tgt._hitFx=G.battle.t; if(kind==='atk'&&dmg>tgt.maxhp*0.12)tgt._bigHit=G.battle.t; }   // juice: flinch / big-hit shake
@@ -869,6 +912,7 @@ export function tryDeath(u){
     if(aura && !G.battle['_teamRev_'+u.side]){ G.battle['_teamRev_'+u.side]=true; u.hp=u.maxhp*aura._teamReviveAura; fx(u,'✟ REVIVED','#f0d375','big'); healRingAt(u); return; }
   }
   u.alive=false;
+  endStatuses(u);   // fire status reverts (polymorph identity, etc.) the moment the unit truly dies
   deathBurst(u);   // juice: dust/blood puff on death
   // Enemy faction themes: Brigand Plunder & Void/Dread empower — killers' side gains stacking damage
   const _killSide=u.side==='P'?'E':'P';
@@ -1244,6 +1288,51 @@ export function castUlt(u,esc,_echo){
       if(m._shred){ m._shred=0; if(m._drBase!=null)m.dr=m._drBase; }
       m._ccImmuneT=Math.max(m._ccImmuneT||0,u.ult.v||1.5); healRingAt(m); fx(m,'✦',col);
     });
+  } else if(k==='taunt'){
+    // provoke nearby enemies into attacking the caster, who braces with a shield
+    const rad=u.ult.r||3, dur=u.ult.v||2.5;
+    fx(u,'🛡 '+(u.ult.name||'PROVOKE').toUpperCase(),'#f0d375','big'); blastAt(u.c,u.r,rad,'#f0d375');
+    applyShield(u, u.ult.shield||u.maxhp*0.25);
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'taunt',dur,data:u}); f.tgt=u; f.retgt=dur; fx(f,'❗','#f0d375'); });
+  } else if(k==='silence'){
+    // drain enemy charge and lock them out of casting for a window
+    const rad=u.ult.r||2, dur=u.ult.v||2.5;
+    fx(u,'🔇 '+(u.ult.name||'DISRUPT').toUpperCase(),'#9c8fb0','big'); blastAt(u.c,u.r,rad,'#9c8fb0');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; f.mag=0; applyStatus(f,{key:'silence',dur}); fx(f,'🔇','#9c8fb0'); });
+  } else if(k==='phase'){
+    // caster (or the most-wounded ally) becomes untargetable + damage-immune briefly
+    const dur=u.ult.v||1.5;
+    const t=(u.ult.self===false)?(mates.filter(m=>m!==u&&!m.token).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]||u):u;
+    fx(t,'✧ '+(u.ult.name||'STASIS').toUpperCase(),'#b48ae8','big'); blastAt(t.c,t.r,0,'#b48ae8');
+    t._cloakT=Math.max(t._cloakT||0,dur); applyStatus(t,{key:'phase',dur});
+  } else if(k==='warcry'){
+    // terrify nearby enemies: they flee and cannot act
+    const rad=u.ult.r||3, dur=u.ult.v||1.5;
+    fx(u,'😱 '+(u.ult.name||'TERRIFY').toUpperCase(),'#7e57c2','big'); blastAt(u.c,u.r,rad,'#7e57c2');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'warcry',dur}); f.tgt=null; f.retgt=0; fx(f,'😱','#7e57c2'); });
+  } else if(k==='confuse'){
+    // madden nearby enemies into attacking their own side
+    const rad=u.ult.r||2, dur=u.ult.v||2.5;
+    fx(u,'💫 '+(u.ult.name||'MADNESS').toUpperCase(),'#e91e63','big'); blastAt(u.c,u.r,rad,'#e91e63');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'confuse',dur}); f.tgt=null; f.retgt=0; fx(f,'💫','#e91e63'); });
+  } else if(k==='polymorph'){
+    // hex the biggest threat into a harmless critter that cannot act, until it reverts
+    const t=enemyOf(u).filter(f=>!f.boss&&!f.ccImmune&&f.alive&&!hasStatus(f,'polymorph')).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    const dur=u.ult.v||3, oname=t.name, oico=t.ico, oart=t.art;
+    fx(t,'🐑 '+(u.ult.name||'HEX').toUpperCase(),'#f4c542','big'); spawnProjectile(u,t,{glyph:'✨',color:'#f4c542',dur:200});
+    t.name='Sheep'; t.ico='🐑'; t.art='Sheep'; t.tgt=null; t.retgt=0;
+    applyStatus(t,{key:'polymorph',dur,onEnd:(x)=>{ x.name=oname; x.ico=oico; x.art=oart; }});
+  } else if(k==='whirlwind'){
+    // a moving melee AoE: pulse damage to adjacent foes each tick while the caster keeps advancing
+    const dur=u.ult.dur||3;
+    fx(u,'🌪 '+(u.ult.name||'CYCLONE').toUpperCase(),'#cfe8ff','big');
+    applyStatus(u,{key:'whirlwind',dur,data:(u.ult.v||0.8)});
+  } else if(k==='bond'){
+    // tether the caster to an ally so incoming damage is shared between them
+    const ally=mates.filter(m=>m!==u&&!m.token&&m.alive).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; if(!ally)return;
+    const dur=u.ult.v||5;
+    fx(u,'🔗 '+(u.ult.name||'SOUL TETHER').toUpperCase(),'#8fd0ff','big'); healRingAt(u); healRingAt(ally);
+    applyStatus(u,{key:'bond',dur,data:ally}); applyStatus(ally,{key:'bond',dur,data:u});
   } else if(k==='zone'){
     // create a damaging zone of board tiles around the densest enemy cluster
     let center=densestTarget(u,foes); if(!center)return;

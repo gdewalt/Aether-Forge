@@ -41,7 +41,15 @@ export const ULT_DESC={
   selfdestruct:'The caster detonates, dying to damage everything nearby',
   bombard:'Rains projectiles from off the board onto several squares',
   cone:'A wedge of damage fanning out toward the target',
-  cleanse:'Strips debuffs from nearby allies and briefly wards them'
+  cleanse:'Strips debuffs from nearby allies and briefly wards them',
+  taunt:'Forces nearby enemies to attack the caster, who gains a shield',
+  silence:'Drains enemy charge and stops them casting for a while',
+  phase:'Becomes untargetable and damage-immune for a moment',
+  warcry:'Terrifies nearby enemies into fleeing, unable to act',
+  confuse:'Maddens nearby enemies into attacking their own side',
+  polymorph:'Hexes a dangerous foe into a harmless critter',
+  whirlwind:'A spinning melee storm that damages adjacent foes while moving',
+  bond:'Tethers to an ally, sharing incoming damage between them'
 };
 export const TT=document.getElementById('tooltip');
 
