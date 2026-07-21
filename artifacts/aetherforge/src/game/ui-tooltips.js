@@ -33,7 +33,15 @@ export const ULT_DESC={
   knockback:'Shoves nearby enemies away from the caster',
   swap:'Trades places with a wounded ally',
   doom:'Brands a dangerous foe; after a delay it takes massive damage',
-  siphon:'Steals attack power (and some armor) from a strong foe'
+  siphon:'Steals attack power (and some armor) from a strong foe',
+  vortex:'Pulls nearby enemies into a cluster and slows them',
+  rend:'A heavy strike that cuts healing and applies bleed',
+  overload:'Hammers the toughest foe with a flurry of hits',
+  feast:'Devours an adjacent weakened foe, growing permanently',
+  selfdestruct:'The caster detonates, dying to damage everything nearby',
+  bombard:'Rains projectiles from off the board onto several squares',
+  cone:'A wedge of damage fanning out toward the target',
+  cleanse:'Strips debuffs from nearby allies and briefly wards them'
 };
 export const TT=document.getElementById('tooltip');
 

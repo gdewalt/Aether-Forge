@@ -343,6 +343,7 @@ export function simTick(){
     if(u._constructRegen && u.hp<u.maxhp){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._constructRegen*TICK); }
     if(u._shockedT>0){ u._shockedT-=TICK; if(u._shockedT<=0)u._shocked=false; }
     if(u._cloakT>0){ u._cloakT-=TICK; if(u._cloakT<=0){ u._cloakT=0; fx(u,'🌫','#b9c4d0'); } }   // infiltrator cloak wears off
+    if(u._ccImmuneT>0){ u._ccImmuneT-=TICK; if(u._ccImmuneT<0)u._ccImmuneT=0; }   // brief post-cleanse debuff immunity
     if(u.shieldT>0){ u.shieldT-=TICK; if(u.shieldT<=0){ u.shield=0; } }
     if(u._shieldFx>0)u._shieldFx-=TICK;
     if(u._healAST>0){ u._healAST-=TICK; if(u._healAST<=0)u._healAS=0; }
@@ -728,7 +729,7 @@ export function placeNear(target){
 // consistent with basic-attack CC; bleed and curse (damage amps, not control) pass through, as they do on hit.
 export function applyPayload(tgt, p, src){
   if(!p||!tgt||!tgt.alive)return;
-  const immune=!!tgt.ccImmune;
+  const immune=!!tgt.ccImmune || (tgt._ccImmuneT>0);
   if(p.stun   && !immune) tgt.stun=Math.max(tgt.stun||0, p.stun);
   if(p.slow   && !immune){ tgt.slowT=Math.max(tgt.slowT||0, p.slow); tgt.slowStacks=Math.max(tgt.slowStacks||0,1); }
   if(p.burn   && !immune){ tgt.burnT=Math.max(tgt.burnT||0, p.burnDur||2); tgt.burnMul=p.burn; }
@@ -746,6 +747,8 @@ export function pushUnit(u, from, dist){
 }
 // swapPos: exchange two units' board positions.
 export function swapPos(a,b){ const c=a.c,r=a.r; a.c=b.c; a.r=b.r; b.c=c; b.r=r; }
+// slay: finalize a kill immediately (mirrors the tick death-sweep) and fire on-death triggers.
+export function slay(t, src){ if(!t||!t.alive)return; t.hp=0; t.alive=false; fx(t,'☠','#d4534a'); onDeath(t); }
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
@@ -1156,6 +1159,91 @@ export function castUlt(u,esc,_echo){
     t.dmg=Math.max(1,t.dmg-dmgSteal); u.dmg+=dmgSteal;
     const drSteal=Math.min(0.15,(t.dr||0)*frac); if(drSteal>0){ t.dr=Math.max(0,(t.dr||0)-drSteal); u.dr=Math.min(0.85,(u.dr||0)+drSteal); }
     applyDamage(t,u.dmg*0.8*power*PACE,'atk',u); fx(t,'-'+dmgSteal+' dmg','#8e44ad');
+  } else if(k==='vortex'){
+    // yank enemies near a cluster inward and briefly slow them (sets up AoE follow-ups)
+    const center=densestTarget(u,foes); if(!center)return;
+    const rad=u.ult.r||2, pull=u.ult.v||2, col='#7cdcff';
+    fx(u,'🌀 '+(u.ult.name||'GRAVITY WELL').toUpperCase(),col,'big'); blastAt(center.c,center.r,rad,col);
+    foes.forEach(f=>{ if(f===center||!f.alive||hexDist(f,center)>rad)return;
+      let c=f.c,r=f.r;
+      for(let i=0;i<pull;i++){ const nc=c+Math.sign(center.c-c), nr=r+Math.sign(center.r-r); if((nc===c&&nr===r)||occupied(nc,nr))break; c=nc; r=nr; }
+      f.c=c; f.r=r; f.tgt=null; f.retgt=0; applyPayload(f,{slow:u.ult.slow||2},u);
+    });
+  } else if(k==='rend'){
+    // heavy single hit + grievous wounds (cuts healing) + bleed — the anti-sustain tool
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    fx(u,'🗡 '+(u.ult.name||'MORTAL STRIKE').toUpperCase(),'#c0392b','big');
+    spawnProjectile(u,t,{glyph:'🗡',color:'#c0392b',dur:160});
+    applyDamage(t,u.dmg*(u.ult.v||2.8)*power*PACE,'atk',u,true);
+    if(t.alive){ t._healCut=u.ult.heal||0.75; t._healCutT=u.ult.hdur||4; applyPayload(t,{bleed:u.ult.bleed||3},u); fx(t,'GRIEVOUS','#c0392b'); }
+  } else if(k==='overload'){
+    // lock the beefiest foe and hammer it with n rapid staggered hits (boss-melter)
+    const t=pickTarget(u,'highhp'); if(!t)return;
+    const hits=u.ult.n||6, col='#ff7043';
+    fx(u,'🎯 '+(u.ult.name||'FOCUS FIRE').toUpperCase(),col,'big');
+    for(let i=0;i<hits;i++){ queueImpact(i*0.08, ()=>{ if(!G.battle||G.battle.done||!t.alive)return;
+      spawnProjectile(u,t,{glyph:'✦',color:col,dur:100}); applyDamage(t,u.dmg*(u.ult.v||1.4)*power*PACE,'atk',u,true); blastAt(t.c,t.r,0,col); }); }
+  } else if(k==='feast'){
+    // devour an adjacent low-HP foe (or bite one to death); grow permanently on a kill, stacking each cast
+    const t=foes.filter(f=>hexDist(f,u)<=1&&!f.boss&&f.alive).sort((a,b)=>a.hp-b.hp)[0];
+    fx(u,'😈 '+(u.ult.name||'DEVOUR').toUpperCase(),'#8e44ad','big');
+    let devoured=false;
+    if(t){
+      if(t.hp/t.maxhp<=(u.ult.v||0.35)){ slay(t,u); devoured=true; }
+      else { applyDamage(t,u.dmg*2.2*power*PACE,'atk',u,true); if(t.hp<=0){ slay(t,u); devoured=true; } }
+    }
+    if(devoured){ const g=u.ult.grow||0.15, hpG=Math.round(u.maxhp*g), dmgG=Math.round(u.dmg*g);
+      u.maxhp+=hpG; u.hp+=hpG; u.dmg+=dmgG; healRingAt(u); fx(u,'⬆ DEVOURED','#8e44ad','big'); }
+  } else if(k==='selfdestruct'){
+    // spend the caster's life for a burst around it (best on cheap tokens / a dying unit)
+    const rad=u.ult.r||2, col='#ff5722';
+    fx(u,'💥 '+(u.ult.name||'DETONATE').toUpperCase(),col,'big'); blastAt(u.c,u.r,rad,col); screenShake();
+    foes.forEach(f=>{ if(f.alive&&hexDist(f,u)<=rad) applyDamage(f,u.dmg*(u.ult.v||4.0)*esc*power*PACE,'atk',u,true); });
+    slay(u,u);
+  } else if(k==='bombard'){
+    // rain projectiles from off the board onto up to n targets, flying in from `dir`, landing in `order`.
+    // Tracks the marked units (not fixed tiles) so moving foes are still struck; dir/order shape the visual.
+    const n=u.ult.n||5, glyph=u.ult.glyph||'☄', col=u.ult.zcol||'#ff9d5c', dir=u.ult.dir||'N', order=u.ult.order||'all';
+    let marks=foes.filter(f=>f.alive);
+    if(marks.length>n){ marks.sort((a,b)=>foesNear(b,u)-foesNear(a,u)); marks=marks.slice(0,n); }
+    if(!marks.length)return;
+    if(order==='random'){ for(let i=marks.length-1;i>0;i--){ const j=Math.floor(RNG()*(i+1)); [marks[i],marks[j]]=[marks[j],marks[i]]; } }
+    else if(order==='col-left') marks.sort((a,b)=>a.c-b.c);
+    else if(order==='col-right') marks.sort((a,b)=>b.c-a.c);
+    else if(order==='row-top') marks.sort((a,b)=>a.r-b.r);
+    else if(order==='row-bottom') marks.sort((a,b)=>b.r-a.r);
+    const off={N:[0,-3],S:[0,3],E:[3,0],W:[-3,0],NE:[3,-3],NW:[-3,-3],SE:[3,3],SW:[-3,3]}[dir]||[0,-3];
+    fx(u,'☄ '+(u.ult.name||'BOMBARDMENT').toUpperCase(),col,'big');
+    marks.forEach((f,i)=>{ const delay=(order==='all')?0.25:(0.15+i*0.12);
+      queueImpact(delay, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
+        spawnProjectile({c:f.c+off[0],r:f.r+off[1]},{c:f.c,r:f.r},{glyph,color:col,dur:200});
+        applyDamage(f,u.dmg*(u.ult.v||1.6)*esc*power*PACE,'atk',u,true);
+        blastAt(f.c,f.r,0,col); blastAt(f.c,f.r,1,col);
+      }); });
+  } else if(k==='cone'){
+    // a wedge that fans out from the caster toward its target, with optional DoT / debuff
+    const aim=pickTarget(u,'nearest'); if(!aim)return;
+    const rad=u.ult.r||3, col=u.ult.zcol||'#ff9d5c';
+    const adx=aim.c-u.c, ady=aim.r-u.r, amag=Math.hypot(adx,ady)||1;
+    const width=u.ult.width!=null?u.ult.width:1, thresh=1-0.35*(width+1);   // wider width -> lower cosine threshold -> broader fan
+    fx(u,'🔥 '+(u.ult.name||'SWEEP').toUpperCase(),col,'big'); beamLine(u,aim,col);
+    foes.forEach(f=>{ if(!f.alive||hexDist(f,u)>rad)return;
+      const fdx=f.c-u.c, fdy=f.r-u.r, fmag=Math.hypot(fdx,fdy)||1;
+      if((fdx*adx+fdy*ady)/(fmag*amag)>=thresh){
+        applyDamage(f,u.dmg*(u.ult.v||1.8)*esc*power*PACE,'atk',u,true);
+        if(u.ult.dot)applyPayload(f,{burn:u.ult.dot.burn,burnDur:u.ult.dot.dur,poison:u.ult.dot.poison,bleed:u.ult.dot.bleed},u);
+        if(u.ult.debuff)applyPayload(f,u.ult.debuff,u);
+        blastAt(f.c,f.r,0,col);
+      } });
+  } else if(k==='cleanse'){
+    // strip all debuffs from nearby allies and grant a brief debuff-immunity window
+    const rad=u.ult.r||3, col='#8fe3c0';
+    fx(u,'✦ '+(u.ult.name||'PURIFY').toUpperCase(),col,'big'); blastAt(u.c,u.r,rad,col);
+    mates.forEach(m=>{ if(!m.alive||hexDist(m,u)>rad)return;
+      m.stun=0; m.slowT=0; m.slowStacks=0; m.burnT=0; m.poisonT=0; m.poisonStacks=0; m.bleedStacks=0; m.curseT=0;
+      if(m._shred){ m._shred=0; if(m._drBase!=null)m.dr=m._drBase; }
+      m._ccImmuneT=Math.max(m._ccImmuneT||0,u.ult.v||1.5); healRingAt(m); fx(m,'✦',col);
+    });
   } else if(k==='zone'){
     // create a damaging zone of board tiles around the densest enemy cluster
     let center=densestTarget(u,foes); if(!center)return;
