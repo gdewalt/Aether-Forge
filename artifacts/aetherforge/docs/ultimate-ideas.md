@@ -325,6 +325,29 @@ number of squares.
     - `row-top` / `row-bottom` — swept row by row from that edge.
 - **Shape:** `ult:{k:'bombard', n:5, v:1.6, dir:'N', order:'row-top', glyph:'☄', name:'Bombardment'}`
 
+### 22. `cone` — Sweep
+Blast a cone that fans out from the caster toward its target, hitting everyone
+inside — with optional DoTs or debuffs on the struck enemies.
+
+- **Gap:** the roster has point-blank circles (`burst`), radiating circles
+  (`nova`), and a one-tile-wide `beam` line — but no *directional wedge*. A cone
+  covers a swath of the board in one facing without being omnidirectional, so
+  positioning and which way the caster faces both matter. Dragon's-breath /
+  frost-cone flavor.
+- **Reuses:** `beamLine`/`blastAt` for the visual, and a facing test on each foe:
+  take the direction to the caster's target, then include foes within `r` hexes
+  whose bearing falls inside a half-angle of that facing. `applyDamage` on hit,
+  and the same status fields the passives use for the optional payload
+  (`burnT`/`burnMul`, `poisonT`, `bleedStacks`, `slowT`, `stun`, `curseT`).
+- **Variables:**
+  - `r` — cone length (how many hexes out it reaches).
+  - `v` — damage multiplier.
+  - `width` — the fan's half-angle / spread (narrow lance vs. wide sweep).
+  - `dot` — optional lingering damage: `{burn}` / `{poison}` / `{bleed}` with
+    magnitude + duration.
+  - `debuff` — optional control: `slow`, `stun`, or a damage-amp `curse`.
+- **Shape:** `ult:{k:'cone', r:3, v:1.8, width:1, dot:{burn:1.4, dur:3}, name:'Sweep'}`
+
 ---
 
 ## Recommended build order
