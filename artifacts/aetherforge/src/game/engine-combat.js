@@ -736,6 +736,16 @@ export function applyPayload(tgt, p, src){
   if(p.bleed) tgt.bleedStacks=Math.min(5,(tgt.bleedStacks||0)+p.bleed);
   if(p.curse) tgt.curseT=Math.max(tgt.curseT||0, p.curse);
 }
+// pushUnit: shove `u` up to `dist` tiles directly away from `from`, stopping at the board edge or an occupied hex.
+export function pushUnit(u, from, dist){
+  const dc=Math.sign(u.c-from.c), dr=Math.sign(u.r-from.r);
+  if(dc===0&&dr===0)return;
+  let c=u.c, r=u.r;
+  for(let i=0;i<dist;i++){ const nc=c+dc, nr=r+dr; if(nc<0||nc>=COLS||nr<0||nr>=ROWS||occupied(nc,nr))break; c=nc; r=nr; }
+  u.c=c; u.r=r; u.tgt=null; u.retgt=0;
+}
+// swapPos: exchange two units' board positions.
+export function swapPos(a,b){ const c=a.c,r=a.r; a.c=b.c; a.r=b.r; b.c=c; b.r=r; }
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
@@ -1110,6 +1120,42 @@ export function castUlt(u,esc,_echo){
       applyDamage(target,dmg,'atk',u,true); applyPayload(target,{stun},u); blastAt(target.c,target.r,0,col);
     }
     applyDamage(grabbed,dmg,'atk',u,true); applyPayload(grabbed,{stun},u); blastAt(grabbed.c,grabbed.r,0,col);
+  } else if(k==='hook'){
+    // yank the farthest enemy (the backline carry) into melee beside the caster and briefly stun it
+    const t=pickTarget(u,'farthest'); if(!t)return;
+    fx(u,'🪝 '+(u.ult.name||'HARPOON').toUpperCase(),'#8fd0ff','big');
+    spawnProjectile(u,t,{glyph:'🪝',color:'#8fd0ff',dur:180});
+    const dest=placeNear(u); if(dest){ t.c=dest.c; t.r=dest.r; t.tgt=null; t.retgt=0; }
+    applyDamage(t,u.dmg*(u.ult.v||1.2)*power*PACE,'atk',u,true); applyPayload(t,{stun:u.ult.stun||1.0},u); blastAt(t.c,t.r,0,'#8fd0ff');
+  } else if(k==='knockback'){
+    // shove every nearby enemy away from the caster (resets their approach); light damage, no stun
+    const rad=u.ult.r||2, dist=u.ult.v||2;
+    const hit=enemyOf(u).filter(f=>hexDist(f,u)<=rad);
+    fx(u,'💨 '+(u.ult.name||'SHOCKWAVE').toUpperCase(),'#cfe8ff','big'); blastAt(u.c,u.r,rad,'#cfe8ff');
+    hit.forEach(f=>{ pushUnit(f,u,dist); applyDamage(f,u.dmg*(u.ult.d||0.6)*power*PACE,'atk',u); });
+  } else if(k==='swap'){
+    // trade places with the most-wounded ally (rescue a diving carry / take its spot)
+    const ally=mates.filter(m=>m!==u&&!m.token).sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0]; if(!ally)return;
+    fx(u,'🌀 '+(u.ult.name||'DISPLACE').toUpperCase(),'#b48ae8','big');
+    swapPos(u,ally); u.tgt=null; u.retgt=0; ally.tgt=null; ally.retgt=0;
+    blastAt(u.c,u.r,0,'#b48ae8'); blastAt(ally.c,ally.r,0,'#b48ae8');
+  } else if(k==='doom'){
+    // brand a dangerous foe; after a fuse it takes massive damage if still alive
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    const fuse=u.ult.v||4, mult=u.ult.d||6;
+    fx(t,'☠ '+(u.ult.name||'DOOM').toUpperCase(),'#a56fd6','big');
+    spawnProjectile(u,t,{glyph:'☠',color:'#a56fd6',dur:220,spin:true});
+    queueImpact(fuse, ()=>{ if(!G.battle||G.battle.done||!t.alive)return;
+      applyDamage(t,u.dmg*mult*power*PACE,'atk',u,true); blastAt(t.c,t.r,1,'#a56fd6'); fx(t,'DOOMED','#a56fd6','big'); });
+  } else if(k==='siphon'){
+    // steal attack power (and a little armor) from a strong foe, adding it to the caster for the fight
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    const frac=u.ult.v||0.3, dmgSteal=Math.round(t.dmg*frac);
+    fx(u,'🩸 '+(u.ult.name||'PLUNDER').toUpperCase(),'#8e44ad','big');
+    spawnProjectile(u,t,{glyph:'🩸',color:'#8e44ad',dur:200});
+    t.dmg=Math.max(1,t.dmg-dmgSteal); u.dmg+=dmgSteal;
+    const drSteal=Math.min(0.15,(t.dr||0)*frac); if(drSteal>0){ t.dr=Math.max(0,(t.dr||0)-drSteal); u.dr=Math.min(0.85,(u.dr||0)+drSteal); }
+    applyDamage(t,u.dmg*0.8*power*PACE,'atk',u); fx(t,'-'+dmgSteal+' dmg','#8e44ad');
   } else if(k==='zone'){
     // create a damaging zone of board tiles around the densest enemy cluster
     let center=densestTarget(u,foes); if(!center)return;

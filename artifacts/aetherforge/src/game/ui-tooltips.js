@@ -28,7 +28,12 @@ export const ULT_DESC={
   banish:'Hurls an enemy to the far edge of the board, stunned',
   charm:'Temporarily turns an enemy unit to fight for you',
   zone:'Scorches an area of tiles that burns enemies standing on them',
-  throw:'Grabs the nearest enemy and hurls it into a distant one — both are struck and briefly stunned'
+  throw:'Grabs the nearest enemy and hurls it into a distant one — both are struck and briefly stunned',
+  hook:'Yanks the farthest enemy into melee beside the caster and briefly stuns it',
+  knockback:'Shoves nearby enemies away from the caster',
+  swap:'Trades places with a wounded ally',
+  doom:'Brands a dangerous foe; after a delay it takes massive damage',
+  siphon:'Steals attack power (and some armor) from a strong foe'
 };
 export const TT=document.getElementById('tooltip');
 
