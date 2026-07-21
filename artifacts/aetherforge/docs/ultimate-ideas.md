@@ -350,6 +350,100 @@ inside — with optional DoTs or debuffs on the struck enemies.
 
 ---
 
+# Batch 4 — reshaping, hard control & positioning
+
+## Board reshaping
+
+### 23. `wall` — Barricade
+Conjure a short line of *impassable* tiles to cut a lane or wall the enemy
+backline's melee off from your carries.
+
+- **Gap:** every tile ult so far (`zone`, `trap`, `buffzone`, `debuffzone`) is a
+  *payload* field — none change *pathing*. This physically reshapes the board.
+- **Reuses:** the existing `rubble` impassable terrain + the occupancy /
+  `stepToward` movement checks.
+- **Variables:** `n` wall length, `dur` lifetime.
+- **Shape:** `ult:{k:'wall', n:3, dur:5, name:'Barricade'}`
+
+### 24. `knockback` — Shockwave
+Shove all nearby enemies back several tiles (no stun) — reset their approach.
+
+- **Gap:** `quake` stuns without moving, `vortex` pulls *in*, `banish` flings
+  *one*. Nothing pushes a *group out* to buy tempo.
+- **Reuses:** the position-set from `banish`, applied to every foe in radius.
+- **Variables:** `r` radius, `v` push distance in tiles.
+- **Shape:** `ult:{k:'knockback', r:2, v:2, name:'Shockwave'}`
+
+## Control (in-place neutralize)
+
+### 25. `polymorph` — Hex
+Turn an enemy into a harmless critter (can't attack, low HP) for `v` seconds —
+neutralize it where it stands.
+
+- **Gap:** `charm` flips a unit to your side, `banish` displaces it, `silence`
+  only stops casting. Nothing shuts a unit *fully off in place*.
+- **Reuses:** the existing `transform` machinery pointed at an enemy + an
+  attack-disable flag (bosses resist, like `charm`).
+- **Variables:** `v` duration.
+- **Shape:** `ult:{k:'polymorph', v:3, name:'Hex'}`
+
+### 26. `confuse` — Madness
+Enemies in an area briefly attack *their own side*.
+
+- **Gap:** distinct from `charm` (one unit joins you) — this turns a whole
+  cluster against each other: chaos, not recruitment.
+- **Reuses:** the side / target-flip from `charm`, temporary and self-targeting
+  (retarget onto their own allies for the duration).
+- **Variables:** `r` radius, `v` duration.
+- **Shape:** `ult:{k:'confuse', r:2, v:2.5, name:'Madness'}`
+
+### 27. `doom` — Mark of Death
+Brand a target; if it's still alive after `v` seconds it takes massive (often
+lethal) damage.
+
+- **Gap:** `execute` is an *instant* finisher on an already-low target — `doom`
+  threatens a *healthy* carry and forces a race to peel or out-heal it. (Auto
+  Chess Doom.)
+- **Reuses:** `queueImpact` + a marked timer, then a big `applyDamage` on expiry.
+- **Variables:** `v` fuse in seconds; optional damage multiplier.
+- **Shape:** `ult:{k:'doom', v:4, name:'Mark of Death'}`
+
+## Positioning & sustain
+
+### 28. `swap` — Displace
+Trade places with a chosen ally — yank a diving carry to safety and take its
+spot, or shove your tank to the front.
+
+- **Gap:** pure positioning of *your own* line. `blink` moves you to an enemy,
+  `hook` pulls an enemy in; nothing repositions allies.
+- **Reuses:** position-set on two units (swap their `c`/`r`).
+- **Variables:** target-pick heuristic (lowest-HP ally, or the frontmost).
+- **Shape:** `ult:{k:'swap', name:'Displace'}`
+
+### 29. `whirlwind` — Cyclone
+A *moving* melee AoE: the caster keeps advancing while damaging everything
+adjacent each tick for `dur`.
+
+- **Gap:** `burst` is a static point-blank detonation; this is sustained damage
+  *while closing*, so it plows through a front line.
+- **Reuses:** a per-tick adjacency sweep + normal movement (a temporary
+  `_whirlT` state checked in the tick loop).
+- **Variables:** `v` per-tick damage multiplier, `dur` duration.
+- **Shape:** `ult:{k:'whirlwind', v:0.8, dur:3, name:'Cyclone'}`
+
+### 30. `bond` — Soul Tether
+Link the caster to an ally so heals / shields on either apply to both (or damage
+is split between them) for `v` seconds.
+
+- **Gap:** a support-tech mechanic with no equivalent — turns a lone Cleric's
+  healing into two-target value and protects a fragile carry.
+- **Reuses:** a paired reference on both units, checked when heal / shield /
+  damage is applied.
+- **Variables:** `v` duration; mode (`share-heal` vs `split-damage`).
+- **Shape:** `ult:{k:'bond', v:5, name:'Soul Tether'}`
+
+---
+
 ## Recommended build order
 
 Start with **`taunt`** and **`cleanse`** — they aren't just new ults, they're
@@ -359,3 +453,7 @@ fight, not just the unit that carries them.
 From Batch 2, the highest impact on how the game *plays* are **`silence`**
 (kills the "whoever ults first wins" problem), **`hook`** (positioning suddenly
 matters for the enemy too), and **`phase`** (nearly free — reuses `_cloakT`).
+
+From Batch 4, the most play-changing are **`wall`** (the only ult that alters
+pathing), **`polymorph`** (the cleanest hard-answer to an enemy carry), and
+**`doom`** (adds a race-the-clock beat fights don't have yet).
