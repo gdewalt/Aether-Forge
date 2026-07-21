@@ -117,8 +117,110 @@ dies — at which point the swallowed unit is regurgitated back into the fight.
 
 ---
 
+# Batch 2 — auto-battler inspirations (Auto Chess / Teamfight Tactics)
+
+Each pulls from a signature auto-battler ability and is chosen to *not* overlap
+the eight above. Two engine facts these lean on: ults gate on `if(u.mag>=100)`
+(so charge / cast denial is a real lever), and `_cloakT` already grants full
+untargetability (decrement in the tick loop, filtered in target acquisition).
+
+## Denial & disruption
+
+### 9. `silence` — Disrupt
+*(TFT mana-reave / Shroud of Stillness; Auto Chess Doom & Silencer)*
+Drain enemy `mag` in an area and lock them out of casting for `v` seconds.
+
+- **Gap — the biggest one here:** there is *zero* counterplay to enemy
+  ultimates today. Every fight is a race of who charges first; nothing lets you
+  deny the enemy carry's cast. A whole new axis of counter-comp.
+- **Reuses:** the `mag` field + one `_silenceT` flag added to the cast gate.
+- **Shape:** `ult:{k:'silence', r:2, v:2.5, name:'Disrupt'}`
+
+## Displacement (single-target, distinct from AoE `vortex`)
+
+### 10. `hook` — Harpoon
+*(Blitzcrank / Pyke; Auto Chess Pudge)*
+Yank the **farthest** enemy — the backline carry — into melee beside the caster
+and briefly stun it.
+
+- **Gap:** `banish` shoves one enemy *away*, `vortex` clumps a group; nothing
+  *extracts* the enemy carry out of its protected backline and drops it in front
+  of your bruisers to be focused. The iconic auto-battler grab.
+- **Reuses:** position-set + `stun` (mirror of `banish`, inverted target pick).
+- **Shape:** `ult:{k:'hook', v:1.2, name:'Harpoon'}`
+
+## Scaling bruiser payoff
+
+### 11. `feast` — Devour
+*(Cho'Gath, in both League/TFT and Auto Chess)*
+Execute an adjacent low-HP enemy and gain **permanent** max-HP + damage for the
+rest of the battle, stacking every cast.
+
+- **Gap:** distinct from `swallow` (which *removes-until-death*) — `feast` kills
+  and *grows*. The roster has no snowballing bruiser scaler; rewards a durable
+  frontliner that keeps landing its casts.
+- **Reuses:** `onDeath` + a stat bump (like `berserk`, but kill-gated and
+  stacking).
+- **Shape:** `ult:{k:'feast', v:0.35, name:'Devour'}` *(execute threshold `v`)*
+
+## Carry survival
+
+### 12. `phase` — Stasis
+*(Zhonya's Hourglass / Fiora W / Kayn)*
+Caster (or your lowest-HP ally) becomes untargetable and damage-immune for `v`
+seconds to dodge a burst window.
+
+- **Gap:** rogues now get a cloak *passively at battle start*, but no one can
+  trigger untargetability *on demand* to survive a spike. Classic carry
+  protection.
+- **Reuses:** `_cloakT` **already does exactly this** — near-free; add a
+  damage-immunity check for the fuller Zhonya's version.
+- **Shape:** `ult:{k:'phase', v:1.5, name:'Stasis'}`
+
+## Two-sided swing
+
+### 13. `siphon` — Plunder
+*(Trundle / Tahm Kench; TFT Shred/Sunder as an active)*
+Steal a slice of the target's damage (and armor) and add it to the caster for
+the fight — weakening them while strengthening you.
+
+- **Gap:** no stat *theft*. `rend` cuts healing and `curse` amps damage taken,
+  but nothing transfers power. A double swing that scales off the enemy's carry.
+- **Reuses:** the `dmg` / `dr` fields on both units.
+- **Shape:** `ult:{k:'siphon', v:0.3, name:'Plunder'}`
+
+## Death-triggered
+
+### 14. `redemption` — Martyr's Boon
+*(TFT Redemption item / Guardian Angel)*
+When the caster dies, detonate a large heal over nearby allies.
+
+- **Gap:** `onDeath` today only fires the dying unit's *own* effects (raise a
+  skeleton, etc.); nothing turns a death into an *ally* payoff. Makes a
+  sacrificial frontliner's death a comeback beat instead of a loss.
+- **Reuses:** the `onDeath` hook + a `heal` blast.
+- **Shape:** `ult:{k:'redemption', v:180, r:2, name:"Martyr's Boon"}`
+
+## Field control
+
+### 15. `timewarp` — Chronofield
+*(Zilean / TFT Chrono & Time Knife)*
+Drop a zone that slows enemy attack speed + movement inside it while allies
+inside gain attack speed.
+
+- **Gap:** `zone` only *damages*; there's no tempo-control field. Turns
+  positioning into a lever — stand your team in it, bait theirs through it.
+- **Reuses:** the `zones` system (already ticks) + `slowT` / `as` modifiers.
+- **Shape:** `ult:{k:'timewarp', r:2, v:0.4, dur:4, name:'Chronofield'}`
+
+---
+
 ## Recommended build order
 
-Start with **`taunt`** and **`cleanse`**. They aren't just new ults — they're
+Start with **`taunt`** and **`cleanse`** — they aren't just new ults, they're
 missing *answers* (aggro control and debuff counterplay) that deepen every
 fight, not just the unit that carries them.
+
+From Batch 2, the highest impact on how the game *plays* are **`silence`**
+(kills the "whoever ults first wins" problem), **`hook`** (positioning suddenly
+matters for the enemy too), and **`phase`** (nearly free — reuses `_cloakT`).
