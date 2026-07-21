@@ -215,6 +215,75 @@ inside gain attack speed.
 
 ---
 
+# Batch 3 — summons, sacrifice & board control
+
+## Self-sacrifice
+
+### 16. `selfdestruct` — Detonate
+Kill the caster and deal heavy damage to everything in a zone around it.
+
+- **Gap:** no life-for-burst trade. `berserk` is a self-buff and `feast` grows
+  the caster; nothing *spends* the caster. Best on cheap tokens or a low-HP unit
+  about to die anyway — turn an imminent death into a payoff. Pairs naturally
+  with `summon`/token builds (walk a bomb into the enemy cluster).
+- **Reuses:** `blastAt` + a radius `applyDamage` sweep (like `burst`), then set
+  `hp=0; alive=false` and fire the existing `onDeath` path.
+- **Variables:** `r` radius, `v` damage multiplier.
+- **Shape:** `ult:{k:'selfdestruct', r:2, v:4.0, name:'Detonate'}`
+
+## Summons
+
+### 17. `mirror` — Illusions
+Summon illusionary copies of the caster that fight alongside it.
+
+- **Gap:** distinct from `summon`, which spawns *preset fodder* tokens — these
+  are copies of the *caster*, inheriting its attack, sprite, and abilities at a
+  fraction of its health. A clone-carry payoff (Phantom Lancer / Wukong /
+  Shaco), and it muddies enemy targeting since the copies look identical.
+- **Reuses:** the `spawnToken` machinery, but the token is cloned from the
+  caster's live template; `art` is set to the caster's `art` so the copies share
+  its sprite. Copies are flagged (e.g. `_illusion`) so they can take extra
+  damage or expire, and so drops/telemetry don't count them.
+- **Variables:** `n` number of copies, `v` health fraction of the caster,
+  optional `art` override (defaults to the caster's sprite).
+- **Shape:** `ult:{k:'mirror', n:2, v:0.4, name:'Illusions'}`
+
+## Board control
+
+### 18. `trap` — Snare
+Place a trap on a tile; it triggers when an enemy moves onto it, then applies a
+configurable payload.
+
+- **Gap:** a *triggered, one-shot* tile with a payload — unlike `zone`, which is
+  a persistent AoE that damages everyone inside every tick. The trap sits armed
+  and invisible-ish until a unit steps on it, then fires once. Reads as
+  Teemo shrooms / Caitlyn trap / Nidalee. Rewards predicting enemy pathing.
+- **Reuses:** the `zones` tile system for the armed tile + the per-tick
+  position check that already runs; on a matching enemy step, fire the payload
+  and remove the tile. Root reuses `stun`/`slowT`, teleport reuses the
+  position-set from `blink`/`banish`, debuff stacks reuse `bleedStacks` etc.
+- **Variables:** `v` damage; and any of `stacks` (debuff stacks + which),
+  `root` (seconds of immobilize), `teleport` (fling to a random open tile).
+  Mix and match — a trap can do several at once.
+- **Shape:** `ult:{k:'trap', v:2.0, root:1.5, teleport:true, name:'Snare'}`
+
+### 19. `buffzone` — Sanctuary
+Create a zone of tiles that grants buffs to allies standing on them.
+
+- **Gap:** no player-*created* buff terrain. The map already has `sacred` ground
+  (+25% charge) and `high` ground (+range) as static terrain, and `timewarp`
+  slows *enemies* — but nothing lets a unit conjure an *ally-empowerment* field
+  on demand (Ivern's grove / Bard / aura totems). Turns positioning into an
+  active choice: pull your carries onto the tiles.
+- **Reuses:** the `zones` system + terrain-style per-tick modifiers; while an
+  ally stands on a tile it gets the buff (mirrors how `sacred` ground already
+  applies its charge bonus), cleared when it steps off.
+- **Variables:** `r` radius, `dur` lifetime, and a `buff` bag — any of `dmg`,
+  `dr`, `as`, `charge`, or `regen`.
+- **Shape:** `ult:{k:'buffzone', r:1, dur:5, buff:{dmg:0.25, dr:0.15}, name:'Sanctuary'}`
+
+---
+
 ## Recommended build order
 
 Start with **`taunt`** and **`cleanse`** — they aren't just new ults, they're
