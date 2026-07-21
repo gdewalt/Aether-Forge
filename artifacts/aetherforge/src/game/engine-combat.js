@@ -698,6 +698,44 @@ export function neighbors(c,r){
   return dirs.map(([dc,dr])=>({c:c+dc,r:r+dr})).filter(n=>n.c>=0&&n.c<COLS&&n.r>=0&&n.r<ROWS);
 }
 export function occupied(c,r){ if(terrainAt(c,r)==='rubble')return true; return [...G.battle.P,...G.battle.E].some(u=>u.alive&&u.c===c&&u.r===r);}
+
+/* ---------- Phase 0.1 — shared ultimate helpers ----------
+   One implementation of the selectors / displacement / status logic that ult
+   handlers used to inline, so new ults reuse tested behavior and the vocabulary
+   stays consistent. (Existing ults are migrated onto these separately — see the
+   implementation plan; each migration is determinism-checked.) */
+// pickTarget: unified enemy selection. Skips cloaked foes (like acquireTarget). Returns a foe or null.
+export function pickTarget(u, mode){
+  const foes=enemyOf(u).filter(f=>!(f._cloakT>0));
+  if(!foes.length)return null;
+  switch(mode){
+    case 'farthest':   return foes.reduce((a,c)=>hexDist(u,c)>hexDist(u,a)?c:a);
+    case 'lowhp':      return foes.reduce((a,c)=>c.hp<a.hp?c:a);
+    case 'highhp':     return foes.reduce((a,c)=>c.hp>a.hp?c:a);
+    case 'densest':    return densestTarget(u,foes);
+    case 'highthreat': return foes.reduce((a,c)=>(c.dmg*c.as)>(a.dmg*a.as)?c:a);
+    case 'nearest':
+    default:           return foes.reduce((a,c)=>hexDist(u,c)<hexDist(u,a)?c:a);
+  }
+}
+// placeNear: nearest open, in-bounds hex adjacent to `target` (widening to a 2-hex ring). Returns {c,r} or null.
+export function placeNear(target){
+  for(const n of neighbors(target.c,target.r)){ if(!occupied(n.c,n.r)) return {c:n.c,r:n.r}; }
+  for(const n of neighbors(target.c,target.r)){ for(const m of neighbors(n.c,n.r)){ if(!occupied(m.c,m.r)) return {c:m.c,r:m.r}; } }
+  return null;
+}
+// applyPayload: unified status application. Hard CC and DoTs (stun/slow/burn/poison) respect ccImmune —
+// consistent with basic-attack CC; bleed and curse (damage amps, not control) pass through, as they do on hit.
+export function applyPayload(tgt, p, src){
+  if(!p||!tgt||!tgt.alive)return;
+  const immune=!!tgt.ccImmune;
+  if(p.stun   && !immune) tgt.stun=Math.max(tgt.stun||0, p.stun);
+  if(p.slow   && !immune){ tgt.slowT=Math.max(tgt.slowT||0, p.slow); tgt.slowStacks=Math.max(tgt.slowStacks||0,1); }
+  if(p.burn   && !immune){ tgt.burnT=Math.max(tgt.burnT||0, p.burnDur||2); tgt.burnMul=p.burn; }
+  if(p.poison && !immune){ tgt.poisonT=Math.max(tgt.poisonT||0, p.poison); tgt.poisonStacks=Math.min(5,(tgt.poisonStacks||0)+1); }
+  if(p.bleed) tgt.bleedStacks=Math.min(5,(tgt.bleedStacks||0)+p.bleed);
+  if(p.curse) tgt.curseT=Math.max(tgt.curseT||0, p.curse);
+}
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
@@ -1058,6 +1096,20 @@ export function castUlt(u,esc,_echo){
     t.side=u.side;                 // switch allegiance
     t.tgt=null; t.retgt=0;
     fx(t,'CHARMED','#ff7ab0','big'); healRingAt(t);
+  } else if(k==='throw'){
+    // grab the nearest enemy and hurl it into the farthest one — both take damage and are briefly stunned
+    const grabbed=pickTarget(u,'nearest'); if(!grabbed)return;
+    const target=foes.filter(f=>f!==grabbed&&!(f._cloakT>0)).sort((a,b)=>hexDist(u,b)-hexDist(u,a))[0]||grabbed;
+    const dmg=u.dmg*(u.ult.v||2.0)*power*PACE, stun=u.ult.stun||1.0, col='#d9a06b';
+    fx(u,'🤾 '+(u.ult.name||'HURL').toUpperCase(),col,'big');
+    spawnProjectile(u,grabbed,{glyph:u.ico,color:col,dur:180});
+    if(target!==grabbed){
+      const dest=placeNear(target);
+      if(dest){ grabbed.c=dest.c; grabbed.r=dest.r; grabbed.tgt=null; grabbed.retgt=0; }
+      spawnProjectile(grabbed,target,{glyph:'💥',color:col,dur:160});
+      applyDamage(target,dmg,'atk',u,true); applyPayload(target,{stun},u); blastAt(target.c,target.r,0,col);
+    }
+    applyDamage(grabbed,dmg,'atk',u,true); applyPayload(grabbed,{stun},u); blastAt(grabbed.c,grabbed.r,0,col);
   } else if(k==='zone'){
     // create a damaging zone of board tiles around the densest enemy cluster
     let center=densestTarget(u,foes); if(!center)return;

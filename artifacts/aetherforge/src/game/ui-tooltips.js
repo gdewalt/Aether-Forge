@@ -27,7 +27,8 @@ export const ULT_DESC={
   blink:'Teleports behind an enemy and lands a devastating strike',
   banish:'Hurls an enemy to the far edge of the board, stunned',
   charm:'Temporarily turns an enemy unit to fight for you',
-  zone:'Scorches an area of tiles that burns enemies standing on them'
+  zone:'Scorches an area of tiles that burns enemies standing on them',
+  throw:'Grabs the nearest enemy and hurls it into a distant one — both are struck and briefly stunned'
 };
 export const TT=document.getElementById('tooltip');
 
@@ -85,7 +86,7 @@ export function openUnitDetail(u, action){
       ${(()=>{const ab=abilityFor(u);return ab?`<div class="sect"><h4>Magic Ability${ab.name?' — '+ab.name:''}</h4>
         <div class="abil">${ab.desc}<br><span style="color:#7d7191;font-size:11px">A passive that triggers automatically in battle.</span></div></div>`:'';})()}
       <div class="sect"><h4>Ultimate — ${u.ult.name}</h4>
-        <div class="abil">${ULT_DESC[u.ult.k]||'A powerful special ability.'}<br><span style="color:#7d7191;font-size:11px">Charges as the unit deals &amp; takes damage; fires at full bar.</span></div>
+        <div class="abil">${u.ult.desc||ULT_DESC[u.ult.k]||'A powerful special ability.'}<br><span style="color:#7d7191;font-size:11px">Charges as the unit deals &amp; takes damage; fires at full bar.</span></div>
       </div>
       <div class="sect"><h4>Synergies</h4>${synTxt}${clsTxt}</div>
       ${gearTxt}
@@ -160,7 +161,7 @@ export function tipHTML(u,live){
       ${live?`<span>Magic</span><span>${Math.round(u.mag)}%</span>`:''}
     </div>
     ${(()=>{const ab=abilityFor(u);return ab?`<div class="tt-ult"><b style="color:#8fd0ff">✦ ${ab.name||'Magic Ability'}</b><br>${ab.desc}</div>`:'';})()}
-    <div class="tt-ult"><b>★ ${u.ult.name}</b><br>${ULT_DESC[u.ult.k]||''}</div>
+    <div class="tt-ult"><b>★ ${u.ult.name}</b><br>${u.ult.desc||ULT_DESC[u.ult.k]||''}</div>
     ${gearLine(u)}
     ${statuses}`;
 }
