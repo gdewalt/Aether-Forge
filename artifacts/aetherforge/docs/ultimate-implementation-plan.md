@@ -162,6 +162,49 @@ the seeded sim as the guard:
 
 ---
 
+## Deliverable: the ult authoring guide (`docs/ult-reference.md`)
+
+Produce and maintain a companion reference so a designer can add or retune a
+unit's ultimate without reading the engine. It is the single source of truth for
+"how do I write this ult on a unit."
+
+**Where ults are defined.** State it up front: an ult is the `ult:{...}` object
+passed to the `U()` / `EU()` constructor (`data-units.js` / `data-enemies.js`),
+alongside the `{passive, tip, art}` bag and the per-unit `ult.desc` (see the
+authoring requirement above). No engine change is needed to give a unit an ult —
+only to add a brand-new *kind*.
+
+**One entry per ult kind**, each documenting:
+- **What it does** — one line.
+- **Variables it reads** — every field on the `ult` object, with meaning, units,
+  and default. e.g. `r` (radius, hexes, default 1), `v` (damage multiplier or,
+  where noted, duration/fraction), `n` (count), `dir` (compass point), `order`
+  (hit sequence), `dot` / `debuff` / `buff` (payload bags), `dur` (field
+  lifetime), `token`, `glyph`/`sprite`.
+- **Target selection** — which `pickTarget` mode it uses (`nearest`, `farthest`,
+  `densest`, `lowhp`, `highthreat`).
+- **A copy-paste example line** — a real `ult:{...}` a designer can drop onto a
+  unit and tweak.
+
+**Shared vocabulary section** — document the common building blocks once so the
+same variable names mean the same thing across every kind:
+- `pickTarget` modes and what each selects.
+- `applyPayload` status keys (`burn`, `poison`, `bleed`, `slow`, `stun`, `curse`)
+  — magnitudes, durations, and the `ccImmune` rule (control is ignored by
+  CC-immune targets, ults and attacks alike).
+- Field payload keys (`buff` / `debuff` / `wall` / `trap`) and their apply /
+  revert semantics.
+
+**"Adding a new kind" checklist** — the four steps: add the `castUlt` branch,
+give it a `ULT_DESC[k]` generic fallback, document the kind + its variables in
+this guide, and (optionally) a templated description.
+
+**Keep it in sync.** Every phase that lands a kind updates this guide in the same
+commit — the guide is not written once at the end. Treat a kind whose variables
+changed but whose guide entry didn't as an incomplete change.
+
+---
+
 ## Cross-cutting
 
 - **Wiring is free:** every ult is `ult:{k, …, desc}` data on a unit / token /
@@ -188,3 +231,7 @@ shared code is proven against known-good behavior before the new ults ride on it
 5. Apply the two intended fixes (ccImmune policy, charm revert) with their own
    before/after measurement.
 6. Balance pass via sim, then wire into factions / commanders.
+
+Throughout: extend `docs/ult-reference.md` in the **same commit** that lands each
+kind — its variables, target mode, and a copy-paste example — so the authoring
+guide never lags the code.
