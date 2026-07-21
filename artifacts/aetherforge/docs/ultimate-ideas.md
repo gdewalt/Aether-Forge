@@ -442,6 +442,24 @@ is split between them) for `v` seconds.
 - **Variables:** `v` duration; mode (`share-heal` vs `split-damage`).
 - **Shape:** `ult:{k:'bond', v:5, name:'Soul Tether'}`
 
+### 31. `throw` — Hurl
+Grab an adjacent enemy and hurl it into a distant one — both take damage and are
+briefly stunned, and the thrown unit lands next to the target.
+
+- **Gap:** the roster's displacement ults each move *one* unit — `banish` flings
+  a foe to the edge, `hook` yanks the backline carry in, `knockback` shoves a
+  group out. None weaponize an enemy *against another enemy*. `throw` is a
+  two-for-one: it repositions a frontline threat back into the enemy's own
+  ranks while damaging and stunning both ends, so it disrupts *their* formation
+  with *their* body.
+- **Reuses:** position-set (like `banish`/`hook`) to relocate the thrown unit
+  beside the target, `applyDamage` on both, and `stun` on both.
+- **Targeting:** thrown = an adjacent enemy (default the nearest / heaviest);
+  target = a far enemy (default the farthest, i.e. the backline carry).
+- **Variables:** `v` damage multiplier applied to each unit; optional `stun`
+  duration (default a brief clip).
+- **Shape:** `ult:{k:'throw', v:2.0, stun:1.0, name:'Hurl'}`
+
 ---
 
 ## Recommended build order
