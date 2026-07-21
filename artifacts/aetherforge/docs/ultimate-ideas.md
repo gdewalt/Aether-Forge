@@ -97,6 +97,24 @@ Resurrect the most-recently-fallen ally at `v`% HP beside the caster.
 - **Reuses:** `onDeath` bookkeeping + token/unit spawn.
 - **Shape:** `ult:{k:'pyre', v:0.5, name:'Rekindle'}`
 
+### 8. `swallow` — Swallow
+Devour a target unit, removing it from the field entirely until the caster
+dies — at which point the swallowed unit is regurgitated back into the fight.
+
+- **Gap:** removal with a **condition tied to the caster's life**. `banish`
+  only displaces one enemy temporarily and `charm` flips allegiance for a fixed
+  duration; nothing takes a unit *off the board* for a variable, caster-linked
+  window. Eating the enemy carry can neutralize it for most of a fight — but the
+  caster becomes a priority target, and killing the caster brings the threat
+  right back, so it's a high-risk swing rather than a permanent delete.
+- **Reuses:** the `alive` / `living()` filter to hide the unit from targeting
+  and the sim loop, a stored reference on the caster (e.g. `caster._swallowed`),
+  and an `onDeath` hook that restores the unit beside the caster's corpse.
+- **Notes:** default to the highest-threat non-boss enemy (bosses should resist,
+  like `charm` already excludes them). If the caster survives to the end of the
+  battle, the swallowed unit stays gone for that battle.
+- **Shape:** `ult:{k:'swallow', name:'Swallow'}`
+
 ---
 
 ## Recommended build order
