@@ -681,6 +681,7 @@ export function condDamageMul(u){
 }
 export function onDeath(u){
   endStatuses(u);   // fire any status reverts (e.g. polymorph identity restore) on hard-kill / fallback deaths
+  if(G.battle)u._deathT=G.battle.t;   // when it fell (for pyre resurrection ordering)
 }
 export function colDepth(u){return u.side==='P'?u.c:(COLS-u.c);} // how deep into enemy territory (for rogue dive we want their backline = high enemy col)
 export function totalHP(s){return living(s).reduce((a,u)=>a+u.hp,0);}
@@ -947,6 +948,7 @@ export function tryDeath(u){
     if(aura && !G.battle['_teamRev_'+u.side]){ G.battle['_teamRev_'+u.side]=true; u.hp=u.maxhp*aura._teamReviveAura; fx(u,'✟ REVIVED','#f0d375','big'); healRingAt(u); return; }
   }
   u.alive=false;
+  u._deathT=G.battle?G.battle.t:0;   // when it fell (for pyre resurrection ordering)
   endStatuses(u);   // fire status reverts (polymorph identity, etc.) the moment the unit truly dies
   deathBurst(u);   // juice: dust/blood puff on death
   // Enemy faction themes: Brigand Plunder & Void/Dread empower — killers' side gains stacking damage
@@ -1410,6 +1412,44 @@ export function castUlt(u,esc,_echo){
     if(!tiles.length)return;
     G.battle.zones=(G.battle.zones||[]).concat([{tiles, side:u.side, wall:true, life:dur, color:col, glyph:'🧱', tick:0}]);
     tiles.forEach(t=>blastAt(t.c,t.r,0,col)); fx(u,'🧱 '+(u.ult.name||'BARRICADE').toUpperCase(),col,'big');
+  } else if(k==='mirror'){
+    // summon health-scaled copies of the caster that share its sprite (illusions are tokens: they expire and don't count)
+    const n=u.ult.n||2, hpFrac=u.ult.v||0.4, dmgFrac=u.ult.dmg||0.6, arr=u.side==='P'?G.battle.P:G.battle.E;
+    fx(u,'👥 '+(u.ult.name||'ILLUSIONS').toUpperCase(),'#b48ae8','big');
+    for(let i=0;i<n;i++){
+      if(arr.filter(x=>x.alive&&x.token).length>=TOKEN_SIDE_CAP)break;
+      let spot=null; const seen=new Set([u.c+','+u.r]); const q=[{c:u.c,r:u.r}];
+      while(q.length&&!spot){ const cur=q.shift(); for(const nb of neighbors(cur.c,cur.r)){ const key=nb.c+','+nb.r; if(seen.has(key))continue; seen.add(key); if(!occupied(nb.c,nb.r)){spot=nb;break;} q.push(nb); } }
+      if(!spot)break;
+      const ghost={ name:u.name, art:u.art, ico:u.ico, cls:u.cls, faction:u.faction, t:u.t, rng:u.rng,
+        hp:Math.round(u.maxhp*hpFrac), dmg:Math.round(u.dmg*dmgFrac), as:u.as, mv:u.mv, dr:u.dr||0, crit:u.crit||0, ult:{k:'none',name:'—'} };
+      const g=mkLive(ghost,u.side,spot.c,spot.r); g.token=true; g.tokenLife=u.ult.dur||8; g._illusion=true;
+      blastAt(spot.c,spot.r,0,'#b48ae8'); arr.push(g);
+    }
+  } else if(k==='pyre'){
+    // resurrect the most-recently-fallen ally beside the caster at a fraction of its health
+    const arr=u.side==='P'?G.battle.P:G.battle.E;
+    const fallen=arr.filter(x=>!x.alive&&!x.token&&x._deathT!=null).sort((a,b)=>b._deathT-a._deathT)[0]; if(!fallen)return;
+    let spot={c:u.c,r:u.r}; if(occupied(u.c,u.r)){ for(const nb of neighbors(u.c,u.r)){ if(!occupied(nb.c,nb.r)){spot=nb;break;} } }
+    fallen.alive=true; fallen.hp=Math.max(1,Math.round(fallen.maxhp*(u.ult.v||0.5))); fallen.c=spot.c; fallen.r=spot.r;
+    fallen.tgt=null; fallen.retgt=0; fallen.stun=0; fallen.slowT=0; fallen.bleedStacks=0; fallen.burnT=0; fallen.poisonT=0; fallen._deathT=null; fallen._status=[];
+    fx(fallen,'✟ '+(u.ult.name||'REKINDLE').toUpperCase(),'#ffcf5c','big'); healRingAt(fallen); blastAt(spot.c,spot.r,1,'#ffcf5c');
+  } else if(k==='swallow'){
+    // remove a foe from the fight until the caster dies, then regurgitate it (no death triggers)
+    const t=enemyOf(u).filter(f=>!f.boss&&f.alive&&!f._swallowed).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    fx(u,'👄 '+(u.ult.name||'SWALLOW').toUpperCase(),'#7b1fa2','big'); fx(t,'GULP','#7b1fa2','big');
+    t._swallowed=true; t.alive=false;
+    applyStatus(u,{key:'swallow',dur:999,data:t,onEnd:(c)=>{ if(!t)return;
+      t._swallowed=false; t.alive=true; t.hp=Math.max(1,Math.round(t.maxhp*(u.ult.regurg||0.5)));
+      let spot={c:c.c,r:c.r}; if(occupied(c.c,c.r)){ for(const nb of neighbors(c.c,c.r)){ if(!occupied(nb.c,nb.r)){spot=nb;break;} } }
+      t.c=spot.c; t.r=spot.r; t.tgt=null; t.retgt=0; fx(t,'REGURGITATED','#7b1fa2','big'); }});
+  } else if(k==='redemption'){
+    // when the caster dies, detonate a heal over nearby allies (death-triggered via the status registry)
+    const heal=u.ult.v||180, rad=u.ult.r||2;
+    fx(u,'✟ '+(u.ult.name||'MARTYR').toUpperCase(),'#f0d375','big');
+    applyStatus(u,{key:'redemption',dur:999,onEnd:(c)=>{
+      living(c.side).forEach(m=>{ if(m!==c&&hexDist(m,c)<=rad&&!m.noHeal){ m.hp=Math.min(m.maxhp,m.hp+heal*(c.healMul||1)); healRingAt(m); fx(m,'+'+Math.round(heal),'#5bbf6a'); } });
+      blastAt(c.c,c.r,rad,'#f0d375'); }});
   }
 }
 // fieldTiles: every in-bounds tile within `rad` hexes of a center (rad 0 = just the center tile).

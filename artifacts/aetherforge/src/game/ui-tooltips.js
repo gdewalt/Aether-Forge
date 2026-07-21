@@ -54,7 +54,11 @@ export const ULT_DESC={
   debuffzone:'Creates tiles that weaken enemies standing on them',
   timewarp:'A field that slows enemies and hastens allies inside it',
   trap:'Arms a tile that triggers on the first enemy to step on it',
-  wall:'Conjures a line of impassable tiles to block a lane'
+  wall:'Conjures a line of impassable tiles to block a lane',
+  mirror:'Summons health-scaled copies of the caster to fight alongside it',
+  pyre:'Resurrects the most-recently-fallen ally beside the caster',
+  swallow:'Devours a foe, removing it from the fight until the caster dies',
+  redemption:'On the caster’s death, heals nearby allies'
 };
 export const TT=document.getElementById('tooltip');
 
