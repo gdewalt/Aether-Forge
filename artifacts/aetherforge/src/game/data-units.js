@@ -27,7 +27,7 @@ export function U(name,faction,cls,t,rng,hp,dmg,as,mv,ico,ult,rar,ab){
 export const POOL=[
   // Neutral — starter units, no faction synergy (flexible, well-rounded)
   U('Footman','Neutral','Warrior','m',1,640,50,.85,1.2,'🪖',{k:'shield',v:240,name:'Hunker Down'},'Common',{art:"Footman",passive:{"dr":0.075,"_condArmor":{"adjAllies":{"n":2,"amt":0.15}}},tip:"Bulwark: while adjacent to 2+ allies, gains +15% armor."}),
-  U('Archer','Neutral','Archer','r',4,400,58,.95,1.2,'🎯',{k:'nova',v:1.4,r:1,name:'Volley'},'Common',{art:"Archer",passive:{"_nthHit":{"n":4,"amt":0.6}},tip:"Take Aim: every 4th shot deals +60% damage."}),
+  U('Archer','Neutral','Archer','r',4,400,58,.95,1.2,'🎯',{k:'execute',v:0.2,name:'Snipe',desc:'A precise shot — finishes a foe below 20% health, otherwise a heavy single strike.'},'Common',{art:"Archer",passive:{"_nthHit":{"n":4,"amt":0.6}},tip:"Take Aim: every 4th shot deals +60% damage."}),
   U('Spearman','Neutral','Warrior','m',1,560,54,.9,1.2,'🔱',{k:'rally',v:.5,name:'Phalanx Formation'},'Common',{art:"Spearman",passive:{"_condRange":{"amt":1,"when":"allyAdj"}},tip:"Reach: +1 range while adjacent to a friendly unit."}),
   U('Crossbowman','Neutral','Archer','r',5,420,80,.65,1.0,'🏹',{k:'execute',v:.3,name:'Heavy Bolt'},'Uncommon',{art:"Crossbowman",passive:{"armorPierce":0.125},tip:"Piercing Bolt: attacks ignore 25% of target armor."}),
   U('Mercenary','Neutral','Warrior','m',1,720,70,.95,1.2,'🗡️',{k:'berserk',v:0.4,d:0.25,name:'War Cry'},'Uncommon',{art:"Mercenary",passive:{"_dmgAboveHP":{"amt":0.1,"thr":0.6}},tip:"Veteran: +10% damage while above 60% HP."}),
@@ -46,7 +46,7 @@ export const POOL=[
   U('Hawkeye Ranger','Sylvan','Archer','r',5,420,86,.95,1.2,'🎯',{k:'beam',v:3.2,name:'Piercing Shot'},'Rare',{art:"Hawkeye Ranger",passive:{"_markAmp":0.15},tip:"Hunter's Mark: marked target takes +15% from all sources."}),
   U('Thornblade Dancer','Sylvan','Rogue','m',1,440,60,1.25,2.0,'🍃',{k:'blink',v:3.0,name:'Thornstep'},'Common',{art:"Thornblade Dancer",passive:{"dodge":0.2},tip:"Evasion: 20% chance to dodge an attack."}),
   U('Druid of the Grove','Sylvan','Cleric','r',3,500,44,.8,1.1,'🌿',{k:'transform',form:'Grizzly Bear',fico:'🐻',hp:1.6,dmg:2.4,as:1.1,name:'Wild Shape'},'Uncommon',{art:"Druid of the Grove",passive:{"chargeMul":1.6,"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Regrowth (periodic 4s): heals lowest-HP ally."}),
-  U('Briar Scout','Sylvan','Archer','r',4,340,58,1.1,1.22,'🏹',{k:'nova',v:1.6,r:1,name:'Thorn Burst'},'Common',{art:"Briar Scout",passive:{"slow":true},tip:"Tangleshot: hits slow the target 15% 2s."}),
+  U('Briar Scout','Sylvan','Archer','r',4,340,58,1.1,1.22,'🏹',{k:'vortex',r:3,v:2,slow:2,name:'Ensnaring Roots',desc:'Roots erupt from the earth, dragging nearby enemies together and slowing them.'},'Common',{art:"Briar Scout",passive:{"slow":true},tip:"Tangleshot: hits slow the target 15% 2s."}),
   U('Lady Aelwyn, Voice of the Wild','Sylvan','Archer','r',6,760,98,1.1,1.09,'🦌',{k:'summon',v:1,n:4,token:'squirrel',name:'Call of the Wild'},'Legendary',{art:"Lady Aelwyn, Voice of the Wild",passive:{"_pierce":{"extra":1}},tip:"Court's Blessing: all Sylvan attacks pierce 1 extra target."}),
   
   // Gilded — healing & mitigation (Cleric/Warrior)
@@ -101,9 +101,9 @@ export const POOL=[
   // Phoenix Cult — self-immolating rebirth
   U('Ash Disciple','Phoenix','Mage','r',4,400,68,.9,1.2,'🌋',{k:'zone',v:0.6,r:1,dur:5,zico:'🔥',zcol:'#ff8a3a',name:'Ember Field'},'Uncommon',{art:"Ash Disciple",passive:{"burn":1,"burnDur":2},tip:"Cinders: attacks apply a small burn that ticks for 2s."}),
   U('Flamewing Seer','Phoenix','Cleric','r',3,460,40,.8,1.1,'🕊️',{k:'pyre',v:0.5,name:'Rekindle',desc:'Calls the most-recently-fallen ally back to the fight beside the Seer at half health.'},'Common',{art:"Flamewing Seer",passive:{"burn":1,"burnDur":2},tip:"Cinder Link: attacks burn self 6%, heal a Phoenix ally 6%."}),
-  U('Ember Acolyte','Phoenix','Mage','r',3,420,70,0.85,1.02,'🔥',{k:'nova',v:1.7,r:2,name:'Immolate'},'Common',{art:"Ember Acolyte",passive:{"_selfRecoil":0.08},tip:"Searing Bolt: deals 70; self takes 8% of damage dealt."}),
-  U('Ashen Zealot','Phoenix','Warrior','m',1,640,72,1.05,1.16,'🌋',{k:'nova',v:1.7,r:1,name:'Selfpyre'},'Uncommon',{art:"Ashen Zealot",passive:{"_dmgBelowHP":{"amt":0.5,"thr":0.3}},tip:"Martyr: below 30% HP, attacks +50% DMG."}),
-  U('Pyreborn Champion','Phoenix','Warrior','m',1,820,88,1.1,1.22,'♨️',{k:'nova',v:1.7,r:1,name:'Supernova'},'Rare',{art:"Pyreborn Champion",passive:{"_dmgPerStack":null,"_stackOn":"allyDeath","_dmgPerDeath":0.25},tip:"Eternal Flame: +25% DMG per time it has died this battle."}),
+  U('Ember Acolyte','Phoenix','Mage','r',3,420,70,0.85,1.02,'🔥',{k:'doom',v:3,d:5,name:'Immolate',desc:'Brands a foe in cursed flame; if it still lives after 3s it bursts into fire for massive damage.'},'Common',{art:"Ember Acolyte",passive:{"_selfRecoil":0.08},tip:"Searing Bolt: deals 70; self takes 8% of damage dealt."}),
+  U('Ashen Zealot','Phoenix','Warrior','m',1,640,72,1.05,1.16,'🌋',{k:'selfdestruct',r:2,v:4.0,name:'Selfpyre',desc:'Erupts in a funeral pyre — dying to deal massive fire damage to everything within 2 hexes.'},'Uncommon',{art:"Ashen Zealot",passive:{"_dmgBelowHP":{"amt":0.5,"thr":0.3}},tip:"Martyr: below 30% HP, attacks +50% DMG."}),
+  U('Pyreborn Champion','Phoenix','Warrior','m',1,820,88,1.1,1.22,'♨️',{k:'burst',r:2,n:3,v:1.4,name:'Supernova',desc:'Detonates in a supernova, striking every enemy within 2 hexes three times.'},'Rare',{art:"Pyreborn Champion",passive:{"_dmgPerStack":null,"_stackOn":"allyDeath","_dmgPerDeath":0.25},tip:"Eternal Flame: +25% DMG per time it has died this battle."}),
   U('The Undying Phoenix','Phoenix','Mage','r',2,1100,100,1.0,1.29,'☀️',{k:'beam',v:2.6,name:'Rebirth in Fire'},'Legendary',{art:"The Undying Phoenix",passive:{"_periodicTeamHeal":{"amt":0.1,"fac":"Phoenix","every":4}},tip:"Reignite (periodic 6s): heals 10% max HP to all Phoenix; self burns 5%."}),
   
   // Gravewardens — stone constructs that harden under fire
@@ -132,7 +132,7 @@ export const POOL=[
   
   // Arachnari — webs that root, amplified damage on webbed foes
   U('Web Spinner','Arachnari','Rogue','m',1,380,40,1.2,1.9,'🕷️',{k:'hook',v:1.2,stun:1.0,name:'Web Yank',desc:'Fires a web that yanks the farthest enemy into melee beside the Web Spinner and stuns it.'},'Common',{art:"Web Spinner",passive:{"_nthSpawn":{"n":3,"key":"swarmling"}},tip:"Spinneret: every 3rd attack spawns a Broodling."}),
-  U('Silk Slinger','Arachnari','Archer','r',4,340,52,0.95,1.16,'🕸️',{k:'nova',v:1.7,r:2,name:'Sticky Volley'},'Common',{art:"Silk Slinger",passive:{"web":true},tip:"Webshot: attacks apply 1 Web stack (slow 12%, stacks)."}),
+  U('Silk Slinger','Arachnari','Archer','r',4,340,52,0.95,1.16,'🕸️',{k:'cone',r:2,v:1.2,width:1,debuff:{slow:2},name:'Web Spray',desc:'Sprays a fan of webbing, damaging and slowing every enemy caught in the cone.'},'Common',{art:"Silk Slinger",passive:{"web":true},tip:"Webshot: attacks apply 1 Web stack (slow 12%, stacks)."}),
   U('Venomfang Lurker','Arachnari','Rogue','m',1,460,58,1.3,2.2,'🪺',{k:'blink',v:3.0,name:'Jumping Spider'},'Uncommon',{art:"Venomfang Lurker",passive:{"_vs":{"slowed":1.3}},tip:"Ruthless: +30% damage vs webbed/slowed targets."}),
   U('Broodmother Acolyte','Arachnari','Cleric','r',3,480,42,0.85,1.09,'🥚',{k:'trap',v:2.0,stacks:2,root:1.2,name:'Web Snare',desc:'Spins a hidden web near the enemy; the first foe to step onto it is rooted 1.2s and left bleeding.'},'Rare',{art:"Broodmother Acolyte",passive:{"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Nurture (periodic 4s): heals lowest-HP ally + spawns a Broodling."}),
   U('Silkweb Sentinel','Arachnari','Guardian','m',1,1050,64,0.7,0.88,'🜸',{k:'bulwark',v:420,r:2,name:'Living Web Wall'},'Uncommon',{art:"Carapace Sentinel",passive:{"web":true},tip:"Web Anchor: adjacent enemies slowed 20%; immune to displacement."}),
