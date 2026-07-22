@@ -36,7 +36,7 @@ export const POOL=[
   // Ironhold — armor wall (Warrior/Guardian)
   U('Shieldbreaker','Ironhold','Warrior','m',1,820,52,.8,1.1,'🛡️',{k:'shield',v:280,name:'Anvil Stance'},'Common',{art:"Shieldbreaker",passive:{"dr":0.06,"_condArmor":{"adjFaction":{"fac":"Ironhold","amt":0.12}}},tip:"Hold the Line: +12% armor while adjacent to another Dwarf."}),
   U('Hammerguard','Ironhold','Warrior','m',1,720,62,.85,1.2,'🔨',{k:'quake',v:1.4,name:'Ground Pound'},'Common',{art:"Hammerguard",passive:{"armorPierce":0.075},tip:"Crushing Blow: every 4th hit ignores 30% armor."}),
-  U('Mountain King','Ironhold','Guardian','m',1,1150,84,.78,1.0,'⛰️',{k:'shield',v:340,name:'Bulwark of Ages'},'Rare',{art:"Mountain King",passive:{"ccImmune":true},tip:"Unyielding: cannot be knocked back; +15% DMG below 50% HP."}),
+  U('Mountain King','Ironhold','Guardian','m',1,1150,84,.78,1.0,'⛰️',{k:'taunt',r:3,v:2.5,name:'Provoke',desc:'Roars a challenge — nearby enemies are forced to attack the Mountain King for 2.5s while it braces behind a shield.'},'Rare',{art:"Mountain King",passive:{"ccImmune":true},tip:"Unyielding: cannot be knocked back; +15% DMG below 50% HP."}),
   U('Axe Thrower','Ironhold','Archer','r',3,560,66,0.85,0.95,'⛏️',{k:'doubleaxe',v:3.0,name:'Twin Axes'},'Uncommon',{art:"Axe Thrower",passive:{"armorPierce":0.1},tip:"Heavy Throw: attacks ignore 20% armor."}),
   U('Anvil Priest','Ironhold','Cleric','m',1,740,46,0.65,0.82,'🪓',{k:'heal',v:300,name:'Molten Blessing'},'Uncommon',{art:"Anvil Priest",passive:{"_periodicHeal":{"amt":200,"range":3,"every":4},"_periodicShield":{"amt":150,"range":3,"every":6}},tip:"Forgeheart (periodic 4s): shield an ally."}),
   U('Thane Brokk Ironfist','Ironhold','Warrior','m',1,1500,105,0.8,0.82,'⚒️',{k:'quake',v:2.0,name:'Avalanche of Steel'},'Legendary',{art:"Thane Brokk Ironfist",tip:"Forgemother: counts as two units toward Ironhold and Warrior synergies."}),
@@ -51,7 +51,7 @@ export const POOL=[
   
   // Gilded — healing & mitigation (Cleric/Warrior)
   U('Acolyte Medic','Gilded','Cleric','r',3,460,38,.8,1.1,'✚',{k:'heal',v:220,name:'Benediction'},'Common',{art:"Acolyte Medic",passive:{"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Mend (periodic 3s): heals lowest-HP ally 80."}),
-  U('Templar','Gilded','Warrior','m',1,860,74,.9,1.1,'🜲',{k:'heal',v:200,name:'Blessing'},'Uncommon',{art:"Templar",passive:{"reflect":0.2},tip:"Righteous Fury: reflects 20% of taken damage."}),
+  U('Templar','Gilded','Warrior','m',1,860,74,.9,1.1,'🜲',{k:'redemption',v:240,r:3,name:"Martyr's Boon",desc:'A dying blessing — when the Templar falls, allies within 3 hexes are healed for 240.'},'Uncommon',{art:"Templar",passive:{"reflect":0.2},tip:"Righteous Fury: reflects 20% of taken damage."}),
   U('High Paladin','Gilded','Guardian','m',1,1180,88,.8,1.0,'☀️',{k:'rally',v:1.0,name:'Holy Zeal'},'Rare',{art:"High Paladin",passive:{"aegis":0.15,"aegisCap":0.25},tip:"Aegis of Light: nearby allies take -15% damage."}),
   U('Squire of Dawn','Gilded','Warrior','m',1,620,50,0.9,1.02,'⚜️',{k:'shield',v:280,name:'Shield of Faith'},'Common',{art:"Squire of Dawn",passive:{"_condArmor":{"adjAllies":{"n":1,"amt":0.12}}},tip:"Support: while adjacent to an ally, takes -12% damage."}),
   U('Lightbringer','Gilded','Mage','r',4,480,72,0.8,0.95,'✝️',{k:'beam',v:2.2,name:'Smite'},'Uncommon',{art:"Lightbringer",passive:{"_healAllyOnHit":0.25},tip:"Radiance: attacks heal the nearest ally for 25% of dmg."}),
@@ -67,7 +67,7 @@ export const POOL=[
   
   // Emberkin — burn AoE (Mage)
   U('Pyromancer','Emberkin','Mage','r',4,420,84,.85,1.1,'🌋',{k:'nova',v:2.0,r:2,name:'Firestorm'},'Uncommon',{art:"Pyromancer",passive:{"_vs":{"burning":1.3}},tip:"Conflagration: +30% to already-burning targets."}),
-  U('Salamander Brave','Emberkin','Warrior','m',1,600,64,.95,1.3,'🦎',{k:'berserk',v:0.6,d:0.50,name:'Blazing Blows'},'Uncommon',{art:"Salamander Brave",passive:{"burn":1,"burnDur":2,"reflect":0.2},tip:"Molten Skin: melee attackers take burn damage."}),
+  U('Salamander Brave','Emberkin','Warrior','m',1,600,64,.95,1.3,'🦎',{k:'cone',r:2,v:1.6,width:1,dot:{burn:1.5,dur:3},name:'Fire Breath',desc:'Exhales a short cone of flame, scorching every enemy caught in the blast and leaving them burning.'},'Uncommon',{art:"Salamander Brave",passive:{"burn":1,"burnDur":2,"reflect":0.2},tip:"Molten Skin: melee attackers take burn damage."}),
   U('Inferno Magus','Emberkin','Mage','r',5,520,100,.8,1.0,'☄️',{k:'transform',form:'Living Flame',fico:'🔥',hp:1.0,dmg:2.0,as:1.2,name:'Incarnate'},'Rare',{art:"Inferno Magus",passive:{"_burnSpread":true},tip:"Wildfire: burns spread to adjacent enemies each tick."}),
   U('Spark Tosser','Emberkin','Archer','r',4,340,54,1.05,1.02,'🔥',{k:'beam',v:2.7,name:'Firework'},'Common',{art:"Spark Tosser",passive:{"_igniteNearby":true},tip:"Scattering Sparks: attacks ignite 1 nearby enemy too."}),
   U('Ashmaw Lizard','Emberkin','Beast','m',1,640,66,1.05,1.22,'🌋',{k:'transform',form:'Fire Drake',fico:'🐉',hp:1.0,dmg:2.0,as:1.15,name:'Evolve'},'Common',{art:"Ashmaw Lizard",passive:{"_asPerBurn":0.05},tip:"Feeding Frenzy: +5% AS per burning enemy on field."}),
@@ -92,8 +92,8 @@ export const POOL=[
   // Voidtouched — demons & warlocks: lifesteal & execute (Warrior/Mage/Rogue)
   U('Void Cultist','Voidtouched','Mage','r',4,400,70,.9,1.1,'👁️',{k:'charm',v:4,name:'Corrupt Mind'},'Common',{art:"Void Cultist",passive:{"_markAmp":0.1},tip:"Corruption: marked foes take +10% damage from all sources for 3s."}),
   U('Soul Leech','Voidtouched','Rogue','m',1,520,62,1.25,1.8,'🦇',{k:'drain',v:3.2,name:'Blood Frenzy'},'Common',{art:"Soul Leech",passive:{"lifesteal":0.12},tip:"Siphon: basic attacks heal for 12% of damage dealt."}),
-  U('Pit Tyrant','Voidtouched','Guardian','m',1,1100,82,.8,1.0,'😈',{k:'bulwark',v:300,r:2,name:'Abyssal Aegis'},'Rare',{art:"Pit Tyrant",passive:{"_healOnEnemyDeath":0.05},tip:"Devour: heals 5% max HP whenever a nearby enemy dies."}),
-  U('Dread Reaver','Voidtouched','Warrior','m',1,780,76,0.9,1.02,'🔮',{k:'drain',v:2.8,name:'Reaping Sweep'},'Uncommon',{art:"Dread Reaver",passive:{"lifesteal":0.3},tip:"Unholy Vigor: lifesteals 30%."}),
+  U('Pit Tyrant','Voidtouched','Guardian','m',1,1100,82,.8,1.0,'😈',{k:'swallow',regurg:0.5,name:'Consume',desc:'Swallows a foe whole, removing it from the fight until the Pit Tyrant dies — then it is regurgitated at half health.'},'Rare',{art:"Pit Tyrant",passive:{"_healOnEnemyDeath":0.05},tip:"Devour: heals 5% max HP whenever a nearby enemy dies."}),
+  U('Dread Reaver','Voidtouched','Warrior','m',1,780,76,0.9,1.02,'🔮',{k:'siphon',v:0.35,name:'Plunder',desc:'Rips power from the deadliest foe — steals 35% of its attack (and some armor) and adds it to the Dread Reaver for the fight.'},'Uncommon',{art:"Dread Reaver",passive:{"lifesteal":0.3},tip:"Unholy Vigor: lifesteals 30%."}),
   U('Pact Priest','Voidtouched','Cleric','r',3,470,56,0.8,1.02,'🌑',{k:'zone',v:0.55,r:1,dur:4,zico:'🔥',zcol:'#ff7a3a',name:'Dark Communion'},'Uncommon',{art:"Pact Priest",passive:{"_periodicHeal":{"amt":80,"range":3,"every":4},"_periodicTeamHeal":{"amt":0.12,"fac":null,"every":4,"lowest":true}},tip:"Blood Tithe (periodic 4s): heals the lowest-HP ally, paying a little of its own HP."}),
   U('Xareth, the Soulflayer','Voidtouched','Mage','r',2,900,105,0.9,1.02,'💀',{k:'execute',v:.9,name:'Harvest of Souls'},'Legendary',{art:"Xareth, the Soulflayer",passive:{"_dmgPerStack":0.03,"_stackOn":"kill"},tip:"Soul Engine: every enemy death = Voidtouched +3% DMG permanently."}),
   
