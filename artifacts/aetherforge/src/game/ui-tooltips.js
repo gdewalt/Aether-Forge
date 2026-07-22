@@ -27,7 +27,38 @@ export const ULT_DESC={
   blink:'Teleports behind an enemy and lands a devastating strike',
   banish:'Hurls an enemy to the far edge of the board, stunned',
   charm:'Temporarily turns an enemy unit to fight for you',
-  zone:'Scorches an area of tiles that burns enemies standing on them'
+  zone:'Scorches an area of tiles that burns enemies standing on them',
+  throw:'Grabs the nearest enemy and hurls it into a distant one — both are struck and briefly stunned',
+  hook:'Yanks the farthest enemy into melee beside the caster and briefly stuns it',
+  knockback:'Shoves nearby enemies away from the caster',
+  swap:'Trades places with a wounded ally',
+  doom:'Brands a dangerous foe; after a delay it takes massive damage',
+  siphon:'Steals attack power (and some armor) from a strong foe',
+  vortex:'Pulls nearby enemies into a cluster and slows them',
+  rend:'A heavy strike that cuts healing and applies bleed',
+  overload:'Hammers the toughest foe with a flurry of hits',
+  feast:'Devours an adjacent weakened foe, growing permanently',
+  selfdestruct:'The caster detonates, dying to damage everything nearby',
+  bombard:'Rains projectiles from off the board onto several squares',
+  cone:'A wedge of damage fanning out toward the target',
+  cleanse:'Strips debuffs from nearby allies and briefly wards them',
+  taunt:'Forces nearby enemies to attack the caster, who gains a shield',
+  silence:'Drains enemy charge and stops them casting for a while',
+  phase:'Becomes untargetable and damage-immune for a moment',
+  warcry:'Terrifies nearby enemies into fleeing, unable to act',
+  confuse:'Maddens nearby enemies into attacking their own side',
+  polymorph:'Hexes a dangerous foe into a harmless critter',
+  whirlwind:'A spinning melee storm that damages adjacent foes while moving',
+  bond:'Tethers to an ally, sharing incoming damage between them',
+  buffzone:'Creates tiles that empower allies standing on them',
+  debuffzone:'Creates tiles that weaken enemies standing on them',
+  timewarp:'A field that slows enemies and hastens allies inside it',
+  trap:'Arms a tile that triggers on the first enemy to step on it',
+  wall:'Conjures a line of impassable tiles to block a lane',
+  mirror:'Summons health-scaled copies of the caster to fight alongside it',
+  pyre:'Resurrects the most-recently-fallen ally beside the caster',
+  swallow:'Devours a foe, removing it from the fight until the caster dies',
+  redemption:'On the caster’s death, heals nearby allies'
 };
 export const TT=document.getElementById('tooltip');
 
@@ -85,7 +116,7 @@ export function openUnitDetail(u, action){
       ${(()=>{const ab=abilityFor(u);return ab?`<div class="sect"><h4>Magic Ability${ab.name?' — '+ab.name:''}</h4>
         <div class="abil">${ab.desc}<br><span style="color:#7d7191;font-size:11px">A passive that triggers automatically in battle.</span></div></div>`:'';})()}
       <div class="sect"><h4>Ultimate — ${u.ult.name}</h4>
-        <div class="abil">${ULT_DESC[u.ult.k]||'A powerful special ability.'}<br><span style="color:#7d7191;font-size:11px">Charges as the unit deals &amp; takes damage; fires at full bar.</span></div>
+        <div class="abil">${u.ult.desc||ULT_DESC[u.ult.k]||'A powerful special ability.'}<br><span style="color:#7d7191;font-size:11px">Charges as the unit deals &amp; takes damage; fires at full bar.</span></div>
       </div>
       <div class="sect"><h4>Synergies</h4>${synTxt}${clsTxt}</div>
       ${gearTxt}
@@ -160,7 +191,7 @@ export function tipHTML(u,live){
       ${live?`<span>Magic</span><span>${Math.round(u.mag)}%</span>`:''}
     </div>
     ${(()=>{const ab=abilityFor(u);return ab?`<div class="tt-ult"><b style="color:#8fd0ff">✦ ${ab.name||'Magic Ability'}</b><br>${ab.desc}</div>`:'';})()}
-    <div class="tt-ult"><b>★ ${u.ult.name}</b><br>${ULT_DESC[u.ult.k]||''}</div>
+    <div class="tt-ult"><b>★ ${u.ult.name}</b><br>${u.ult.desc||ULT_DESC[u.ult.k]||''}</div>
     ${gearLine(u)}
     ${statuses}`;
 }

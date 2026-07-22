@@ -343,6 +343,7 @@ export function simTick(){
     if(u._constructRegen && u.hp<u.maxhp){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._constructRegen*TICK); }
     if(u._shockedT>0){ u._shockedT-=TICK; if(u._shockedT<=0)u._shocked=false; }
     if(u._cloakT>0){ u._cloakT-=TICK; if(u._cloakT<=0){ u._cloakT=0; fx(u,'🌫','#b9c4d0'); } }   // infiltrator cloak wears off
+    if(u._ccImmuneT>0){ u._ccImmuneT-=TICK; if(u._ccImmuneT<0)u._ccImmuneT=0; }   // brief post-cleanse debuff immunity
     if(u.shieldT>0){ u.shieldT-=TICK; if(u.shieldT<=0){ u.shield=0; } }
     if(u._shieldFx>0)u._shieldFx-=TICK;
     if(u._healAST>0){ u._healAST-=TICK; if(u._healAST<=0)u._healAS=0; }
@@ -375,24 +376,36 @@ export function simTick(){
     if(u.regen>0&&u.hp<u.maxhp&&u.alive){ u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u.regen*TICK*healScale(u)); }   // Verdant Cuirass regen
     if(u.curseT>0)u.curseT-=TICK;
     if(u.stun>0)u.stun-=TICK;
-    if(u._charmT>0){ u._charmT-=TICK; if(u._charmT<=0 && u._charmHome){ u.side=u._charmHome; u._charmHome=null; u.tgt=null; u.retgt=0; fx(u,'freed','#9c8fb0'); } }
     if(u.token&&u.tokenLife!=null){ u.tokenLife-=TICK; if(u.tokenLife<=0){ u.alive=false; fx(u,'✦','#9c8fb0'); } }
+    tickStatuses(u);   // Phase 2 status registry (taunt/silence/phase/warcry/confuse/polymorph/whirlwind/bond)
+    u._field=fieldMods(u);   // Phase 3 field stat-mods, cached once per tick (read by the dmg/as/dr calcs)
+    if(u._field){ if(u._field.regen&&u.hp<u.maxhp)u.hp=Math.min(u.maxhp,u.hp+u.maxhp*u._field.regen*TICK);
+      if(u._field.charge)u.mag=Math.min(100,u.mag+u._field.charge*TICK); }
+    if(hasStatus(u,'whirlwind')){ u._wwT=(u._wwT||0)-TICK; if(u._wwT<=0){ u._wwT=0.3; const v=statusData(u,'whirlwind')||0.8;
+      enemyOf(u).forEach(f=>{ if(f.alive&&hexDist(f,u)<=1) applyDamage(f,u.dmg*v*PACE,'atk',u); }); blastAt(u.c,u.r,1,'#cfe8ff'); } }
   }
-  // (1b) DAMAGING ZONES — units standing on a hostile zone tile take damage; zones decay
+  // (1b) FIELDS — damage/spore zones, trap tiles, and debuff DoT/slow. Buff/debuff stat mods and walls
+  // are applied elsewhere (fieldMods at use-time; occupied() for walls). Zones decay via z.life.
   if(b.zones&&b.zones.length){
     for(const z of b.zones){
       // Mycelia — while she lives, her side's spore clouds don't decay; otherwise normal decay
       const cloudMaster = z.spore && living(z.side).some(a=>a._cloudMaster&&a.alive);
       if(!cloudMaster) z.life-=TICK;
+      // TRAP: single-fire the moment an enemy of the owner steps onto any tile
+      if(z.trap){
+        const victim=all.find(x=>x.side!==z.side && z.tiles.some(t=>t.c===x.c&&t.r===x.r));
+        if(victim){ if(z.dmg)applyDamage(victim,z.dmg,'atk',null); if(z.payload)applyPayload(victim,z.payload,null);
+          if(z.payload&&z.payload.teleport)teleportRandom(victim); fx(victim,'💥','#ffb300'); blastAt(victim.c,victim.r,0,z.color||'#ffb300'); z.life=0; }
+        continue;
+      }
       z.tick=(z.tick||0)+TICK;
       if(z.tick>=0.5){ z.tick=0;
         for(const u of all){ if(u.side===z.side)continue;
-          if(z.tiles.some(t=>t.c===u.c&&t.r===u.r)){
-            // spore clouds poison instead of dealing direct damage: each tick inside adds a stack (cap 5)
-            if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } }
-            else applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
-            if(z.spore && cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); }
-          }
+          if(!z.tiles.some(t=>t.c===u.c&&t.r===u.r))continue;
+          if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } if(cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); } }
+          else if(z.dmg) applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
+          if(z.debuff&&z.debuff.dot) applyDamage(u, z.debuff.dot*0.5*PACE, 'dot', null);   // debuffzone DoT
+          if(z.slowOnTile && !u.ccImmune){ u.slowT=Math.max(u.slowT||0,z.slowOnTile); u.slowStacks=Math.max(u.slowStacks||0,1); }   // timewarp movement slow
         }
       }
     }
@@ -440,8 +453,21 @@ export function simTick(){
       u.retgt=RETGT_TIME;
     }
 
-    // (2) ULTIMATE if bar full
-    if(u.mag>=100){ castUlt(u,esc); u.mag=0; continue; }
+    // ---- Phase 2 status behaviors: neutralize / retarget / cast-gate ----
+    if(hasStatus(u,'polymorph')) continue;                          // hexed: cannot act
+    if(hasStatus(u,'warcry')){                                      // feared: flee, cannot attack or cast
+      const foe=enemyOf(u).sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0];
+      if(foe){ u.movecd=(u.movecd||0)-TICK; if(u.movecd<=0){ u.movecd=MOVE_BASE/Math.max(0.5,u.mv); pushUnit(u,foe,1); } }
+      continue;
+    }
+    if(hasStatus(u,'taunt')){ const by=statusData(u,'taunt'); if(by&&by.alive)u.tgt=by; }        // provoked: attack the taunter
+    else if(hasStatus(u,'confuse')){                                                              // maddened: attack own side
+      const allies=living(u.side).filter(a=>a!==u);
+      if(allies.length) u.tgt=allies.reduce((a,c)=>hexDist(u,c)<hexDist(u,a)?c:a);
+    }
+
+    // (2) ULTIMATE if bar full — silence blocks the cast
+    if(u.mag>=100 && !hasStatus(u,'silence')){ castUlt(u,esc); u.mag=0; continue; }
 
     // (3)/(4) SUPPORT ability: clerics prefer healing a wounded ally over attacking
     if(u.arch==='support'){
@@ -468,12 +494,12 @@ export function simTick(){
     }
     // (5) ATTACK if in range
     if(d<=effRng){
-      u.atkcd-=TICK*slowAtkRate(u)*auraAtkSpeed(u)*selfAtkSpeedMul(u);
+      u.atkcd-=TICK*slowAtkRate(u)*auraAtkSpeed(u)*selfAtkSpeedMul(u)*(u._field?u._field.as:1);
       if(u.atkcd<=0){
         u.atkcd=1/u.as;
         u._idleT=0;   // attacked this tick — reset idle timer (for regen-while-idle abilities)
         if(u._asPerTravel)u._travelDist=0;   // Galeclaw: reset travel charge after attacking
-        let dmg=u.dmg*esc*PACE*auraBonus(u)*condDamageMul(u);
+        let dmg=u.dmg*esc*PACE*auraBonus(u)*condDamageMul(u)*(u._field?u._field.dmg:1);
         if(u._selfBurnDmg)dmg*=(1+u._selfBurnDmg);
         if(u.token){ const aura=living(u.side).find(a=>a._tokenDmgAura&&!a.token&&hexDist(a,u)<=a._tokenDmgAura.range); if(aura)dmg*=(1+aura._tokenDmgAura.amt); }
         if(u._tokenDmgAura && u.token)dmg*=1;
@@ -653,7 +679,8 @@ export function condDamageMul(u){
   return m;
 }
 export function onDeath(u){
-  // hook for on-death triggers (Phoenix rebirth, Hivemind spawns, etc. — stubbed for prototype slice)
+  endStatuses(u);   // fire any status reverts (e.g. polymorph identity restore) on hard-kill / fallback deaths
+  if(G.battle)u._deathT=G.battle.t;   // when it fell (for pyre resurrection ordering)
 }
 export function colDepth(u){return u.side==='P'?u.c:(COLS-u.c);} // how deep into enemy territory (for rogue dive we want their backline = high enemy col)
 export function totalHP(s){return living(s).reduce((a,u)=>a+u.hp,0);}
@@ -697,11 +724,110 @@ export function neighbors(c,r){
    :[[+1,+1],[+1,0],[0,-1],[-1,0],[-1,+1],[0,+1]];
   return dirs.map(([dc,dr])=>({c:c+dc,r:r+dr})).filter(n=>n.c>=0&&n.c<COLS&&n.r>=0&&n.r<ROWS);
 }
-export function occupied(c,r){ if(terrainAt(c,r)==='rubble')return true; return [...G.battle.P,...G.battle.E].some(u=>u.alive&&u.c===c&&u.r===r);}
+export function occupied(c,r){ if(terrainAt(c,r)==='rubble')return true;
+  const zs=G.battle&&G.battle.zones; if(zs)for(const z of zs){ if(z.wall && z.tiles.some(t=>t.c===c&&t.r===r))return true; }   // Barricade walls block movement
+  return [...G.battle.P,...G.battle.E].some(u=>u.alive&&u.c===c&&u.r===r);}
+
+/* ---------- Phase 0.1 — shared ultimate helpers ----------
+   One implementation of the selectors / displacement / status logic that ult
+   handlers used to inline, so new ults reuse tested behavior and the vocabulary
+   stays consistent. (Existing ults are migrated onto these separately — see the
+   implementation plan; each migration is determinism-checked.) */
+// pickTarget: unified enemy selection. Skips cloaked foes (like acquireTarget). Returns a foe or null.
+export function pickTarget(u, mode){
+  const foes=enemyOf(u).filter(f=>!(f._cloakT>0));
+  if(!foes.length)return null;
+  switch(mode){
+    case 'farthest':   return foes.reduce((a,c)=>hexDist(u,c)>hexDist(u,a)?c:a);
+    case 'lowhp':      return foes.reduce((a,c)=>c.hp<a.hp?c:a);
+    case 'highhp':     return foes.reduce((a,c)=>c.hp>a.hp?c:a);
+    case 'densest':    return densestTarget(u,foes);
+    case 'highthreat': return foes.reduce((a,c)=>(c.dmg*c.as)>(a.dmg*a.as)?c:a);
+    case 'nearest':
+    default:           return foes.reduce((a,c)=>hexDist(u,c)<hexDist(u,a)?c:a);
+  }
+}
+// placeNear: nearest open, in-bounds hex adjacent to `target` (widening to a 2-hex ring). Returns {c,r} or null.
+export function placeNear(target){
+  for(const n of neighbors(target.c,target.r)){ if(!occupied(n.c,n.r)) return {c:n.c,r:n.r}; }
+  for(const n of neighbors(target.c,target.r)){ for(const m of neighbors(n.c,n.r)){ if(!occupied(m.c,m.r)) return {c:m.c,r:m.r}; } }
+  return null;
+}
+// applyPayload: unified status application. Hard CC and DoTs (stun/slow/burn/poison) respect ccImmune —
+// consistent with basic-attack CC; bleed and curse (damage amps, not control) pass through, as they do on hit.
+export function applyPayload(tgt, p, src){
+  if(!p||!tgt||!tgt.alive)return;
+  const immune=!!tgt.ccImmune || (tgt._ccImmuneT>0);
+  if(p.stun   && !immune) tgt.stun=Math.max(tgt.stun||0, p.stun);
+  if(p.slow   && !immune){ tgt.slowT=Math.max(tgt.slowT||0, p.slow); tgt.slowStacks=Math.max(tgt.slowStacks||0,1); }
+  if(p.burn   && !immune){ tgt.burnT=Math.max(tgt.burnT||0, p.burnDur||2); tgt.burnMul=p.burn; }
+  if(p.poison && !immune){ tgt.poisonT=Math.max(tgt.poisonT||0, p.poison); tgt.poisonStacks=Math.min(5,(tgt.poisonStacks||0)+1); }
+  if(p.bleed) tgt.bleedStacks=Math.min(5,(tgt.bleedStacks||0)+p.bleed);
+  if(p.curse) tgt.curseT=Math.max(tgt.curseT||0, p.curse);
+}
+// pushUnit: shove `u` up to `dist` tiles directly away from `from`, stopping at the board edge or an occupied hex.
+export function pushUnit(u, from, dist){
+  const dc=Math.sign(u.c-from.c), dr=Math.sign(u.r-from.r);
+  if(dc===0&&dr===0)return;
+  let c=u.c, r=u.r;
+  for(let i=0;i<dist;i++){ const nc=c+dc, nr=r+dr; if(nc<0||nc>=COLS||nr<0||nr>=ROWS||occupied(nc,nr))break; c=nc; r=nr; }
+  u.c=c; u.r=r; u.tgt=null; u.retgt=0;
+}
+// swapPos: exchange two units' board positions.
+export function swapPos(a,b){ const c=a.c,r=a.r; a.c=b.c; a.r=b.r; b.c=c; b.r=r; }
+// slay: finalize a kill immediately (mirrors the tick death-sweep) and fire on-death triggers.
+export function slay(t, src){ if(!t||!t.alive)return; t.hp=0; t.alive=false; fx(t,'☠','#d4534a'); onDeath(t); }
+
+/* ---------- Phase 0.3 — status registry ----------
+   Timed statuses with an onEnd revert, so ults like confuse/polymorph/bond don't each
+   accrete a bespoke timer + restore block in the tick loop. onEnd runs on natural expiry
+   AND on death/battle-end (via endStatuses), so reverts always fire. */
+export function applyStatus(u, s){
+  u._status=u._status||[];
+  const ex=u._status.find(x=>x.key===s.key);
+  if(ex){ ex.t=Math.max(ex.t, s.dur); if(s.onEnd)ex.onEnd=s.onEnd; if(s.data!==undefined)ex.data=s.data; return ex; }
+  const st={key:s.key, t:s.dur, onEnd:s.onEnd||null, data:s.data};
+  u._status.push(st); return st;
+}
+export function hasStatus(u,key){ const st=u._status; if(!st)return false; for(const s of st){ if(s.key===key&&s.t>0)return true; } return false; }
+export function statusData(u,key){ const st=u._status; if(!st)return null; for(const s of st){ if(s.key===key&&s.t>0)return s.data; } return null; }
+export function tickStatuses(u){
+  const st=u._status; if(!st||!st.length)return;
+  for(let i=st.length-1;i>=0;i--){ const s=st[i]; s.t-=TICK; if(s.t<=0){ st.splice(i,1); if(s.onEnd)try{s.onEnd(u);}catch(e){} } }
+}
+// endStatuses: fire remaining onEnds immediately (death / battle-end) so reverts never get stranded.
+export function endStatuses(u){
+  const st=u._status; if(!st||!st.length)return; u._status=[];
+  for(const s of st){ if(s.onEnd)try{s.onEnd(u);}catch(e){} }
+}
+
+/* ---------- Phase 3 — generalized field system ----------
+   Fields are entries in G.battle.zones. Beyond the existing damage/spore zones they carry a typed
+   payload: buff (ally stat mods), debuff (enemy stat mods), wall (impassable), trap (single-fire).
+   Stat mods are computed at use-time (like auraBonus) — cached once per unit per tick as u._field —
+   so there is no enter/leave bookkeeping or revert to strand. */
+export function fieldMods(u){
+  const zs=G.battle&&G.battle.zones; if(!zs||!zs.length)return null;
+  let dmg=1, as=1, dr=0, charge=0, regen=0, has=false;
+  for(const z of zs){
+    if(!z.buff&&!z.debuff)continue;
+    if(!z.tiles.some(t=>t.c===u.c&&t.r===u.r))continue;
+    if(z.buff && u.side===z.side){ const b=z.buff; has=true; if(b.dmg)dmg*=(1+b.dmg); if(b.as)as*=(1+b.as); if(b.dr)dr+=b.dr; if(b.charge)charge+=b.charge; if(b.regen)regen+=b.regen; }
+    if(z.debuff && u.side!==z.side){ const d=z.debuff; has=true; if(d.dmg)dmg*=(1-d.dmg); if(d.as)as*=(1-d.as); if(d.dr)dr-=d.dr; }
+  }
+  return has?{dmg,as,dr,charge,regen}:null;
+}
+// teleportRandom: fling a unit to a random open board tile (trap payload).
+export function teleportRandom(u){
+  const opts=[]; for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){ if(!occupied(c,r))opts.push({c,r}); }
+  if(opts.length){ const d=opts[Math.floor(RNG()*opts.length)]; u.c=d.c; u.r=d.r; u.tgt=null; u.retgt=0; }
+}
 export function applyDamage(tgt,amt,kind,src,isCrit){
   if(!tgt.alive)return;
+  if(hasStatus(tgt,'phase')){ fx(tgt,'✧','#b48ae8'); return; }   // Stasis: untargetable + damage-immune
   if(kind==='atk'&&tgt.dodge&&RNG()<tgt.dodge){ fx(tgt,'DODGE','#cfe8ff'); return; }   // Batch 8
-  let drEff=tgt.dr||0;
+  let drEff=(tgt.dr||0)+(tgt._field?tgt._field.dr:0);   // field buff/debuff shifts armor (debuff can push it negative → bonus damage)
+  if(drEff>0.95)drEff=0.95;
   if(src&&src.armorPierce)drEff=Math.max(0,drEff-src.armorPierce);
   let dmg=amt*(1-drEff);
   if(kind==='atk'&&src){ const emp=(src._plunderAcc||0)+(src._empAcc||0); if(emp>0)dmg*=(1+emp); } // enemy Plunder/empower stacks
@@ -742,6 +868,9 @@ export function applyDamage(tgt,amt,kind,src,isCrit){
     fx(tgt,'-'+Math.round(absorbed),'#7cdcff');
     if(tgt.shield<=0){ tgt.shield=0; fx(tgt,'SHIELD BROKEN','#7cdcff'); }
   }
+  // Soul Tether: a bonded pair shares incoming damage (half redirected to the partner)
+  if(dmg>0 && hasStatus(tgt,'bond')){ const partner=statusData(tgt,'bond');
+    if(partner&&partner.alive&&partner!==tgt){ const share=dmg*0.5; dmg-=share; partner.hp-=share; partner._dmgTaken=(partner._dmgTaken||0)+share; fx(partner,'🔗','#8fd0ff'); } }
   tgt.hp-=dmg;
   tgt._dmgTaken=(tgt._dmgTaken||0)+dmg;   // per-battle telemetry (run statistics)
   if(dmg>0&&G.battle){ tgt._hitFx=G.battle.t; if(kind==='atk'&&dmg>tgt.maxhp*0.12)tgt._bigHit=G.battle.t; }   // juice: flinch / big-hit shake
@@ -818,6 +947,8 @@ export function tryDeath(u){
     if(aura && !G.battle['_teamRev_'+u.side]){ G.battle['_teamRev_'+u.side]=true; u.hp=u.maxhp*aura._teamReviveAura; fx(u,'✟ REVIVED','#f0d375','big'); healRingAt(u); return; }
   }
   u.alive=false;
+  u._deathT=G.battle?G.battle.t:0;   // when it fell (for pyre resurrection ordering)
+  endStatuses(u);   // fire status reverts (polymorph identity, etc.) the moment the unit truly dies
   deathBurst(u);   // juice: dust/blood puff on death
   // Enemy faction themes: Brigand Plunder & Void/Dread empower — killers' side gains stacking damage
   const _killSide=u.side==='P'?'E':'P';
@@ -866,7 +997,7 @@ export function castUlt(u,esc,_echo){
   if(u.ultCrit&&RNG()<0.25){ power*=1.5; fx(u,u.faction==='Stargazers'?'ASTRAL CRIT':'✶ ULT CRIT','#c8a6ff','big'); }
   if(k==='none')return;
   if(k==='nova'){ // aoe around densest cluster
-    let center=densestTarget(u,foes); if(!center)return;
+    let center=pickTarget(u,'densest'); if(!center)return;
     const col=u.faction==='Emberkin'?'#ff7a3a':'#f0d375';
     fx(u,'✸ '+(u.ult.name||'NOVA').toUpperCase(),col,'big');
     // a projectile arcs to the cluster, then the blast lands
@@ -879,9 +1010,9 @@ export function castUlt(u,esc,_echo){
   } else if(k==='shield'){
     {const sh=Math.round(u.ult.v*healScale(u));applyShield(u,sh);healRingAt(u);blastAt(u.c,u.r,0,'#7cdcff');fx(u,'🛡 '+(u.ult.name||'SHIELD').toUpperCase(),'#7cdcff','big');}
   } else if(k==='execute'){
-    let t=foes.reduce((a,c)=>c.hp<a.hp?c:a,foes[0]); if(!t)return;
+    let t=pickTarget(u,'lowhp'); if(!t)return;
     spawnProjectile(u,t,{glyph:'⚡',color:'#fff',dur:200});
-    if(t.hp/t.maxhp<=u.ult.v){t.hp=0;t.alive=false;fx(t,'EXECUTE','#d4534a','big');onDeath(t);}
+    if(t.hp/t.maxhp<=u.ult.v){fx(t,'EXECUTE','#d4534a','big');slay(t,u);}
     else applyDamage(t,u.dmg*2.5*power*PACE,'atk',u,true);
   } else if(k==='doubleaxe'){
     // Barrage: a volley of axes cycles through enemies within range (repeating targets if the volley outnumbers them)
@@ -914,11 +1045,11 @@ export function castUlt(u,esc,_echo){
     fx(u,'⚑ RALLY','#f0d375','big'); blastAt(u.c,u.r,(u.ult.r||3),'#f0d375');
     mates.forEach(m=>{ if(hexDist(m,u)<=(u.ult.r||3)){ m.as*=(1+(u.ult.v||0.5)); m.dmg=Math.round(m.dmg*(1+(u.ult.v||0.5)*0.3)); healRingAt(m); fx(m,'⚑','#f0d375'); } });
   } else if(k==='freeze'){
-    let center=densestTarget(u,foes);if(!center)return;
+    let center=pickTarget(u,'densest');if(!center)return;
     fx(u,'❄ '+(u.ult.name||'FREEZE').toUpperCase(),'#7cdcff','big');
     spawnProjectile(u,center,{glyph:'❄',color:'#7cdcff',dur:300,spin:true});
     queueImpact(0.30, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||1),'#7cdcff');
-      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); });
+      foes.forEach(f=>{if(f.alive&&hexDist(f,center)<=(u.ult.r||1)){if(!f.ccImmune)f.stun=u.ult.v;applyDamage(f,u.dmg*1.2*esc*PACE,'atk',u);fx(f,'❄','#7cdcff');}}); });
   } else if(k==='chain'){
     // lightning arcs from the nearest foe to successive nearby foes, falling off each jump
     let cur=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!cur)return;
@@ -934,7 +1065,7 @@ export function castUlt(u,esc,_echo){
     }
   } else if(k==='beam'){
     // piercing line toward the most distant foe — a searing beam lances across the board, hitting everything on its path
-    let far=foes.slice().sort((a,b)=>hexDist(u,b)-hexDist(u,a))[0]; if(!far)return;
+    let far=pickTarget(u,'farthest'); if(!far)return;
     const bcol=u.faction==='Emberkin'?'#ff7a3a':'#ff9d5c';
     fx(u,'☄ '+(u.ult.name||'BEAM').toUpperCase(),bcol,'big');
     beamLine(u,far,bcol);   // the glowing beam itself, with muzzle flash at the caster
@@ -955,7 +1086,7 @@ export function castUlt(u,esc,_echo){
     for(let i=0;i<n;i++) spawnToken(u.side,key,u.c,u.r,u.ult.v||1);
   } else if(k==='drain'){
     // vampiric strike: heavy single-target hit that heals the caster
-    let t=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!t)return;
+    let t=pickTarget(u,'nearest'); if(!t)return;
     fx(u,'🩸 '+(u.ult.name||'DRAIN').toUpperCase(),'#c0392b','big');
     spawnProjectile(u,t,{glyph:'🩸',color:'#c0392b',dur:200});
     const dmg=u.dmg*u.ult.v*power*PACE; applyDamage(t,dmg,'atk',u,true);
@@ -966,7 +1097,7 @@ export function castUlt(u,esc,_echo){
     mates.forEach(m=>{ if(hexDist(m,u)<=(u.ult.r||2)){ const sv=Math.round(u.ult.v*(u.healMul||1)*healScale(u)); applyShield(m,sv); m.dr=Math.min(.85,(m.dr||0)+0.15); healRingAt(m); } });
   } else if(k==='curse'){
     // hex a cluster: damage-amp debuff + lingering poison (a setup ultimate)
-    let center=densestTarget(u,foes); if(!center)return;
+    let center=pickTarget(u,'densest'); if(!center)return;
     fx(u,'☠ '+(u.ult.name||'CURSE').toUpperCase(),'#9b59b6','big');
     spawnProjectile(u,center,{glyph:'☠',color:'#9b59b6',dur:280,spin:true});
     queueImpact(0.28, ()=>{ if(!G.battle||G.battle.done)return; blastAt(center.c,center.r,(u.ult.r||2),'#9b59b6');
@@ -986,7 +1117,7 @@ export function castUlt(u,esc,_echo){
     foes.forEach(f=>{ if(f.alive){
       // stagger each foe's hit slightly by distance so the wave visibly sweeps across the board
       const d=hexDist(u,f); queueImpact(Math.min(300, d*45)/1000, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
-        applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); if(RNG()<0.5)f.stun=Math.max(f.stun||0,0.6);
+        applyDamage(f,u.dmg*u.ult.v*esc*power*PACE,'atk',u); if(RNG()<0.5&&!f.ccImmune)f.stun=Math.max(f.stun||0,0.6);
         blastAt(f.c,f.r,0,'#b9772e'); debrisBurst(f.c,f.r,4);
       });
     } });
@@ -1020,7 +1151,7 @@ export function castUlt(u,esc,_echo){
     }
   } else if(k==='blink'){
     // teleport behind the chosen enemy and land a devastating strike
-    let t=foes.slice().sort((a,b)=>(b.hp)-(a.hp))[0]; // hit the juiciest target (highest HP/backline carry)
+    let t=pickTarget(u,'highhp'); // hit the juiciest target (highest HP/backline carry)
     if(u.arch==='backline') t=foes.slice().sort((a,b)=>b.c-a.c)[0]||t; // divers prefer the far backline
     if(!t)return;
     // find an empty hex "behind" the target (further from the caster's side)
@@ -1036,28 +1167,211 @@ export function castUlt(u,esc,_echo){
     u.tgt=t; u.retgt=2;
   } else if(k==='banish'){
     // hurl an enemy to the far edge of the board (removes a threat from the fight for a while)
-    let t=foes.slice().sort((a,b)=>hexDist(u,a)-hexDist(u,b))[0]; if(!t)return;
-    const edgeC = t.side==='E' ? COLS-1 : 0;  // shove toward its own back edge
-    let dest=null;
-    for(let dc=0;dc<COLS&&!dest;dc++){
-      const cc = t.side==='E' ? COLS-1-dc : dc;
-      for(const r of [t.r,t.r-1,t.r+1,0,ROWS-1]){
-        if(r>=0&&r<ROWS&&!occupied(cc,r)){ dest={c:cc,r}; break; }
-      }
-    }
+    let t=pickTarget(u,'nearest'); if(!t)return;
     spawnProjectile(u,t,{glyph:'🌀',color:'#7cdcff',dur:200});
     fx(t,'BANISHED','#7cdcff','big');
-    if(dest){ t.c=dest.c; t.r=dest.r; }
-    t.stun=Math.max(t.stun||0,u.ult.v||1.5); t.slowT=2; t.tgt=null; t.retgt=2;
+    if(!t.ccImmune){   // ccImmune ("cannot be knocked back") resists the displacement + CC
+      let dest=null;
+      for(let dc=0;dc<COLS&&!dest;dc++){
+        const cc = t.side==='E' ? COLS-1-dc : dc;
+        for(const r of [t.r,t.r-1,t.r+1,0,ROWS-1]){
+          if(r>=0&&r<ROWS&&!occupied(cc,r)){ dest={c:cc,r}; break; }
+        }
+      }
+      if(dest){ t.c=dest.c; t.r=dest.r; }
+      t.stun=Math.max(t.stun||0,u.ult.v||1.5); t.slowT=2; t.tgt=null; t.retgt=2;
+    }
   } else if(k==='charm'){
-    // temporarily turn an enemy unit to fight for you
-    let t=foes.filter(f=>!f.boss&&!f._charmT).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    // temporarily turn an enemy unit to fight for you — MOVE it between the P/E arrays so .side and
+    // array membership agree (fixes the old half-changed-allegiance bug), and revert via the registry.
+    let t=enemyOf(u).filter(f=>!f.boss&&!f.ccImmune&&!hasStatus(f,'charm')).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
     spawnProjectile(u,t,{glyph:'💗',color:'#ff7ab0',dur:220});
-    t._charmT=u.ult.v||4;          // duration in seconds
-    t._charmHome=t.side;           // remember original side
-    t.side=u.side;                 // switch allegiance
-    t.tgt=null; t.retgt=0;
+    const home=t.side, homeArr=G.battle[home], newArr=G.battle[u.side];
+    const idx=homeArr.indexOf(t); if(idx>=0)homeArr.splice(idx,1); newArr.push(t);
+    t.side=u.side; t.tgt=null; t.retgt=0;
+    applyStatus(t,{key:'charm',dur:u.ult.v||4,onEnd:(x)=>{ const cur=G.battle[x.side]||[], hArr=G.battle[home]||[];
+      const j=cur.indexOf(x); if(j>=0)cur.splice(j,1); if(!hArr.includes(x))hArr.push(x); x.side=home; x.tgt=null; x.retgt=0; fx(x,'freed','#9c8fb0'); }});
     fx(t,'CHARMED','#ff7ab0','big'); healRingAt(t);
+  } else if(k==='throw'){
+    // grab the nearest enemy and hurl it into the farthest one — both take damage and are briefly stunned
+    const grabbed=pickTarget(u,'nearest'); if(!grabbed)return;
+    const target=foes.filter(f=>f!==grabbed&&!(f._cloakT>0)).sort((a,b)=>hexDist(u,b)-hexDist(u,a))[0]||grabbed;
+    const dmg=u.dmg*(u.ult.v||2.0)*power*PACE, stun=u.ult.stun||1.0, col='#d9a06b';
+    fx(u,'🤾 '+(u.ult.name||'HURL').toUpperCase(),col,'big');
+    spawnProjectile(u,grabbed,{glyph:u.ico,color:col,dur:180});
+    if(target!==grabbed){
+      const dest=placeNear(target);
+      if(dest){ grabbed.c=dest.c; grabbed.r=dest.r; grabbed.tgt=null; grabbed.retgt=0; }
+      spawnProjectile(grabbed,target,{glyph:'💥',color:col,dur:160});
+      applyDamage(target,dmg,'atk',u,true); applyPayload(target,{stun},u); blastAt(target.c,target.r,0,col);
+    }
+    applyDamage(grabbed,dmg,'atk',u,true); applyPayload(grabbed,{stun},u); blastAt(grabbed.c,grabbed.r,0,col);
+  } else if(k==='hook'){
+    // yank the farthest enemy (the backline carry) into melee beside the caster and briefly stun it
+    const t=pickTarget(u,'farthest'); if(!t)return;
+    fx(u,'🪝 '+(u.ult.name||'HARPOON').toUpperCase(),'#8fd0ff','big');
+    spawnProjectile(u,t,{glyph:'🪝',color:'#8fd0ff',dur:180});
+    const dest=placeNear(u); if(dest){ t.c=dest.c; t.r=dest.r; t.tgt=null; t.retgt=0; }
+    applyDamage(t,u.dmg*(u.ult.v||1.2)*power*PACE,'atk',u,true); applyPayload(t,{stun:u.ult.stun||1.0},u); blastAt(t.c,t.r,0,'#8fd0ff');
+  } else if(k==='knockback'){
+    // shove every nearby enemy away from the caster (resets their approach); light damage, no stun
+    const rad=u.ult.r||2, dist=u.ult.v||2;
+    const hit=enemyOf(u).filter(f=>hexDist(f,u)<=rad);
+    fx(u,'💨 '+(u.ult.name||'SHOCKWAVE').toUpperCase(),'#cfe8ff','big'); blastAt(u.c,u.r,rad,'#cfe8ff');
+    hit.forEach(f=>{ pushUnit(f,u,dist); applyDamage(f,u.dmg*(u.ult.d||0.6)*power*PACE,'atk',u); });
+  } else if(k==='swap'){
+    // trade places with the most-wounded ally (rescue a diving carry / take its spot)
+    const ally=mates.filter(m=>m!==u&&!m.token).sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0]; if(!ally)return;
+    fx(u,'🌀 '+(u.ult.name||'DISPLACE').toUpperCase(),'#b48ae8','big');
+    swapPos(u,ally); u.tgt=null; u.retgt=0; ally.tgt=null; ally.retgt=0;
+    blastAt(u.c,u.r,0,'#b48ae8'); blastAt(ally.c,ally.r,0,'#b48ae8');
+  } else if(k==='doom'){
+    // brand a dangerous foe; after a fuse it takes massive damage if still alive
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    const fuse=u.ult.v||4, mult=u.ult.d||6;
+    fx(t,'☠ '+(u.ult.name||'DOOM').toUpperCase(),'#a56fd6','big');
+    spawnProjectile(u,t,{glyph:'☠',color:'#a56fd6',dur:220,spin:true});
+    queueImpact(fuse, ()=>{ if(!G.battle||G.battle.done||!t.alive)return;
+      applyDamage(t,u.dmg*mult*power*PACE,'atk',u,true); blastAt(t.c,t.r,1,'#a56fd6'); fx(t,'DOOMED','#a56fd6','big'); });
+  } else if(k==='siphon'){
+    // steal attack power (and a little armor) from a strong foe, adding it to the caster for the fight
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    const frac=u.ult.v||0.3, dmgSteal=Math.round(t.dmg*frac);
+    fx(u,'🩸 '+(u.ult.name||'PLUNDER').toUpperCase(),'#8e44ad','big');
+    spawnProjectile(u,t,{glyph:'🩸',color:'#8e44ad',dur:200});
+    t.dmg=Math.max(1,t.dmg-dmgSteal); u.dmg+=dmgSteal;
+    const drSteal=Math.min(0.15,(t.dr||0)*frac); if(drSteal>0){ t.dr=Math.max(0,(t.dr||0)-drSteal); u.dr=Math.min(0.85,(u.dr||0)+drSteal); }
+    applyDamage(t,u.dmg*0.8*power*PACE,'atk',u); fx(t,'-'+dmgSteal+' dmg','#8e44ad');
+  } else if(k==='vortex'){
+    // yank enemies near a cluster inward and briefly slow them (sets up AoE follow-ups)
+    const center=densestTarget(u,foes); if(!center)return;
+    const rad=u.ult.r||2, pull=u.ult.v||2, col='#7cdcff';
+    fx(u,'🌀 '+(u.ult.name||'GRAVITY WELL').toUpperCase(),col,'big'); blastAt(center.c,center.r,rad,col);
+    foes.forEach(f=>{ if(f===center||!f.alive||hexDist(f,center)>rad)return;
+      let c=f.c,r=f.r;
+      for(let i=0;i<pull;i++){ const nc=c+Math.sign(center.c-c), nr=r+Math.sign(center.r-r); if((nc===c&&nr===r)||occupied(nc,nr))break; c=nc; r=nr; }
+      f.c=c; f.r=r; f.tgt=null; f.retgt=0; applyPayload(f,{slow:u.ult.slow||2},u);
+    });
+  } else if(k==='rend'){
+    // heavy single hit + grievous wounds (cuts healing) + bleed — the anti-sustain tool
+    const t=pickTarget(u,'highthreat'); if(!t)return;
+    fx(u,'🗡 '+(u.ult.name||'MORTAL STRIKE').toUpperCase(),'#c0392b','big');
+    spawnProjectile(u,t,{glyph:'🗡',color:'#c0392b',dur:160});
+    applyDamage(t,u.dmg*(u.ult.v||2.8)*power*PACE,'atk',u,true);
+    if(t.alive){ t._healCut=u.ult.heal||0.75; t._healCutT=u.ult.hdur||4; applyPayload(t,{bleed:u.ult.bleed||3},u); fx(t,'GRIEVOUS','#c0392b'); }
+  } else if(k==='overload'){
+    // lock the beefiest foe and hammer it with n rapid staggered hits (boss-melter)
+    const t=pickTarget(u,'highhp'); if(!t)return;
+    const hits=u.ult.n||6, col='#ff7043';
+    fx(u,'🎯 '+(u.ult.name||'FOCUS FIRE').toUpperCase(),col,'big');
+    for(let i=0;i<hits;i++){ queueImpact(i*0.08, ()=>{ if(!G.battle||G.battle.done||!t.alive)return;
+      spawnProjectile(u,t,{glyph:'✦',color:col,dur:100}); applyDamage(t,u.dmg*(u.ult.v||1.4)*power*PACE,'atk',u,true); blastAt(t.c,t.r,0,col); }); }
+  } else if(k==='feast'){
+    // devour an adjacent low-HP foe (or bite one to death); grow permanently on a kill, stacking each cast
+    const t=foes.filter(f=>hexDist(f,u)<=1&&!f.boss&&f.alive).sort((a,b)=>a.hp-b.hp)[0];
+    fx(u,'😈 '+(u.ult.name||'DEVOUR').toUpperCase(),'#8e44ad','big');
+    let devoured=false;
+    if(t){
+      if(t.hp/t.maxhp<=(u.ult.v||0.35)){ slay(t,u); devoured=true; }
+      else { applyDamage(t,u.dmg*2.2*power*PACE,'atk',u,true); if(t.hp<=0){ slay(t,u); devoured=true; } }
+    }
+    if(devoured){ const g=u.ult.grow||0.15, hpG=Math.round(u.maxhp*g), dmgG=Math.round(u.dmg*g);
+      u.maxhp+=hpG; u.hp+=hpG; u.dmg+=dmgG; healRingAt(u); fx(u,'⬆ DEVOURED','#8e44ad','big'); }
+  } else if(k==='selfdestruct'){
+    // spend the caster's life for a burst around it (best on cheap tokens / a dying unit)
+    const rad=u.ult.r||2, col='#ff5722';
+    fx(u,'💥 '+(u.ult.name||'DETONATE').toUpperCase(),col,'big'); blastAt(u.c,u.r,rad,col); screenShake();
+    foes.forEach(f=>{ if(f.alive&&hexDist(f,u)<=rad) applyDamage(f,u.dmg*(u.ult.v||4.0)*esc*power*PACE,'atk',u,true); });
+    slay(u,u);
+  } else if(k==='bombard'){
+    // rain projectiles from off the board onto up to n targets, flying in from `dir`, landing in `order`.
+    // Tracks the marked units (not fixed tiles) so moving foes are still struck; dir/order shape the visual.
+    const n=u.ult.n||5, glyph=u.ult.glyph||'☄', col=u.ult.zcol||'#ff9d5c', dir=u.ult.dir||'N', order=u.ult.order||'all';
+    let marks=foes.filter(f=>f.alive);
+    if(marks.length>n){ marks.sort((a,b)=>foesNear(b,u)-foesNear(a,u)); marks=marks.slice(0,n); }
+    if(!marks.length)return;
+    if(order==='random'){ for(let i=marks.length-1;i>0;i--){ const j=Math.floor(RNG()*(i+1)); [marks[i],marks[j]]=[marks[j],marks[i]]; } }
+    else if(order==='col-left') marks.sort((a,b)=>a.c-b.c);
+    else if(order==='col-right') marks.sort((a,b)=>b.c-a.c);
+    else if(order==='row-top') marks.sort((a,b)=>a.r-b.r);
+    else if(order==='row-bottom') marks.sort((a,b)=>b.r-a.r);
+    const off={N:[0,-3],S:[0,3],E:[3,0],W:[-3,0],NE:[3,-3],NW:[-3,-3],SE:[3,3],SW:[-3,3]}[dir]||[0,-3];
+    fx(u,'☄ '+(u.ult.name||'BOMBARDMENT').toUpperCase(),col,'big');
+    marks.forEach((f,i)=>{ const delay=(order==='all')?0.25:(0.15+i*0.12);
+      queueImpact(delay, ()=>{ if(!G.battle||G.battle.done||!f.alive)return;
+        spawnProjectile({c:f.c+off[0],r:f.r+off[1]},{c:f.c,r:f.r},{glyph,color:col,dur:200});
+        applyDamage(f,u.dmg*(u.ult.v||1.6)*esc*power*PACE,'atk',u,true);
+        blastAt(f.c,f.r,0,col); blastAt(f.c,f.r,1,col);
+      }); });
+  } else if(k==='cone'){
+    // a wedge that fans out from the caster toward its target, with optional DoT / debuff
+    const aim=pickTarget(u,'nearest'); if(!aim)return;
+    const rad=u.ult.r||3, col=u.ult.zcol||'#ff9d5c';
+    const adx=aim.c-u.c, ady=aim.r-u.r, amag=Math.hypot(adx,ady)||1;
+    const width=u.ult.width!=null?u.ult.width:1, thresh=1-0.35*(width+1);   // wider width -> lower cosine threshold -> broader fan
+    fx(u,'🔥 '+(u.ult.name||'SWEEP').toUpperCase(),col,'big'); beamLine(u,aim,col);
+    foes.forEach(f=>{ if(!f.alive||hexDist(f,u)>rad)return;
+      const fdx=f.c-u.c, fdy=f.r-u.r, fmag=Math.hypot(fdx,fdy)||1;
+      if((fdx*adx+fdy*ady)/(fmag*amag)>=thresh){
+        applyDamage(f,u.dmg*(u.ult.v||1.8)*esc*power*PACE,'atk',u,true);
+        if(u.ult.dot)applyPayload(f,{burn:u.ult.dot.burn,burnDur:u.ult.dot.dur,poison:u.ult.dot.poison,bleed:u.ult.dot.bleed},u);
+        if(u.ult.debuff)applyPayload(f,u.ult.debuff,u);
+        blastAt(f.c,f.r,0,col);
+      } });
+  } else if(k==='cleanse'){
+    // strip all debuffs from nearby allies and grant a brief debuff-immunity window
+    const rad=u.ult.r||3, col='#8fe3c0';
+    fx(u,'✦ '+(u.ult.name||'PURIFY').toUpperCase(),col,'big'); blastAt(u.c,u.r,rad,col);
+    mates.forEach(m=>{ if(!m.alive||hexDist(m,u)>rad)return;
+      m.stun=0; m.slowT=0; m.slowStacks=0; m.burnT=0; m.poisonT=0; m.poisonStacks=0; m.bleedStacks=0; m.curseT=0;
+      if(m._shred){ m._shred=0; if(m._drBase!=null)m.dr=m._drBase; }
+      m._ccImmuneT=Math.max(m._ccImmuneT||0,u.ult.v||1.5); healRingAt(m); fx(m,'✦',col);
+    });
+  } else if(k==='taunt'){
+    // provoke nearby enemies into attacking the caster, who braces with a shield
+    const rad=u.ult.r||3, dur=u.ult.v||2.5;
+    fx(u,'🛡 '+(u.ult.name||'PROVOKE').toUpperCase(),'#f0d375','big'); blastAt(u.c,u.r,rad,'#f0d375');
+    applyShield(u, u.ult.shield||u.maxhp*0.25);
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'taunt',dur,data:u}); f.tgt=u; f.retgt=dur; fx(f,'❗','#f0d375'); });
+  } else if(k==='silence'){
+    // drain enemy charge and lock them out of casting for a window
+    const rad=u.ult.r||2, dur=u.ult.v||2.5;
+    fx(u,'🔇 '+(u.ult.name||'DISRUPT').toUpperCase(),'#9c8fb0','big'); blastAt(u.c,u.r,rad,'#9c8fb0');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; f.mag=0; applyStatus(f,{key:'silence',dur}); fx(f,'🔇','#9c8fb0'); });
+  } else if(k==='phase'){
+    // caster (or the most-wounded ally) becomes untargetable + damage-immune briefly
+    const dur=u.ult.v||1.5;
+    const t=(u.ult.self===false)?(mates.filter(m=>m!==u&&!m.token).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]||u):u;
+    fx(t,'✧ '+(u.ult.name||'STASIS').toUpperCase(),'#b48ae8','big'); blastAt(t.c,t.r,0,'#b48ae8');
+    t._cloakT=Math.max(t._cloakT||0,dur); applyStatus(t,{key:'phase',dur});
+  } else if(k==='warcry'){
+    // terrify nearby enemies: they flee and cannot act
+    const rad=u.ult.r||3, dur=u.ult.v||1.5;
+    fx(u,'😱 '+(u.ult.name||'TERRIFY').toUpperCase(),'#7e57c2','big'); blastAt(u.c,u.r,rad,'#7e57c2');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'warcry',dur}); f.tgt=null; f.retgt=0; fx(f,'😱','#7e57c2'); });
+  } else if(k==='confuse'){
+    // madden nearby enemies into attacking their own side
+    const rad=u.ult.r||2, dur=u.ult.v||2.5;
+    fx(u,'💫 '+(u.ult.name||'MADNESS').toUpperCase(),'#e91e63','big'); blastAt(u.c,u.r,rad,'#e91e63');
+    enemyOf(u).forEach(f=>{ if(hexDist(f,u)>rad||f.ccImmune)return; applyStatus(f,{key:'confuse',dur}); f.tgt=null; f.retgt=0; fx(f,'💫','#e91e63'); });
+  } else if(k==='polymorph'){
+    // hex the biggest threat into a harmless critter that cannot act, until it reverts
+    const t=enemyOf(u).filter(f=>!f.boss&&!f.ccImmune&&f.alive&&!hasStatus(f,'polymorph')).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    const dur=u.ult.v||3, oname=t.name, oico=t.ico, oart=t.art;
+    fx(t,'🐑 '+(u.ult.name||'HEX').toUpperCase(),'#f4c542','big'); spawnProjectile(u,t,{glyph:'✨',color:'#f4c542',dur:200});
+    t.name='Sheep'; t.ico='🐑'; t.art='Sheep'; t.tgt=null; t.retgt=0;
+    applyStatus(t,{key:'polymorph',dur,onEnd:(x)=>{ x.name=oname; x.ico=oico; x.art=oart; }});
+  } else if(k==='whirlwind'){
+    // a moving melee AoE: pulse damage to adjacent foes each tick while the caster keeps advancing
+    const dur=u.ult.dur||3;
+    fx(u,'🌪 '+(u.ult.name||'CYCLONE').toUpperCase(),'#cfe8ff','big');
+    applyStatus(u,{key:'whirlwind',dur,data:(u.ult.v||0.8)});
+  } else if(k==='bond'){
+    // tether the caster to an ally so incoming damage is shared between them
+    const ally=mates.filter(m=>m!==u&&!m.token&&m.alive).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0]; if(!ally)return;
+    const dur=u.ult.v||5;
+    fx(u,'🔗 '+(u.ult.name||'SOUL TETHER').toUpperCase(),'#8fd0ff','big'); healRingAt(u); healRingAt(ally);
+    applyStatus(u,{key:'bond',dur,data:ally}); applyStatus(ally,{key:'bond',dur,data:u});
   } else if(k==='zone'){
     // create a damaging zone of board tiles around the densest enemy cluster
     let center=densestTarget(u,foes); if(!center)return;
@@ -1069,5 +1383,76 @@ export function castUlt(u,esc,_echo){
     spawnProjectile(u,center,{glyph:u.ult.zico||'🔥',color:u.ult.zcol||'#ff7a3a',dur:260,spin:true});
     queueImpact(0.26, ()=>{ if(G.battle&&!G.battle.done) blastAt(center.c,center.r,rad,u.ult.zcol||'#ff7a3a'); });
     fx(u,'ZONE','#ff7a3a','big');
+  } else if(k==='buffzone'){
+    // empower allies standing on a patch of tiles around the caster
+    const rad=u.ult.r||1, dur=u.ult.dur||5, col=u.ult.zcol||'#8fe3c0';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(u,rad), side:u.side, buff:(u.ult.buff||{dmg:0.25,dr:0.15}), life:dur, color:col, glyph:u.ult.zico||'✚', tick:0}]);
+    blastAt(u.c,u.r,rad,col); fx(u,'✚ '+(u.ult.name||'SANCTUARY').toUpperCase(),col,'big');
+  } else if(k==='debuffzone'){
+    // sap enemies standing on a patch around the densest cluster
+    const center=densestTarget(u,foes)||u, rad=u.ult.r||1, dur=u.ult.dur||5, col=u.ult.zcol||'#7e6b8a';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, debuff:(u.ult.debuff||{dmg:0.25,as:0.20}), life:dur, color:col, glyph:u.ult.zico||'☠', tick:0}]);
+    spawnProjectile(u,center,{glyph:u.ult.zico||'☠',color:col,dur:240,spin:true}); blastAt(center.c,center.r,rad,col); fx(u,'☠ '+(u.ult.name||'BLIGHT').toUpperCase(),col,'big');
+  } else if(k==='timewarp'){
+    // a field that slows enemies (attack speed + movement) while hastening allies inside it
+    const center=densestTarget(u,foes)||u, rad=u.ult.r||2, dur=u.ult.dur||4, v=u.ult.v||0.4, col='#c8a6ff';
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, buff:{as:v}, debuff:{as:v}, slowOnTile:1.0, life:dur, color:col, glyph:'⏳', tick:0}]);
+    spawnProjectile(u,center,{glyph:'⏳',color:col,dur:240,spin:true}); blastAt(center.c,center.r,rad,col); fx(u,'⏳ '+(u.ult.name||'CHRONOFIELD').toUpperCase(),col,'big');
+  } else if(k==='trap'){
+    // arm a tile near the densest cluster; the first enemy to step on it triggers the payload
+    const center=densestTarget(u,foes)||pickTarget(u,'nearest'); if(!center)return;
+    const rad=u.ult.r||0, col=u.ult.zcol||'#ffb300';
+    const payload={}; if(u.ult.stacks)payload.bleed=u.ult.stacks; if(u.ult.root){payload.stun=u.ult.root;} if(u.ult.teleport)payload.teleport=true; if(u.ult.slow)payload.slow=u.ult.slow;
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles:fieldTiles(center,rad), side:u.side, trap:true, dmg:u.dmg*(u.ult.v||2.0)*power*PACE, payload, life:u.ult.dur||10, color:col, glyph:'🎯', tick:0}]);
+    fx(u,'🎯 '+(u.ult.name||'SNARE').toUpperCase(),col,'big');
+  } else if(k==='wall'){
+    // conjure a short line of impassable tiles to cut a lane
+    const n=u.ult.n||3, dur=u.ult.dur||5, col=u.ult.zcol||'#8a7f74';
+    // build the wall just ahead of the caster, spanning rows around it
+    const wc=u.side==='P'?Math.min(COLS-1,u.c+2):Math.max(0,u.c-2);
+    const tiles=[]; for(let dr=-(n>>1);tiles.length<n&&dr<=ROWS;dr++){ const r=u.r+dr; if(r>=0&&r<ROWS&&!occupied(wc,r))tiles.push({c:wc,r}); }
+    if(!tiles.length)return;
+    G.battle.zones=(G.battle.zones||[]).concat([{tiles, side:u.side, wall:true, life:dur, color:col, glyph:'🧱', tick:0}]);
+    tiles.forEach(t=>blastAt(t.c,t.r,0,col)); fx(u,'🧱 '+(u.ult.name||'BARRICADE').toUpperCase(),col,'big');
+  } else if(k==='mirror'){
+    // summon health-scaled copies of the caster that share its sprite (illusions are tokens: they expire and don't count)
+    const n=u.ult.n||2, hpFrac=u.ult.v||0.4, dmgFrac=u.ult.dmg||0.6, arr=u.side==='P'?G.battle.P:G.battle.E;
+    fx(u,'👥 '+(u.ult.name||'ILLUSIONS').toUpperCase(),'#b48ae8','big');
+    for(let i=0;i<n;i++){
+      if(arr.filter(x=>x.alive&&x.token).length>=TOKEN_SIDE_CAP)break;
+      let spot=null; const seen=new Set([u.c+','+u.r]); const q=[{c:u.c,r:u.r}];
+      while(q.length&&!spot){ const cur=q.shift(); for(const nb of neighbors(cur.c,cur.r)){ const key=nb.c+','+nb.r; if(seen.has(key))continue; seen.add(key); if(!occupied(nb.c,nb.r)){spot=nb;break;} q.push(nb); } }
+      if(!spot)break;
+      const ghost={ name:u.name, art:u.art, ico:u.ico, cls:u.cls, faction:u.faction, t:u.t, rng:u.rng,
+        hp:Math.round(u.maxhp*hpFrac), dmg:Math.round(u.dmg*dmgFrac), as:u.as, mv:u.mv, dr:u.dr||0, crit:u.crit||0, ult:{k:'none',name:'—'} };
+      const g=mkLive(ghost,u.side,spot.c,spot.r); g.token=true; g.tokenLife=u.ult.dur||8; g._illusion=true;
+      blastAt(spot.c,spot.r,0,'#b48ae8'); arr.push(g);
+    }
+  } else if(k==='pyre'){
+    // resurrect the most-recently-fallen ally beside the caster at a fraction of its health
+    const arr=u.side==='P'?G.battle.P:G.battle.E;
+    const fallen=arr.filter(x=>!x.alive&&!x.token&&x._deathT!=null).sort((a,b)=>b._deathT-a._deathT)[0]; if(!fallen)return;
+    let spot={c:u.c,r:u.r}; if(occupied(u.c,u.r)){ for(const nb of neighbors(u.c,u.r)){ if(!occupied(nb.c,nb.r)){spot=nb;break;} } }
+    fallen.alive=true; fallen.hp=Math.max(1,Math.round(fallen.maxhp*(u.ult.v||0.5))); fallen.c=spot.c; fallen.r=spot.r;
+    fallen.tgt=null; fallen.retgt=0; fallen.stun=0; fallen.slowT=0; fallen.bleedStacks=0; fallen.burnT=0; fallen.poisonT=0; fallen._deathT=null; fallen._status=[];
+    fx(fallen,'✟ '+(u.ult.name||'REKINDLE').toUpperCase(),'#ffcf5c','big'); healRingAt(fallen); blastAt(spot.c,spot.r,1,'#ffcf5c');
+  } else if(k==='swallow'){
+    // remove a foe from the fight until the caster dies, then regurgitate it (no death triggers)
+    const t=enemyOf(u).filter(f=>!f.boss&&f.alive&&!f._swallowed).sort((a,b)=>(b.dmg*b.as)-(a.dmg*a.as))[0]; if(!t)return;
+    fx(u,'👄 '+(u.ult.name||'SWALLOW').toUpperCase(),'#7b1fa2','big'); fx(t,'GULP','#7b1fa2','big');
+    t._swallowed=true; t.alive=false;
+    applyStatus(u,{key:'swallow',dur:999,data:t,onEnd:(c)=>{ if(!t)return;
+      t._swallowed=false; t.alive=true; t.hp=Math.max(1,Math.round(t.maxhp*(u.ult.regurg||0.5)));
+      let spot={c:c.c,r:c.r}; if(occupied(c.c,c.r)){ for(const nb of neighbors(c.c,c.r)){ if(!occupied(nb.c,nb.r)){spot=nb;break;} } }
+      t.c=spot.c; t.r=spot.r; t.tgt=null; t.retgt=0; fx(t,'REGURGITATED','#7b1fa2','big'); }});
+  } else if(k==='redemption'){
+    // when the caster dies, detonate a heal over nearby allies (death-triggered via the status registry)
+    const heal=u.ult.v||180, rad=u.ult.r||2;
+    fx(u,'✟ '+(u.ult.name||'MARTYR').toUpperCase(),'#f0d375','big');
+    applyStatus(u,{key:'redemption',dur:999,onEnd:(c)=>{
+      living(c.side).forEach(m=>{ if(m!==c&&hexDist(m,c)<=rad&&!m.noHeal){ m.hp=Math.min(m.maxhp,m.hp+heal*(c.healMul||1)); healRingAt(m); fx(m,'+'+Math.round(heal),'#5bbf6a'); } });
+      blastAt(c.c,c.r,rad,'#f0d375'); }});
   }
 }
+// fieldTiles: every in-bounds tile within `rad` hexes of a center (rad 0 = just the center tile).
+export function fieldTiles(center,rad){ const tiles=[]; for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){ if(hexDist({c,r},center)<=rad)tiles.push({c,r}); } return tiles; }
