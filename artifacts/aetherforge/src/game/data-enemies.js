@@ -17,11 +17,11 @@ export const ENEMY_FACTIONS={
     EU('Brigand','Warrior','m',1,460,40,.9,1.2,'🪓',{k:"berserk",v:0.5,d:0.3,name:"Bloodlust"},{art:"Brigand",passive:{"lifesteal":0.1},tip:"Plunderer: lifesteal 10% of damage dealt."}),
     EU('Bandit Archer','Archer','r',4,300,44,.95,1.2,'🏹',{k:"beam",v:1.4,name:"Pinning Volley"},{art:"Bandit Archer",passive:{"bleed":true},tip:"Barbed Arrows: attacks apply bleed."}),
     EU('Thug','Warrior','m',1,540,46,.85,1.1,'👊',{k:"quake",v:1.1,name:"Brutal Smash"},{art:"Thug",passive:{"dr":0.06},tip:"Brawler: +12% armor while adjacent to 2+ allies."}),
-    EU('Highwayman','Rogue','m',1,400,50,1.2,1.4,'🐴',{k:"drain",v:1.8,name:"Cutpurse"},{art:"Highwayman",passive:{"_vs":{"wounded":1.2}},tip:"Cutthroat: +20% damage vs wounded (<50% HP)."}),
+    EU('Highwayman','Rogue','m',1,400,50,1.2,1.4,'🐴',{k:"siphon",v:0.3,name:"Cutpurse",desc:"Robs the strongest foe of 30% of its attack damage, stealing the strength for itself."},{art:"Highwayman",passive:{"_vs":{"wounded":1.2}},tip:"Cutthroat: +20% damage vs wounded (<50% HP)."}),
   ]},
   'Wildwood Pack':{ico:'🐺',col:'#5b7b3a',units:[
     EU('Dire Wolf','Beast','m',1,420,46,1.25,1.7,'🐺',{k:"berserk",v:0.45,d:0.25,name:"Frenzy"},{art:"Dire Wolf",passive:{"_auraAS":0.08},tip:"Pack Hunter: nearby allies +8% attack speed."}),
-    EU('Boar','Beast','m',1,620,42,.8,1.3,'🐗',{k:"banish",name:"Gore Toss"},{art:"Boar",passive:{"reflect":0.2},tip:"Bristled: attackers take 20% reflected damage."}),
+    EU('Boar','Beast','m',1,620,42,.8,1.3,'🐗',{k:"throw",name:"Gore Toss",desc:"Hooks an adjacent foe on its tusks and hurls it back across the field."},{art:"Boar",passive:{"reflect":0.2},tip:"Bristled: attackers take 20% reflected damage."}),
     EU('Treant Sapling','Guardian','m',1,820,34,.6,0.8,'🌲',{k:"bulwark",v:100,r:2,name:"Bark Ward"},{art:"Treant Sapling",passive:{"_regenIdle":0.02},tip:"Rooted: regenerates 2% max HP/sec while stationary."}),
     EU('Spitting Viper','Beast','r',3,260,40,1.3,1.9,'🐍',{k:"curse",name:"Venom Spray"},{art:"Spitting Viper",passive:{"spore":true},tip:"Venomous: attacks apply poison."}),
     EU('Pack Alpha','Beast','m',1,540,54,1.1,1.6,'🐾',{k:"rally",v:0.6,name:"Howl"},{art:"Pack Alpha",passive:{"_auraAS":0.08},tip:"Alpha: nearby allies +8% attack speed."}),
@@ -31,13 +31,13 @@ export const ENEMY_FACTIONS={
     EU('Bog Lurker','Rogue','m',1,420,44,1.1,1.2,'🐍',{k:"drain",v:1.6,name:"Leech"},{art:"Bog Lurker",passive:{"crit":0.15},tip:"Ambusher: +15% crit chance."}),
     EU('Toad Brute','Guardian','m',1,760,40,.7,0.9,'🐸',{k:"quake",v:1.2,name:"Belly Flop"},{art:"Toad Brute",passive:{"reflect":0.2},tip:"Warty Hide: attackers take 20% reflected damage."}),
     EU('Mire Priest','Cleric','r',3,420,30,.8,1.0,'🔮',{k:"heal",v:100,name:"Foul Mend"},{art:"Mire Priest",passive:{"_periodicHeal":{"amt":80,"range":3,"every":4}},tip:"Foul Grace: heals lowest-HP ally for 80 every 4s."}),
-    EU('Swamp Hag','Mage','r',4,360,58,.85,1.0,'🧙',{k:"zone",v:1.2,r:2,name:"Quagmire"},{art:"Swamp Hag",passive:{"slow":true},tip:"Mire: attacks apply slow."}),
+    EU('Swamp Hag','Mage','r',4,360,58,.85,1.0,'🧙',{k:"debuffzone",r:2,dur:5,debuff:{dmg:0.25,as:0.20},zico:'🟢',zcol:'#6b8f4a',name:"Quagmire",desc:"Sinks the ground into a clinging bog; foes caught in it deal 25% less damage and attack 20% slower."},{art:"Swamp Hag",passive:{"slow":true},tip:"Mire: attacks apply slow."}),
   ]},
   // ---- ACT II ----
   'Iron Legion':{ico:'🤖',col:'#7a7f88',units:[
     EU('Sentinel Automaton','Warrior','m',1,750,56,.85,1.0,'🤖',{k:"bulwark",v:100,r:2,name:"Bulwark Protocol"},{art:"Sentinel Automaton",passive:{"aegis":0.05,"aegisCap":0.25},tip:"Plating: converts 5% of damage taken into armor (aegis)."}),
     EU('Rust Pikebot','Warrior','m',1,700,50,.9,1.0,'🔩',{k:"beam",v:1.3,name:"Pike Lunge"},{art:"Rust Pikebot",passive:{"dr":0.06,"_condArmor":{"adjFaction":{"fac":"__enemy","amt":0.12}}},tip:"Phalanx: +12% armor while adjacent to another ally."}),
-    EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"zone",v:1.8,r:2,name:"Bombardment"},{art:"Siege Engine",passive:{"armorPierce":0.1},tip:"Siege Protocol: attacks ignore 20% of target armor."}),
+    EU('Siege Engine','Archer','r',5,550,92,.55,0.8,'🎯',{k:"bombard",v:1.6,n:4,glyph:'💣',zcol:'#c9a24b',dir:'N',order:'all',name:"Bombardment",desc:"Calls in a salvo from off the field, dropping shells onto four of your units at once."},{art:"Siege Engine",passive:{"armorPierce":0.1},tip:"Siege Protocol: attacks ignore 20% of target armor."}),
     EU('Iron Praetor','Warrior','m',1,860,68,.9,1.0,'⚙️',{k:"rally",v:0.5,name:"Reactivate"},{art:"Iron Praetor",passive:{"_auraAllyDmg":0.1},tip:"Command Aura: nearby allies +10% damage."}),
     EU('Cogsmith Drone','Mage','r',4,480,64,.8,0.9,'🔧',{k:"beam",v:1.6,name:"Mortar Servo"},{art:"Cogsmith Drone",passive:{"_periodicHeal":{"amt":90,"range":3,"every":4},"_periodicShield":{"amt":50,"range":3,"every":5}},tip:"Field Repair: shields the nearest ally for 50 every 5s."}),
   ]},
@@ -51,9 +51,9 @@ export const ENEMY_FACTIONS={
   'Emberforge Syndicate':{ico:'🌋',col:'#c0562b',units:[
     EU('Flame Cannon','Archer','r',5,680,60,.55,0.8,'💥',{k:"doubleaxe",v:2.0,n:4,name:"Grapeshot"},{art:"Flame Cannon",passive:{"burn":1,"burnDur":2},tip:"Incendiary: attacks apply burn."}),
     EU('Forge Guard','Guardian','m',1,1000,58,.7,0.9,'🛡️',{k:"bulwark",v:260,r:2,name:"Molten Guard"},{art:"Forge Guard",passive:{"reflect":0.25},tip:"Molten Skin: attackers take 25% reflected damage."}),
-    EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"beam",v:1.6,name:"Ignite Charge"},{art:"Pyrolancer",passive:{"burn":1,"burnDur":2},tip:"Searing: attacks apply burn."}),
+    EU('Pyrolancer','Warrior','m',1,640,66,.95,1.2,'🔥',{k:"cone",v:1.6,r:3,width:1,dot:{burn:1,dur:3},zcol:'#ff7043',name:"Ignite Charge",desc:"Sweeps a jet of flame in a wide arc, scorching everything in front of it and setting them ablaze."},{art:"Pyrolancer",passive:{"burn":1,"burnDur":2},tip:"Searing: attacks apply burn."}),
     EU('Magma Adept','Mage','r',4,600,65,.85,1.0,'🌋',{k:"zone",v:2,r:2,name:"Eruption"},{art:"Magma Adept",passive:{"_auraMagicResist":0.08},tip:"Heat Haze: nearby allies take -8% magic damage (ward field)."}),
-    EU('Cinder Sprite','Beast','m',1,360,50,1.3,1.6,'✨',{k:"blink",name:"Cinder Dash"},{art:"Cinder Sprite",passive:{"burn":1,"burnDur":2},tip:"Ember Trail: attacks apply burn."}),
+    EU('Cinder Sprite','Beast','m',1,360,50,1.3,1.6,'✨',{k:"selfdestruct",v:3.5,r:1,name:"Cinder Burst",desc:"Flares white-hot and bursts, immolating everything adjacent — but consumes itself in the blast."},{art:"Cinder Sprite",passive:{"burn":1,"burnDur":2},tip:"Ember Trail: attacks apply burn."}),
   ]},
   // ---- ACT III ----
   'Void Choir':{ico:'🐙',col:'#6a4d8c',units:[
@@ -61,7 +61,7 @@ export const ENEMY_FACTIONS={
     EU('Tide Spawn','Warrior','m',1,820,70,.9,1.1,'🦑',{k:"drain",v:1.7,name:"Engulf"},{art:"Tide Spawn",passive:{"lifesteal":0.1},tip:"Engulfing: lifesteal 10% of damage dealt."}),
     EU('Star Seer','Mage','r',5,420,68,.9,1.0,'👁️',{k:"charm",name:"Maddening Gaze"},{art:"Star Seer",passive:{"slow":true},tip:"Maddening: attacks apply slow."}),
     EU('Reef Priest','Cleric','r',3,520,40,.8,1.0,'🔱',{k:"heal",v:240,name:"Abyssal Mend"},{art:"Reef Priest",passive:{"_periodicHeal":{"amt":90,"range":3,"every":4}},tip:"Deep Grace: heals lowest-HP ally for 90 every 4s."}),
-    EU('Tentacle Horror','Beast','m',1,720,72,1.1,1.4,'🐙',{k:"banish",name:"Drag Under"},{art:"Tentacle Horror",passive:{"_healOnEnemyDeath":0.05},tip:"Devourer: heals 5% max HP whenever a nearby enemy dies."}),
+    EU('Tentacle Horror','Beast','m',1,720,72,1.1,1.4,'🐙',{k:"hook",v:1.2,stun:1.0,name:"Drag Under",desc:"Lashes out a tentacle to drag your farthest fighter into the fray, stunning it on impact."},{art:"Tentacle Horror",passive:{"_healOnEnemyDeath":0.05},tip:"Devourer: heals 5% max HP whenever a nearby enemy dies."}),
   ]},
   'Stormhalla':{ico:'⚡',col:'#d8b13a',units:[
     EU('Valkyrie','Beast','r',4,560,72,1.0,1.8,'🪽',{k:"blink",name:"Diving Strike"},{art:"Valkyrie",passive:{"crit":0.15},tip:"Winged: +15% crit chance."}),
@@ -72,7 +72,7 @@ export const ENEMY_FACTIONS={
   ]},
   'Dread Dominion':{ico:'👑',col:'#9e2b25',units:[
     EU('Tyrant Guard','Guardian','m',1,1200,80,.7,0.9,'🛡️',{k:"bulwark",v:240,r:2,name:"Iron Will"},{art:"Tyrant Guard",passive:{"ccImmune":true},tip:"Unbreakable: cannot be knocked back."}),
-    EU('Dominion Mage','Mage','r',5,720,96,.8,1.0,'🔮',{k:"beam",v:2.4,name:"Doom Bolt"},{art:"Dominion Mage",passive:{"chargeMul":1.2},tip:"Dread Focus: ultimate charges 20% faster."}),
+    EU('Dominion Mage','Mage','r',5,720,96,.8,1.0,'🔮',{k:"doom",v:3,d:6,name:"Doom Bolt",desc:"Brands your strongest fighter with a death-rune that detonates for devastating damage after 3 seconds — shield or overheal it to survive the blast."},{art:"Dominion Mage",passive:{"chargeMul":1.2},tip:"Dread Focus: ultimate charges 20% faster."}),
     EU('Death Knight','Warrior','m',1,940,82,.9,1.1,'☠️',{k:"execute",v:0.3,name:"Reaper Strike"},{art:"Death Knight",passive:{"_vs":{"wounded":1.25}},tip:"Dread Blade: +25% damage vs wounded (<50% HP)."}),
     EU('Soul Reaver','Rogue','m',1,680,76,1.2,1.4,'🗡️',{k:"drain",v:2,name:"Harvest"},{art:"Soul Reaver",passive:{"_healOnEnemyDeath":0.05},tip:"Soul Harvest: heals 5% max HP whenever a nearby enemy dies."}),
     EU('Royal Cleric','Cleric','r',3,680,44,.8,1.0,'✝️',{k:"heal",v:200,name:"Royal Mend"},{art:"Royal Cleric",passive:{"_periodicHeal":{"amt":90,"range":3,"every":4}},tip:"Royal Grace: heals lowest-HP ally for 90 every 4s."}),
@@ -91,7 +91,7 @@ export const ELITES={
   ],
   'Bog Cult':[
     EU('Plague Matron','Mage','r',4,760,92,0.9,1.0,'🧫',{k:'zone',v:1.8,r:2,name:'Pestilence'},{art:"Plague Matron",passive:{"spore":true},tip:"Contagion: attacks apply poison."}),
-    EU('Bog Horror','Guardian','m',1,1300,82,0.7,0.9,'🐊',{k:'drain',v:2.0,name:'Devour'},{art:"Bog Horror",passive:{"_healOnEnemyDeath":0.05},tip:"Gluttonous: heals 5% max HP whenever a nearby enemy dies."}),
+    EU('Bog Horror','Guardian','m',1,1300,82,0.7,0.9,'🐊',{k:'feast',v:0.35,grow:0.15,name:'Devour',desc:'Swallows a wounded fighter whole; every meal makes the horror permanently larger and deadlier.'},{art:"Bog Horror",passive:{"_healOnEnemyDeath":0.05},tip:"Gluttonous: heals 5% max HP whenever a nearby enemy dies."}),
   ],
   'Iron Legion':[
     EU('Praetorian Colossus','Guardian','m',1,1600,88,0.7,0.8,'🛡️',{k:'bulwark',v:380,r:2,name:'Aegis Field'},{art:"Praetorian Colossus",passive:{"ccImmune":true},tip:"Immovable: cannot be knocked back."}),
@@ -106,8 +106,8 @@ export const ELITES={
     EU('Artillery Master','Archer','r',6,820,140,0.55,0.7,'💥',{k:'zone',v:2.6,r:2,name:'Mortar Storm'},{art:"Artillery Master",passive:{"burn":1,"burnDur":2},tip:"Incendiary Shells: attacks apply burn."}),
   ],
   'Void Choir':[
-    EU('Void Prophet','Mage','r',5,920,114,0.9,1.0,'👁️',{k:'curse',name:'Unspeakable Truth'},{art:"Void Prophet",passive:{"_auraMagicResist":0.08},tip:"Maddening Aura: nearby allies take -8% magic damage (ward field)."}),
-    EU('Abyssal Behemoth','Guardian','m',1,1700,100,0.8,0.9,'🦑',{k:'drain',v:2.2,name:'Consume'},{art:"Abyssal Behemoth",passive:{"lifesteal":0.12},tip:"Voracious: lifesteal 12% of damage dealt."}),
+    EU('Void Prophet','Mage','r',5,920,114,0.9,1.0,'👁️',{k:'silence',v:2.5,r:3,name:'Unspeakable Truth',desc:'Whispers a truth no mind can bear — nearby foes lose their charged ultimates and cannot cast for 2.5s.'},{art:"Void Prophet",passive:{"_auraMagicResist":0.08},tip:"Maddening Aura: nearby allies take -8% magic damage (ward field)."}),
+    EU('Abyssal Behemoth','Guardian','m',1,1700,100,0.8,0.9,'🦑',{k:'swallow',regurg:0.5,name:'Consume',desc:'Engulfs your strongest fighter entirely, removing it from the battle until the behemoth is slain.'},{art:"Abyssal Behemoth",passive:{"lifesteal":0.12},tip:"Voracious: lifesteal 12% of damage dealt."}),
   ],
   'Stormhalla':[
     EU('Valkyrie Champion','Beast','r',3,1000,118,1.2,1.6,'⚡',{k:'chain',v:2.2,j:5,name:'Tempest Call'},{art:"Valkyrie Champion",passive:{"chargeMul":1.2},tip:"Storm-Charged: ultimate charges 20% faster."}),
@@ -167,7 +167,7 @@ export const BOSSES={
     ult:{k:'nova',v:2.4,r:2,name:'Chain Tempest'},mech:'stormcall',
     desc:'Summons board-wide chain-lightning storms; flies over your front line.'},
   'Dread Dominion':{name:'Vorkagar the World-Ender',art:'Vorkagar the World-Ender',ico:'🐲',cls:'Warrior',hp:4000,dmg:128,as:.9,foot:3,
-    ult:{k:'quake',v:2.8,r:2,name:'Annihilation'},mech:'worldender',
+    ult:{k:'cone',v:2.0,r:5,width:2,dot:{burn:2,dur:3},zcol:'#ff5722',name:'Annihilation'},mech:'worldender',
     desc:'A multi-phase elder dragon flanked by Drake Lieutenants; full-board fire breath.'},
 };
 
