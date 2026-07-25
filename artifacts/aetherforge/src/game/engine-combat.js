@@ -45,23 +45,23 @@ export function applyUnitAbility(u){
 // Transformed creatures: each transform ultimate swaps the unit into one of these full forms —
 // new name (so the sprite resolves by name), attack type/range, stat multipliers, and its OWN ultimate.
 export const TRANSFORM_FORMS={
-  'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.0,dmg:2.0,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
-  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.0,dmg:2.2,as:1.15,ult:{k:'nova',v:2.4,r:2,name:'Dragonfire Breath'}},
-  'Living Flame':      {art:'Living Flame',   ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.0,dmg:2.2,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
-  'Leviathan':         {art:'Leviathan',      ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
-  'Thunder Beast':     {art:'Thunder Beast',  ico:'🐃',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:2.1,as:1.2, ult:{k:'chain',v:2.0,r:4,name:'Thunderstampede'}},
-  'Greater Phoenix':   {art:'Greater Phoenix',ico:'🦅',cls:'Beast',  t:'r',rng:3, hp:1.0,dmg:2.2,as:1.25,ult:{k:'nova',v:2.2,r:2,name:'Solar Flare'}},
-  'Mountain Titan':    {art:'Mountain Titan', ico:'🗻',cls:'Guardian',t:'m',rng:1,hp:1.0,dmg:2.0,as:1.0, ult:{k:'quake',v:2.2,r:2,name:'Seismic Slam'}},
-  'Brood Queen':       {art:'Brood Queen',    ico:'🦂',cls:'Beast',  t:'m',rng:1, hp:1.0,dmg:1.9,as:1.3, ult:{k:'summon',token:'swarmling',n:3,v:1,name:'Spawn Brood'}},
-  'Grizzly Bear':      {art:'Grizzly Bear',   ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:2.4,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
+  'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.45,dmg:1.55,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
+  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.45,dmg:1.6,as:1.15,ult:{k:'nova',v:2.4,r:2,name:'Dragonfire Breath'}},
+  'Living Flame':      {art:'Living Flame',   ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.45,dmg:1.55,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
+  'Leviathan':         {art:'Leviathan',      ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.7,dmg:1.6,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
+  'Thunder Beast':     {art:'Thunder Beast',  ico:'🐃',cls:'Beast',  t:'m',rng:1, hp:1.55,dmg:1.45,as:1.2, ult:{k:'chain',v:2.0,r:4,name:'Thunderstampede'}},
+  'Greater Phoenix':   {art:'Greater Phoenix',ico:'🦅',cls:'Beast',  t:'r',rng:3, hp:1.45,dmg:1.5,as:1.25,ult:{k:'nova',v:2.2,r:2,name:'Solar Flare'}},
+  'Mountain Titan':    {art:'Mountain Titan', ico:'🗻',cls:'Guardian',t:'m',rng:1,hp:1.75,dmg:1.55,as:1.0, ult:{k:'quake',v:2.2,r:2,name:'Seismic Slam'}},
+  'Brood Queen':       {art:'Brood Queen',    ico:'🦂',cls:'Beast',  t:'m',rng:1, hp:1.5,dmg:1.4,as:1.3, ult:{k:'summon',token:'swarmling',n:3,v:1,name:'Spawn Brood'}},
+  'Grizzly Bear':      {art:'Grizzly Bear',   ico:'🐻',cls:'Beast',  t:'m',rng:1, hp:1.6,dmg:1.55,as:1.1, ult:{k:'berserk',v:0.5,d:0.3,name:'Feral Rage'}},
 };
 export const TOKENS={
-  swarmling:{name:'Swarmling',art:'Swarmling',cls:'Beast',t:'m',rng:1,hp:120,dmg:18,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
-  squirrel:{name:'Squirrel',art:'Squirrel',cls:'Beast',t:'m',rng:1,hp:110,dmg:20,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
-  broodling:{name:'Broodling',art:'Broodling',cls:'Beast',t:'m',rng:1,hp:140,dmg:22,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
-  skeleton:{name:'Skeleton',art:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:200,dmg:50,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
-  turret:{name:'Gun Turret',art:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:280,dmg:45,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
-  scrapbot:{name:'Scrap Bot',art:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:180,dmg:22,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
+  swarmling:{name:'Swarmling',art:'Swarmling',cls:'Beast',t:'m',rng:1,hp:200,dmg:30,as:1.2,mv:1.8,ico:'🐛',ult:{k:'none',name:'—'},hive:true,life:4},
+  squirrel:{name:'Squirrel',art:'Squirrel',cls:'Beast',t:'m',rng:1,hp:150,dmg:28,as:1.3,mv:2.2,ico:'🐿️',ult:{k:'none',name:'—'},life:null},
+  broodling:{name:'Broodling',art:'Broodling',cls:'Beast',t:'m',rng:1,hp:200,dmg:32,as:1.15,mv:1.7,ico:'🕷️',ult:{k:'none',name:'—'},web:true,life:6},
+  skeleton:{name:'Skeleton',art:'Skeleton',cls:'Warrior',t:'m',rng:1,hp:210,dmg:51,as:.9,mv:1.2,ico:'💀',ult:{k:'none',name:'—'},life:5},
+  turret:{name:'Gun Turret',art:'Gun Turret',cls:'Archer',t:'r',rng:5,hp:260,dmg:42,as:1.0,mv:0,ico:'🗼',ult:{k:'none',name:'—'},life:null},
+  scrapbot:{name:'Scrap Bot',art:'Scrap Bot',cls:'Warrior',t:'m',rng:1,hp:220,dmg:27,as:1.0,mv:1.3,ico:'🤖',ult:{k:'none',name:'—'},life:null},
 };
 export const TOKEN_SIDE_CAP=12;
 export function spawnToken(side,key,nearC,nearR,mult){
@@ -136,8 +136,8 @@ export function bossMechanic(bu,phase,frac){
     case 'stormcall':     // Valdris — board-wide chain lightning
       living('P').forEach(u=>{ applyDamage(u, bu.dmg*0.6, 'atk', bu); }); fx(bu,'⚡ TEMPEST','#ffe97a','big'); break;
     case 'worldender':    // Vorkagar — full-board fire breath + enrage
-      living('P').forEach(u=>{ applyDamage(u, bu.dmg*0.8, 'atk', bu); u.burnT=3; }); fx(bu,'🔥 WORLD-FIRE','#ff7043','big');
-      if(phase===3){ bu.as*=1.4; bu.dmg*=1.15; }   // enrage
+      living('P').forEach(u=>{ applyDamage(u, bu.dmg*0.55, 'atk', bu); u.burnT=3; }); fx(bu,'🔥 WORLD-FIRE','#ff7043','big');
+      if(phase===3){ bu.as*=1.25; bu.dmg*=1.10; }   // enrage
       summonAdds(bu,2,0.8); break;
     default:              // generic: summon 2 adds
       summonAdds(bu,2,0.8);
@@ -278,8 +278,8 @@ export const GLOBAL_DIFF=1.0;           // global difficulty ease: <1 lowers all
 // Per-act balance knobs — multipliers applied to ALL enemy HP / damage (rank-and-file, elites, bosses).
 // Index by act (1/2/3); index 0 is an unused padding slot so ACT_HP_MULT[act] reads naturally.
 // Set to 1.0 for no change; raise to make an act harder, lower to ease it.
-export const ACT_HP_MULT  = [1.0, 1.0, 1.5, 2.0];   // [pad, Act I, Act II, Act III]
-export const ACT_DMG_MULT = [1.0, 1.0, 1.2, 1.5];   // [pad, Act I, Act II, Act III]
+export const ACT_HP_MULT  = [1.0, 1.0, 1.15, 1.35];  // [pad, Act I, Act II, Act III]
+export const ACT_DMG_MULT = [1.0, 1.0, 1.05, 1.15];  // [pad, Act I, Act II, Act III]
 export function actHpMult(){  return ACT_HP_MULT[Math.min(3, G.act||1)]  || 1.0; }
 export function actDmgMult(){ return ACT_DMG_MULT[Math.min(3, G.act||1)] || 1.0; }
 export const MOVE_BASE=1.1;             // seconds-per-hex = MOVE_BASE / unit.mv  (higher = slower, more visible movement)
@@ -304,7 +304,10 @@ export function frame(){
   while(b.acc>=TICK && !b.done && steps<8){ simTick(); b.acc-=TICK; steps++; }
   renderCombat(); renderPhase();
 }
-export function escFactor(t){ return t>30 ? 1+(t-30)*0.05 : 1; }  // Bloodlust ramp (prototype: from 30s)
+// Bloodlust ramp: an anti-stall pressure valve from 30s. Capped — uncapped it grew without bound
+// (4x by 90s) and disproportionately punished long boss fights, where the boss's own HP pool makes
+// a quick finish impossible no matter how strong the player's army is.
+export function escFactor(t){ return t>30 ? Math.min(2.0, 1+(t-30)*0.04) : 1; }
 
 // ----- one fixed 30Hz tick, following the GDD order of operations -----
 // Timed combat impacts ride the SIM clock, not wall-clock: ranged projectiles, delayed ult
@@ -420,7 +423,7 @@ export function simTick(){
     const want= frac<=0.33?3 : frac<=0.66?2 : 1;
     if(want>bu._phase){
       bu._phase=want;
-      bu.dmg*=1.2;
+      bu.dmg*=1.12;
       bossPhaseFx(bu,want);
       bossMechanic(bu,want,frac);
     }
