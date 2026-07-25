@@ -166,7 +166,7 @@ export const BOSSES={
   'Stormhalla':{name:'Valdris Stormcrowned',art:'Valdris Stormcrowned',ico:'⚡',cls:'Beast',hp:3000,dmg:118,as:1.05,foot:2,
     ult:{k:'chain',v:2.4,j:6,name:'Chain Tempest',desc:'Calls down a tempest bolt that arcs between up to six of your fighters, chaining from body to body.'},mech:'stormcall',
     desc:'Summons board-wide chain-lightning storms; flies over your front line.'},
-  'Dread Dominion':{name:'Vorkagar the World-Ender',art:'Vorkagar the World-Ender',ico:'🐲',cls:'Warrior',hp:4000,dmg:128,as:.9,foot:3,
+  'Dread Dominion':{name:'Vorkagar the World-Ender',art:'Vorkagar the World-Ender',ico:'🐲',cls:'Warrior',hp:3400,dmg:128,as:.9,foot:3,
     ult:{k:'cone',v:2.0,r:5,width:2,dot:{burn:2,dur:3},zcol:'#ff5722',name:'Annihilation'},mech:'worldender',
     desc:'A multi-phase elder dragon flanked by Drake Lieutenants; full-board fire breath.'},
 };
