@@ -121,13 +121,116 @@ export function showTitle(){
     <div class="row" style="justify-content:center;margin-top:18px">
       ${resumable?`<button class="primary" onclick="resumeRun()">▶ Resume Run</button>`:''}
       <button class="${resumable?'small':'primary'}" onclick="showCommanderSelect()">Begin a Run</button>
+      <button class="small" onclick="showHowToPlay()">📖 How to Play</button>
       <button class="small" onclick="showMetaStore()">🏛 Athenaeum</button>
       <button class="small" onclick="showStats()">📊 Stats</button>
     </div>
-    <p class="tip" style="margin-top:24px">17 factions, 149 units, 20 ultimate types, deterministic auto-combat.<br>
+    <p class="tip" style="margin-top:24px">17 factions, 103 units, 58 ultimate types, deterministic auto-combat.<br>
       <span style="color:#9c8fb0">Unlocked: <b>${META.unlocked.length}/${FACTIONS.length+1}</b> factions · 📜 <b>${META.lore}</b> Lore banked</span></p>
     <div class="row" style="justify-content:center;margin-top:18px">
       <button class="small danger" onclick="if(confirm('Reset ALL progress? This permanently erases unlocked factions, commanders, Lore, ascension, and Athenaeum upgrades.')){resetProgress();showTitle();}">🗑 Reset Progress</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- HOW TO PLAY ---------- */
+// Reference screen reached from the title. Pure prose/markup — deliberately imports nothing so it
+// can't add an import cycle. If a rule below changes in the engine, update it here too.
+export function showHowToPlay(){
+  const sect=(title,body)=>`<div class="card" style="width:100%;margin-bottom:10px;text-align:left">
+    <div class="cn" style="font-size:14px">${title}</div>
+    <div style="font-size:13px;color:#c9bbe0;margin-top:6px;line-height:1.65">${body}</div></div>`;
+  const k=s=>`<b style="color:var(--gold-bright)">${s}</b>`;
+  SC.innerHTML=`<div class="panel" style="margin-top:20px;padding:24px;max-width:820px;margin-left:auto;margin-right:auto">
+    <div class="center">
+      <h2 style="font-size:26px;color:var(--gold-bright)">How to Play</h2>
+      <p class="tip" style="margin:10px auto 18px;max-width:640px;font-size:13px;line-height:1.6">
+        A roguelike autobattler. You are a commander, not a puppeteer — you build the army and choose
+        where each unit stands, then the battle plays itself out. Every win makes your army stronger;
+        a single loss ends the run.</p>
+    </div>
+
+    ${sect('⚔️ The core idea',`
+      You draft an army, place it on the hex battlefield, and press begin. From then on your units
+      pick their own targets, move, attack, and fire their ultimates — you cannot control them
+      mid-fight. ${k('All of your decisions happen before the battle starts')}: who you recruit, how
+      you upgrade them, and where you position them. Combat is deterministic, so the same army in the
+      same spots against the same foes always resolves the same way.`)}
+
+    ${sect('🗺️ A run, step by step',`
+      1. Pick a ${k('commander')} — each has a signature passive that shapes the whole run.<br>
+      2. You start with ${k('4 army slots')}, 160 gold, and a small starting force.<br>
+      3. Climb the ${k('map')} from the bottom row upward, choosing one node at a time. You may only
+         move along a connecting path, so which route you take is a real decision.<br>
+      4. Clear the act's ${k('boss')} at the top to advance. Three acts to win.<br>
+      5. ${k('Lose a single battle and the run is over')} — there are no extra lives. What you keep is
+         the Lore you banked, which is spent between runs.`)}
+
+    ${sect('🧭 Map nodes',`
+      ⚔️ ${k('Battle')} — a standard enemy host. Win to recruit a survivor.<br>
+      💀 ${k('Elite')} — a much tougher fight that drops a ${k('Relic')}. Expect to need upgraded units.<br>
+      🐉 ${k('Boss')} — the act's finale. Drops a Relic and Equipment.<br>
+      ⚖️ ${k('Recruit')} — hire a new unit and browse gear.<br>
+      🏰 ${k('Town')} — unlock another faction into this run's draft pool.<br>
+      ⚒️ ${k('Arcane Forge')} — spend gold &amp; Essence to permanently upgrade a unit or a piece of gear.<br>
+      🔥 ${k('Rest')} — choose a boon: train (+XP) or forage (+gold).<br>
+      ❓ ${k('Event')} — a narrative choice, with reward or risk.`)}
+
+    ${sect('🛡️ Building the army',`
+      ${k('Rarity')} — Common, Uncommon, Rare, Legendary. Each step up is a modest power increase
+      (roughly +20% per tier) and costs more gold, so a Legendary is better than a Common of the same
+      class, but not by a landslide.<br>
+      ${k('Fusion')} — collect ${k('3 copies')} of the same unit and they merge into a ★★ version at
+      1.6× stats; three of those become ★★★ at 2.4×. This is the strongest power curve in the game —
+      a fused Common outperforms an unfused Legendary, so duplicates are never wasted.<br>
+      ${k('Equipment')} — every unit has a weapon, armor, and trinket slot. Gear dropped from bosses
+      and bought in shops can be moved freely between units.<br>
+      ${k('Army slots')} — you gain +1 slot every second commander level, so later fights are fought
+      with more bodies as well as better ones.`)}
+
+    ${sect('✨ Synergies',`
+      Fielding several units that share a ${k('faction')} activates that faction's theme at 2 and 4
+      units — Ironhold gains armor, Sylvan's archers gain attack speed, Emberkin set foes alight, and
+      so on. ${k('Classes')} give weaker but easier cross-faction bonuses at 3 and 6 units (Warriors
+      gain HP, Archers gain range, Mages gain ultimate power). Chasing a synergy usually beats
+      fielding six unrelated units — the planning screen shows which are active.`)}
+
+    ${sect('🔮 Ultimates',`
+      Every unit has one ultimate. Its bar fills as the unit ${k('deals and takes damage')}, and fires
+      automatically at full — from board-wide quakes and chain lightning to hooks that drag your foe's
+      backline into the open, silences, doom brands, revives, and summons. Because the bar charges from
+      combat rather than a timer, a unit that's positioned to actually fight is a unit that casts.
+      Hover any unit to read exactly what its ultimate does.`)}
+
+    ${sect('⛰️ Positioning &amp; terrain',`
+      Placement is your main lever. Put durable units where the enemy arrives first and fragile
+      damage-dealers behind them; melee units walk to their targets, ranged ones open fire from a
+      distance. The middle of the board is scattered with terrain:<br>
+      🌲 ${k('Forest')} — −25% incoming ranged damage, but slower to move through.<br>
+      ⛰️ ${k('High Ground')} — +1 range and +10% ranged damage for whoever stands there.<br>
+      ✨ ${k('Sacred Ground')} — ultimate charges 25% faster.<br>
+      🌋 ${k('Lava')} — burns anything standing on it.<br>
+      🪨 ${k('Rubble')} — impassable; it shapes the choke points.`)}
+
+    ${sect('🏛 Between runs',`
+      Runs bank ${k('Lore')}, which you spend in the ${k('Athenaeum')} on permanent upgrades and on
+      unlocking new factions and commanders for future runs — so a lost run still moves you forward.
+      Once you can win comfortably, raise the ${k('Ascension')} level to make enemies tougher in
+      exchange for a stiffer challenge.`)}
+
+    ${sect('💡 Tips for your first runs',`
+      • Take the fights you can win and read every enemy line before you commit — hover the enemy
+        units on the planning screen.<br>
+      • Buy duplicates. Fusion is stronger than rarity.<br>
+      • Two or four units of one faction is worth more than six scattered ones.<br>
+      • Keep a healer or a shield alive; sustain wins long fights, and the longer a fight runs the
+        harder both sides hit.<br>
+      • ${k('Elites are gated on upgrades, not luck')} — if an elite looks impossible, it probably is.
+        Take a Recruit or Forge node first and come back stronger.`)}
+
+    <div class="row" style="margin-top:14px;justify-content:center">
+      <button class="primary" onclick="showCommanderSelect()">Begin a Run</button>
+      <button class="small" onclick="showTitle()">← Back</button>
     </div>
   </div>`;
 }
