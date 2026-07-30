@@ -46,8 +46,8 @@ export function applyUnitAbility(u){
 // new name (so the sprite resolves by name), attack type/range, stat multipliers, and its OWN ultimate.
 export const TRANSFORM_FORMS={
   'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.45,dmg:1.55,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
-  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:2, hp:1.45,dmg:1.6,as:1.15,ult:{k:'cone',v:1.6,r:3,width:1,dot:{burn:1,dur:3},name:'Spit Fire'}},
-  'Volcanic Dragon':   {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.45,dmg:1.6,as:1.15,ult:{k:'cone',v:2.0,r:5,width:2,dot:{burn:1,dur:5},name:'Magma Cone'}},
+  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:2, hp:1.45,dmg:1.6,as:1.15,ult:{k:'transform',form:'Volcanic Dragon',name:'Draconic Ascension'}},
+  'Volcanic Dragon':   {art:'Volcanic Dragon',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.45,dmg:1.6,as:1.15,ult:{k:'cone',v:2.0,r:5,width:2,dot:{burn:1,dur:5},name:'Magma Cone'}},
   'Living Flame':      {art:'Living Flame',   ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.45,dmg:1.55,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
   'Leviathan':         {art:'Leviathan',      ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.7,dmg:1.6,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
   'Thunder Beast':     {art:'Thunder Beast',  ico:'🐃',cls:'Beast',  t:'m',rng:1, hp:1.55,dmg:1.45,as:1.2, ult:{k:'chain',v:2.0,r:4,name:'Thunderstampede'}},
