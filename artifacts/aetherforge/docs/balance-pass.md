@@ -75,71 +75,88 @@ turret keeping a premium for being stuck in place:
 Measured required-player-power (the multiplier a reference roster needs for a
 ~50% win) exposed three structural faults:
 
-- **Act I was free** — 88% win at *half* power, then Acts II/III spiked **11×**
-  and **3×**. 
+- **Act I was free** — 88% win at *half* power, then Acts II/III spiked **11x**
+  and **3x**.
 - **Boss escorts used a flat `scale=1.35`** that never tracked the act, so
   late-act *normal* battles out-scaled the act's own boss.
-- **`ACT_HP_MULT`/`ACT_DMG_MULT` compounded** on top of an already-steep per-act
-  base, and Act II/III enemy *count* grew every 2 clears on top of that.
+- **Act II/III enemy count grew every 2 clears** on top of an already-steep base.
 
-Changes:
+### Follow-up: Acts II & III were still too easy for a good composition
+
+The first round of this pass over-corrected: `ACT_HP_MULT`/`ACT_DMG_MULT` were cut
+hard (1.5 -> 1.15, 2.0 -> 1.35) on the strength of a reference roster carrying no
+armour or shields, which badly misreports AoE-heavy fights. Re-measured against a
+genuinely **optimized** build — double faction synergy (Aegis Wall + Blessing both
+at level 2), tanks, sustain *and* real damage — Act III was a walkover: 100% win
+on normal battles, **100% on elites**, with 7-8 of 8 units surviving.
+
+Two measurement bugs were fixed first, and both had been distorting earlier
+numbers:
+
+1. The harness scored the engine's **70s overtime backstop** (`engine-combat.js`
+   ~560: the side with more total HP wins) as a loss, so any fight that ran long —
+   most boss fights — was misreported. The harness now replicates the engine's
+   real resolution rules.
+2. Enemy **count saturated at the cap of 8 for both acts**, so late Act II fielded
+   exactly as many enemies as late Act III. Act III is now strictly larger at every
+   point in the act.
+
+All three levers were then raised, weighted toward Act III:
 
 | Knob | Before | After |
 |---|---|---|
-| `ACT_HP_MULT` | 1.0 / 1.5 / 2.0 | 1.0 / 1.15 / 1.35 |
-| `ACT_DMG_MULT` | 1.0 / 1.2 / 1.5 | 1.0 / 1.05 / 1.15 |
-| Act I base / per-clear | 0.92 / 0.012 | 1.02 / 0.018 |
-| Act II–III base / per-clear | 1.15+0.18·(act−1) / 0.07 | 1.20+0.12·(act−1) / 0.045 |
-| Act I enemy count | 3+⌊ac/4⌋ | 4+⌊ac/5⌋ |
-| Act II–III enemy count | 3+⌊ac/2⌋+(act−1) | 3+⌊ac/3⌋+(act−1) |
-| Elite scale | flat 1.08/1.32/1.46 | act scale × **1.12** |
-| Boss escort | flat 1.35, size 5 | act base × 0.80, size 4 |
-| Boss HP multiplier | flat 2.0 | act-aware **1.85 / 1.60 / 1.25** |
-| Drake Lieutenant HP | 45% of boss | 25% of boss |
+| `ACT_HP_MULT` | 1.0 / 1.15 / 1.35 | 1.0 / **1.30** / **1.85** |
+| `ACT_DMG_MULT` | 1.0 / 1.05 / 1.15 | 1.0 / **1.15** / **1.45** |
+| Act II-III enemy count | 3+floor(ac/3)+(act-1) | **4**+floor(ac/3)+(act-1) |
+| Elite enemy count | 5 | 5, **6 in Act III** |
+| Act II-III base scale | 1.20+0.12*(act-1) | explicit per act: **1.32 / 1.50** |
+| Act II-III per-clear | 0.045 | 0.020 (flatter; size carries the intra-act ramp) |
+| Elite premium | x1.12 | x1.05 (size now carries the step) |
+| Boss HP multiplier | 1.85 / 1.60 / 1.25 | 1.85 / **2.10** / **1.00** |
+| Drake Lieutenant HP | 25% of boss | 20% of boss |
 
-Elites now take a **premium on top of** the extra body and the mini-boss they
-already bring, rather than a hand-set per-act number.
+Act I was deliberately left untouched — its opening fights already measured 60-67%.
 
 ### Boss mechanics (not statistics, but they dominated the Act III fight)
 
 Vorkagar was unwinnable at any roster power. The cause was mechanical stacking,
-not stats — its army is actually *lighter* than a normal Act III battle
-(12.5k HP / 767 DPS vs 14.2k / 1147). Per phase every boss gained `dmg ×1.2`,
-and Vorkagar added a full-board breath at `dmg×0.8`, six summoned adds, and a
-1.4× enrage on top. Softened: phase ramp `×1.2 → ×1.12`, breath `0.8 → 0.55`,
-enrage `1.4/1.15 → 1.25/1.10`, and its base HP 4000 → 3400.
+not stats — its army is actually *lighter* than a normal Act III battle. Per phase
+every boss gained `dmg x1.2`, and Vorkagar added a full-board breath, summoned adds
+and a 1.4x enrage on top. Softened: phase ramp `x1.2 -> x1.12`, breath
+`0.8 -> 0.45`, enrage `1.4/1.15 -> 1.25/1.10`, adds per phase `2 -> 1`, and its
+base HP 4000 -> 3000.
 
-The **Bloodlust escalation ramp is now capped at 2.0×** (was unbounded — 4× by
-90s), because it disproportionately punished long boss fights where the boss's
-own HP pool makes a fast finish impossible regardless of player strength.
+The **Bloodlust escalation ramp is now capped at 2.0x** (was unbounded — 4x by
+90s), because it disproportionately punished long boss fights where the boss's own
+HP pool makes a fast finish impossible regardless of player strength.
 
 ## 5. Result
 
-Win rates with rosters representative of each stage:
+Win rates against a **strong, synergy-stacked composition** at each stage — the
+case the curve now has to hold up against:
 
 | Stage | Roster | Win | Survivors |
 |---|---|---|---|
-| Act I battle #1 | 4× tier-1 Common | **75%** | 2.7 / 4 |
-| Act I battle #4 | starter +1 | 88% | 4.2 / 5 |
-| Act I battle #8 | starter +1 | 63% | 2.5 / 5 |
-| **Act I elite** | **unupgraded** | **0%** | 0 |
-| **Act I elite** | **upgraded (tier 2–3)** | **100%** | 6 / 6 |
-| Act I boss | early roster | 46% | 1.0 |
-| Act II battle | tier-2 team | 96% | 4.7 / 6 |
-| **Act II elite** | tier-2 team | **25%** | 0.9 |
-| Act II boss | tier-2 team | 71% | 4.3 |
-| Act III battle | endgame team | 83% | 7.3 / 8 |
-| Act III elite | endgame team | 79% | 7.2 / 8 |
-| Act III boss | endgame team | 83% | 5.4 / 8 |
+| Act I battle #1 | 4x tier-1 | 60% | 2.3 / 4 |
+| Act I battle #8 | 5x tier-1 | 67% | 2.9 / 5 |
+| Act I elite | realistic mid-Act I | 67% | 3.7 / 6 |
+| Act I boss | realistic end-Act I | 100% | 5.8 / 6 |
+| Act II battle (early) | tier-2 | 90% | 3.8 / 6 |
+| Act II battle (late) | tier-2 | **40%** | 1.6 / 6 |
+| Act II elite | tier-2 | **53%** | 1.5 / 6 |
+| Act II boss | tier-2 | **53%** | 3.4 / 6 |
+| Act III battle (early) | tier-3 optimized | 90% | 6.0 / 8 |
+| Act III battle (late) | tier-3 optimized | **53%** | 3.9 / 8 |
+| Act III elite | tier-3 optimized | **57%** | 3.5 / 8 |
+| Act III boss | tier-3 optimized | **57%** | 3.3 / 8 |
 
-Opening fights are contested but winnable (goal 2); elites are a wall to an
-unupgraded roster and clear cleanly once fused (goal 3).
+For comparison, the same optimized rosters before this follow-up: Act III normal
+**100%/97%**, Act III elite **100%**, Act II normal **97%**, Act II boss **87%**.
 
 ### Caveat on the harness
 
 The sim models units, synergies, ults, terrain and enemy composition, but **not**
 gear, relics, commander passives or meta upgrades — so real-run win rates will sit
 somewhat above these figures. A reference roster with no armor/shields also badly
-misreports AoE-heavy **boss** fights specifically (it implied the Act III boss
-needed >32× power, while a realistic tanky endgame team wins 83%). Boss numbers
-should always be read from a realistic composition, not a stat-scaled one.
+misreports AoE-heavy **boss** fights specifically. Boss numbers should always be
+read from a realistic composition, not a stat-scaled one.

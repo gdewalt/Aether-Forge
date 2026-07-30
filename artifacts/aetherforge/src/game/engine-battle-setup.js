@@ -154,21 +154,22 @@ export function buildEnemyArmy(node){
   const ac=G.actCleared||0;
   // size: gentler early; grows with act & clears WITHIN the current act (resets each act).
   // Act I grows its enemy count more slowly so the introductory act stays comfortably winnable.
-  let size = node.t==='boss'?4 : node.t==='elite'?5
+  let size = node.t==='boss'?4 : node.t==='elite'?(G.act>=3?6:5)
            : G.act===1 ? 4+Math.floor(ac/5)
-           : 3+Math.floor(ac/3)+(G.act-1);
+           : 4+Math.floor(ac/3)+(G.act-1);
   size=Math.min(size, node.t==='boss'?7:8);
   // Difficulty scale. Act I is a gentler on-ramp (softer per-clear growth), but its base is high
   // enough that the opening fights are contested rather than free. Acts II/III step up per act —
   // the per-act jump is deliberately modest because ACT_HP_MULT/ACT_DMG_MULT compound on top of
   // it and the enemy count also grows.
-  const perClear = G.act===1 ? 0.018 : 0.045;
-  const base     = G.act===1 ? 1.02 : 1.20 + 0.12*(G.act-1);
+  const perClear = G.act===1 ? 0.018 : 0.020;
+  // Explicit per-act bases: Act III is the real difficulty step, Act II a moderate one.
+  const base     = G.act===1 ? 1.02 : G.act===2 ? 1.32 : 1.50;
   let scale = base + perClear*(G.actCleared||0);
   if(node.t==='elite'){
     // Elites: a premium over the act's rank-and-file (on top of the extra body and the mini-boss),
     // so clearing one demands an upgraded roster. A3 Elite Pressure ascension adds more.
-    scale *= 1.12 + (asc()>=3?0.12:0);
+    scale *= 1.05 + (asc()>=3?0.12:0);
   } else if(node.t==='boss'){
     // Boss nodes: the boss unit itself carries the fight, so its escort is lighter and does NOT
     // take the per-clear ramp — otherwise a late-act boss escort out-scales the act's own battles.
@@ -196,8 +197,8 @@ export function buildEnemyArmy(node){
     const B=BOSSES[fname]||BOSSES['Dread Dominion'];
     const boss=clone(fac.units[0]);
     boss.name=B.name; boss.art=B.art||B.name; boss.ico=B.ico; boss.cls=B.cls; boss.t='m'; boss.rng=1;
-    const bossHpMul = G.act===2?1.60 : G.act===3?1.25 : 1.85;   // act-aware: ACT_HP_MULT compounds on top
-    const bossActMul = G.act===2?1.03 : G.act===3?1.05 : 1.0;   // damage nudge for later bosses
+    const bossHpMul = G.act===2?2.10 : G.act===3?1.00 : 1.85;   // act-aware: ACT_HP_MULT compounds on top
+    const bossActMul = G.act===2?1.03 : G.act===3?0.85 : 1.0;   // ACT_DMG_MULT already scales later bosses hard
     boss.hp=Math.round(B.hp*bossHpMul*GLOBAL_DIFF*actHpMult()); boss.dmg=Math.round(B.dmg*GLOBAL_DIFF*bossActMul*actDmgMult()); boss.as=B.as; boss.mv=0.9; boss.ult=B.ult; boss.boss=true;
     if(asc()>=6) boss.hp=Math.round(boss.hp*1.15);   // A6: Cruel Bosses
     boss.mech=B.mech; boss.foot=B.foot||2; boss.bossDesc=B.desc;
@@ -208,7 +209,7 @@ export function buildEnemyArmy(node){
       for(let k=0;k<2;k++){
         const dl=clone(fac.units[1]||fac.units[0]);
         dl.name='Drake Lieutenant'; dl.art='Drake Lieutenant'; dl.ico='🐉'; dl.t='m'; dl.rng=1;
-        dl.hp=Math.round(boss.hp*0.25); dl.dmg=Math.round(B.dmg*0.7); dl.as=B.as; dl.mv=1.0;
+        dl.hp=Math.round(boss.hp*0.20); dl.dmg=Math.round(B.dmg*0.7); dl.as=B.as; dl.mv=1.0;
         dl.ult={k:'nova',v:2.0,r:1,name:'Searing Breath'}; dl.subboss=true;
         dl.efaction=fname; dl.ecol=fac.col;
         arr.push(dl);
