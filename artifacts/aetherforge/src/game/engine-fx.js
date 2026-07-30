@@ -62,9 +62,11 @@ export function resetCombatTokens(){ for(const [,d] of TOK) d.remove(); TOK.clea
 
 function tokGeom(u){
   const useSpr=hasSprite(artOf(u));
-  const sz=u.boss?(u.foot>=3?122:100):u.subboss?80:u.token?48:70;
-  const fs=u.boss?(u.foot>=3?50:40):u.subboss?38:u.token?24:34;
-  const sprH=u.boss?(u.foot>=3?158:130):u.subboss?112:u.token?62:98;  // standee heights (tokens are smaller minions)
+  // Summoned tokens render at the same size as regular units — only bosses and sub-bosses
+  // (elites, Drake Lieutenants) get a larger standee.
+  const sz=u.boss?(u.foot>=3?122:100):u.subboss?80:70;
+  const fs=u.boss?(u.foot>=3?50:40):u.subboss?38:34;
+  const sprH=u.boss?(u.foot>=3?158:130):u.subboss?112:98;   // standee heights
   const ring=u.side==='P'?'tok-p':'tok-e';
   return {useSpr,sz,fs,sprH,ring};
 }
