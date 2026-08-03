@@ -1,0 +1,75 @@
+name: Deploy to GitHub Pages
+
+# Publishes artifacts/aetherforge as a static site. The game is fully client-side
+# (no fetch/WebSocket calls; progress lives in localStorage), so a plain Vite build
+# is all Pages needs.
+#
+# Before this can run successfully:
+#   1. The repository must be public, OR the account must be on a paid plan —
+#      GitHub Pages is not available for private repos on the Free tier.
+#   2. Settings → Pages → "Build and deployment" → Source must be "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Root package.json has no packageManager field, so pin the version explicitly.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Install from the repo root: artifacts/aetherforge uses workspace:* and
+      # catalog: dependencies that only resolve through the workspace.
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: artifacts/aetherforge
+        env:
+          # vite.config.ts throws unless PORT is set, even though only the dev
+          # server uses it — supply a dummy value so the build can run.
+          PORT: "5173"
+          NODE_ENV: production
+        run: |
+          # Project site: assets are served from /<repo>/. For a user/org site
+          # (a repo named <user>.github.io) set BASE_PATH="/" instead.
+          export BASE_PATH="/${GITHUB_REPOSITORY#*/}/"
+          echo "Building with BASE_PATH=$BASE_PATH"
+          pnpm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/aetherforge/dist/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
