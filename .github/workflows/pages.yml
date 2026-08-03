@@ -58,7 +58,12 @@ jobs:
           echo "Building with BASE_PATH=$BASE_PATH"
           pnpm run build
 
+      # enablement: true turns Pages on (with build_type=workflow) via the API if it isn't
+      # already configured. Without it this step fails with "Get Pages site failed … Not Found"
+      # whenever Settings -> Pages -> Source hasn't been set to "GitHub Actions" by hand.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
