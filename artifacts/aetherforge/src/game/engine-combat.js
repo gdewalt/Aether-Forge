@@ -44,6 +44,8 @@ export function applyUnitAbility(u){
    Spawned mid-battle, free of Army Cap, never count toward synergy, capped per side. */
 // Transformed creatures: each transform ultimate swaps the unit into one of these full forms —
 // new name (so the sprite resolves by name), attack type/range, stat multipliers, and its OWN ultimate.
+// Max number of transforms a single unit may chain through in one battle (base -> A -> B ...).
+export const TRANSFORM_MAX_CHAIN=3;
 export const TRANSFORM_FORMS={
   'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.45,dmg:1.55,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
   'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:2, hp:1.45,dmg:1.6,as:1.15,ult:{k:'transform',form:'Volcanic Dragon',name:'Ascension'}},
@@ -1128,15 +1130,20 @@ export function castUlt(u,esc,_echo){
       });
     } });
   } else if(k==='transform'){
-    // Swap the unit into a distinct creature: new name (drives the sprite), attack type, and its own ultimate.
-    if(!u._transformed){
-      u._transformed=true;
-      const T=u.ult;                                   // {form, fico, hp, dmg, as, rng, name}
-      const F=TRANSFORM_FORMS[T.form]||{};
+    // Swap the unit into a distinct creature: new name (drives the sprite), attack type, and its own
+    // ultimate. Forms may CHAIN — a form's installed ult can itself be a `transform`, so e.g.
+    // Ashmaw Lizard → Fire Drake → Volcanic Dragon. Two guards keep that safe: never re-enter the
+    // form the unit already is, and cap the chain length, so two forms pointing at each other can't
+    // ping-pong and compound hp/dmg without bound.
+    const T=u.ult;                                     // {form, fico, hp, dmg, as, rng, name}
+    const target=T.form||'Beast';
+    if(u._formName!==target && (u._formStage||0)<TRANSFORM_MAX_CHAIN){
+      u._transformed=true; u._formStage=(u._formStage||0)+1;
+      const F=TRANSFORM_FORMS[target]||{};
       u._origName=u.name; u._origIco=u.ico; u._origCls=u.cls; u._origT=u.t; u._origRng=u.rng;
       // identity → the transformed creature (sprite resolves by the form's art key)
-      u.name=T.form||'Beast';
-      u.art=F.art||T.form||'Beast';
+      u.name=target;
+      u.art=F.art||target;
       u.ico=F.ico||T.fico||'🐲';
       if(F.cls)u.cls=F.cls;
       if(F.t)u.t=F.t;                                  // melee/ranged can change (Drake→ranged, Leviathan→melee)
@@ -1146,14 +1153,14 @@ export function castUlt(u,esc,_echo){
       u.dmg=Math.round(u.dmg*(F.dmg||T.dmg||2.2));
       u.as*=(F.as||T.as||1.2);
       u.dr=Math.min(.85,(u.dr||0)+0.10);
-      u._formName=T.form||'beast';
+      u._formName=target;
       // install the FORM'S own ultimate and reset the bar so it can charge & fire again
       if(F.ult){ u.ult=Object.assign({}, F.ult); }
       u.mag=0;
       // the new form is a different kind of combatant — recompute its AI archetype (a healer druid
       // becomes a melee bruiser bear) and drop the stale target so it re-acquires and advances.
       u.arch=archetypeOf(u); u.tgt=null; u.retgt=0; u.atkcd=0;
-      blastAt(u.c,u.r,1,'#ffcf5c'); healRingAt(u); fx(u,'⟿ '+(T.form||'TRANSFORM').toUpperCase(),'#ffcf5c','big');
+      blastAt(u.c,u.r,1,'#ffcf5c'); healRingAt(u); fx(u,'⟿ '+target.toUpperCase(),'#ffcf5c','big');
     }
   } else if(k==='blink'){
     // teleport behind the chosen enemy and land a devastating strike

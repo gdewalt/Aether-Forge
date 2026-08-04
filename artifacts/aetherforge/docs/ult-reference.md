@@ -171,7 +171,18 @@ Stuns / fears / charms check `ccImmune`. Note: `hook`, `throw`, and `vortex` sti
 | `summon` | Raise `n` ally tokens beside the caster. | `token` ('skeleton') — key into `TOKENS`; `n` (3); `v` (1) — token power | `{k:'summon',token:'skeleton',n:3,name:'Raise Dead'}` |
 | `mirror` | Spawn `n` health-scaled illusion copies of the caster (tokens; expire, don't count). | `n` (2); `v` (0.4) — HP frac; `dmg` (0.6) — dmg frac; `dur` (8) — lifespan | `{k:'mirror',n:2,v:0.4,name:'Illusions'}` |
 | `pyre` | Revive the most-recently-fallen ally beside the caster at `v` HP. | `v` (0.5) — HP frac | `{k:'pyre',v:0.5,name:'Rekindle'}` |
-| `transform` | Turn the caster into a bigger creature with new stats **and its own ult** (installed from the form). One-time. | `form` — key into `TRANSFORM_FORMS` (below) | `{k:'transform',form:'Fire Drake',name:'Draconic Ascension'}` |
+| `transform` | Turn the caster into a bigger creature with new stats **and its own ult** (installed from the form). **Chainable** — see below. | `form` — key into `TRANSFORM_FORMS` (below) | `{k:'transform',form:'Fire Drake',name:'Draconic Ascension'}` |
+
+> **Chained evolutions.** Because a form installs its own ult, that ult can itself be another
+> `transform`, giving multi-stage evolutions (Ashmaw Lizard → Fire Drake → Volcanic Dragon). Two
+> guards keep it safe: a unit never re-enters the form it already is, and `TRANSFORM_MAX_CHAIN`
+> (default 3) caps how many transforms one unit can chain, so two forms pointing at each other
+> can't ping-pong and compound stats forever.
+>
+> **Watch the compounding.** Each stage multiplies *total* power by roughly its
+> `hp × dmg × as` product (~2.7× for the stock forms), so a two-stage chain is ~7× — enough to put
+> a Common far above a Legendary. Size later stages deliberately rather than reusing the standard
+> single-stage multipliers.
 
 **`TRANSFORM_FORMS`** (`engine-combat.js` ~line 47) — each form sets art/class/type,
 stat multipliers, and the ult the transformed unit then charges:
