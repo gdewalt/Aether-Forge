@@ -119,6 +119,13 @@ scalar for most kinds.
 | `timewarp` | Field that slows enemies (AS+move) and hastens allies inside it. | densest | `r` (2); `dur` (4); `v` (0.4) — AS delta | `{k:'timewarp',r:2,dur:4,v:0.4,name:'Chronofield'}` |
 | `trap` | Arms a tile; first foe to step on it eats the payload. | densest | `r` (0) — size; `v` (2.0) — dmg; `dur` (10) — armed life; payload: `stacks`→bleed, `root`→stun, `slow`, `teleport`; `zcol` | `{k:'trap',v:2.5,root:1.5,name:'Plant Mines'}` |
 | `wall` | Short line of impassable tiles just ahead of the caster. | ahead of caster | `n` (3) — length; `dur` (5); `zcol` | `{k:'wall',n:3,dur:5,name:'Barricade'}` |
+| `firewall` | Burning line ahead of the caster; foes standing in it take damage every 0.5s and catch fire. **Passable by default** — see note below. | ahead of caster | `n` (3) — length; `v` (1.0) — dmg per tick; `dur` (5); `burn` (1) / `bdur` (2); `off` (2) — columns ahead; `block` (false) — also impassable; `zcol`/`zico` | `{k:'firewall',v:1.0,n:4,dur:6,burn:1.3,bdur:3,name:'Wall of Flame'}` |
+
+> **`firewall` and `block`.** `occupied()` treats `wall` tiles as impassable and the AI paths
+> with `occupied()`, so a damaging wall with `block:true` gets routed *around* and never burns
+> anyone. Leave it passable so enemies must walk through the flames to reach your line; use
+> `block:true` only when you want a pure Barricade reskin. Note also that zone damage passes a
+> `null` source, so it earns the caster no lifesteal or kill credit.
 
 ### 5d. Crowd control & displacement
 

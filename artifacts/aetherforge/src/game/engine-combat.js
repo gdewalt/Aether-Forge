@@ -409,6 +409,7 @@ export function simTick(){
           if(!z.tiles.some(t=>t.c===u.c&&t.r===u.r))continue;
           if(z.spore){ if(!u.ccImmune){ u.poisonT=Math.max(u.poisonT||0,2.5); u.poisonStacks=Math.min(5,(u.poisonStacks||0)+1); } if(cloudMaster){ u.slowT=Math.max(u.slowT||0,1); u.slowStacks=Math.max(u.slowStacks||0,1); } }
           else if(z.dmg) applyDamage(u, z.dmg*0.5*PACE, 'dot', null);
+          if(z.burn) applyPayload(u,{burn:z.burn, burnDur:z.burnDur}, null);   // firewall: ignite anyone standing in it
           if(z.debuff&&z.debuff.dot) applyDamage(u, z.debuff.dot*0.5*PACE, 'dot', null);   // debuffzone DoT
           if(z.slowOnTile && !u.ccImmune){ u.slowT=Math.max(u.slowT||0,z.slowOnTile); u.slowStacks=Math.max(u.slowStacks||0,1); }   // timewarp movement slow
         }
@@ -1419,6 +1420,28 @@ export function castUlt(u,esc,_echo){
     if(!tiles.length)return;
     G.battle.zones=(G.battle.zones||[]).concat([{tiles, side:u.side, wall:true, life:dur, color:col, glyph:'🧱', tick:0}]);
     tiles.forEach(t=>blastAt(t.c,t.r,0,col)); fx(u,'🧱 '+(u.ult.name||'BARRICADE').toUpperCase(),col,'big');
+  } else if(k==='firewall'){
+    // A burning line laid across the lane ahead of the caster: foes standing in it take damage
+    // every half-second and catch fire. Unlike `wall` this is PASSABLE by default — occupied()
+    // treats wall tiles as impassable, and the AI paths with occupied(), so a blocking fire wall
+    // would simply be routed around and never burn anyone. Set block:true only for a barricade.
+    const n=u.ult.n||3, dur=u.ult.dur||5, col=u.ult.zcol||'#ff7043';
+    const off=u.ult.off!=null?u.ult.off:2;
+    const wc=u.side==='P'?Math.min(COLS-1,u.c+off):Math.max(0,u.c-off);
+    const tiles=[];
+    // keep tiles that units occupy (casting onto a foe should burn it); only rubble is skipped
+    for(let dr=-(n>>1); tiles.length<n && dr<=ROWS; dr++){
+      const r=u.r+dr; if(r>=0&&r<ROWS&&terrainAt(wc,r)!=='rubble') tiles.push({c:wc,r});
+    }
+    if(!tiles.length)return;
+    G.battle.zones=(G.battle.zones||[]).concat([{
+      tiles, side:u.side,
+      dmg:u.dmg*(u.ult.v||1.0)*power,        // no *PACE here — the field tick applies it
+      burn:u.ult.burn||1, burnDur:u.ult.bdur||2,
+      wall:!!u.ult.block,
+      life:dur, color:col, glyph:u.ult.zico||'🔥', tick:0 }]);
+    tiles.forEach(t=>blastAt(t.c,t.r,0,col));
+    fx(u,'🔥 '+(u.ult.name||'WALL OF FIRE').toUpperCase(),col,'big');
   } else if(k==='mirror'){
     // summon health-scaled copies of the caster that share its sprite (illusions are tokens: they expire and don't count)
     const n=u.ult.n||2, hpFrac=u.ult.v||0.4, dmgFrac=u.ult.dmg||0.6, arr=u.side==='P'?G.battle.P:G.battle.E;

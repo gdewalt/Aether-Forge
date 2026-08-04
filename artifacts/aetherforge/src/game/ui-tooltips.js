@@ -55,6 +55,7 @@ export const ULT_DESC={
   timewarp:'A field that slows enemies and hastens allies inside it',
   trap:'Arms a tile that triggers on the first enemy to step on it',
   wall:'Conjures a line of impassable tiles to block a lane',
+  firewall:'Raises a burning line across the lane — foes standing in it take damage and catch fire',
   mirror:'Summons health-scaled copies of the caster to fight alongside it',
   pyre:'Resurrects the most-recently-fallen ally beside the caster',
   swallow:'Devours a foe, removing it from the fight until the caster dies',
