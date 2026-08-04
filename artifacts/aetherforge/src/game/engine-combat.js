@@ -46,7 +46,7 @@ export function applyUnitAbility(u){
 // new name (so the sprite resolves by name), attack type/range, stat multipliers, and its OWN ultimate.
 export const TRANSFORM_FORMS={
   'Seraph':            {art:'Seraph',         ico:'😇',cls:'Cleric', t:'r',rng:3, hp:1.45,dmg:1.55,as:1.2, ult:{k:'heal',v:300,r:3,name:'Radiant Grace'}},
-  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:2, hp:1.45,dmg:1.6,as:1.15,ult:{k:'transform',form:'Volcanic Dragon',name:'Draconic Ascension'}},
+  'Fire Drake':        {art:'Fire Drake',     ico:'🐉',cls:'Beast',  t:'r',rng:2, hp:1.45,dmg:1.6,as:1.15,ult:{k:'transform',form:'Volcanic Dragon',name:'Ascension'}},
   'Volcanic Dragon':   {art:'Volcanic Dragon',     ico:'🐉',cls:'Beast',  t:'r',rng:4, hp:1.45,dmg:1.6,as:1.15,ult:{k:'cone',v:2.0,r:5,width:2,dot:{burn:1,dur:5},name:'Magma Cone'}},
   'Fire Incarnate':      {art:'Living Flame',   ico:'🔥',cls:'Mage',   t:'r',rng:4, hp:1.45,dmg:1.55,as:1.2, ult:{k:'zone',v:2.0,r:2,name:'Conflagration'}},
   // 'Leviathan':         {art:'Leviathan',      ico:'🐋',cls:'Warrior',t:'m',rng:1, hp:1.7,dmg:1.6,as:1.0, ult:{k:'quake',v:2.0,r:2,name:'Tidal Crush'}},
