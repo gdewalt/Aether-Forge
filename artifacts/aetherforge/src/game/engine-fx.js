@@ -221,8 +221,26 @@ export function fx(u,txt,color,cls){
 }
 export function ultFx(u){
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
-  const d=document.createElement('div');d.className='ultflash';d.style.cssText=`left:${ce.x-30}px;top:${ce.y-30}px`;
-  d.textContent=u.ult.name+'!';g.appendChild(d);setTimeout(()=>d.remove(),1100);
+  const palettes={
+    nova:'#ff9d5c',heal:'#72dc8a',shield:'#7cdcff',execute:'#ff6474',doubleaxe:'#e6b860',
+    rally:'#f5d67a',freeze:'#8de8ff',chain:'#fff07a',beam:'#ff9d5c',summon:'#d0b8ef',
+    drain:'#e85d75',bulwark:'#7cdcff',curse:'#c684f1',berserk:'#ff6b55',quake:'#d89544',
+    transform:'#ffcf5c',blink:'#cb91ff',charm:'#e58ee7'
+  };
+  const color=palettes[u.ult.k]||'#f0d375';
+  const aura=document.createElement('div');aura.className='ult-aura';const size=78;
+  aura.style.cssText=`left:${ce.x-size/2}px;top:${ce.y-size/2}px;width:${size}px;height:${size}px;--ult-color:${color}`;
+  g.appendChild(aura);setTimeout(()=>aura.remove(),820);
+  for(let i=0;i<10;i++){
+    const a=(Math.PI*2*i/10)+(RNG?RNG()-.5:Math.random()-.5)*.35,dist=25+(RNG?RNG():Math.random())*30;
+    const s=document.createElement('div');s.className='ult-spark';
+    s.style.cssText=`left:${ce.x-2}px;top:${ce.y-2}px;--ult-color:${color};--ux:${Math.cos(a)*dist}px;--uy:${Math.sin(a)*dist}px`;
+    g.appendChild(s);setTimeout(()=>s.remove(),680);
+  }
+  const d=document.createElement('div');d.className='ultflash';
+  d.style.cssText=`left:${ce.x-115}px;top:${ce.y-43}px;width:230px;--ult-color:${color}`;
+  d.innerHTML=`<span class="ult-kicker">${u.side==='E'?'ENEMY':'ULTIMATE'}</span><span class="ult-name">✦ ${u.ult.name||'ULTIMATE'} ✦</span>`;
+  g.appendChild(d);setTimeout(()=>d.remove(),1050);
 }
 // ---- projectiles: animate a glyph from source hex to target hex ----
 export const PROJ_GLYPH={Sylvan:'➳',Ironhold:'●',Emberkin:'🔥',Tidecallers:'❄',Leonin:'🌾',Gilded:'✦'};
