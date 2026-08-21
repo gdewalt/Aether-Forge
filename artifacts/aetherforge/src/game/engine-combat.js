@@ -11,14 +11,14 @@ import { terrainAt } from "./engine-battle-setup.js";
 // Combat presentation layer lives in engine-fx.js. The sim below calls these to visualize
 // what it decides; we re-export them so existing importers keep resolving them from here.
 import {
-  HOVU, PHASE_NAMES, PROJ_GLYPH, SPEED, activeDebuffs, beamLine, blastAt, bossPhaseFx,
+  HOVU, PAUSED, PHASE_NAMES, PROJ_GLYPH, SPEED, activeDebuffs, beamLine, blastAt, bossPhaseFx,
   deathBurst, debrisBurst, debuffBadges, fx, healRingAt, renderCombat, renderPhase, screenShake,
-  setHOVU, setSpeed, shockwaveAt, showCombat, spawnProjectile, ultFx,
+  setHOVU, setSpeed, shockwaveAt, showCombat, spawnProjectile, toggleCombatOptions, togglePause, toggleReducedMotion, ultFx,
 } from "./engine-fx.js";
 export {
   HOVU, PHASE_NAMES, PROJ_GLYPH, SPEED, activeDebuffs, beamLine, blastAt, bossPhaseFx,
   deathBurst, debrisBurst, debuffBadges, fx, healRingAt, renderCombat, renderPhase, screenShake,
-  setHOVU, setSpeed, shockwaveAt, showCombat, spawnProjectile, ultFx,
+  setHOVU, setSpeed, shockwaveAt, showCombat, spawnProjectile, toggleCombatOptions, togglePause, toggleReducedMotion, ultFx,
 };
 
 // Merges a unit's structured `passive` data (authored directly on its template in
@@ -297,6 +297,7 @@ export function slowMoveRate(u){ if(!(u.slowT>0))return 1; const st=Math.max(1,u
 export function slowAtkRate(u){ if(!(u.slowT>0))return 1; const st=Math.max(1,u.slowStacks||0); return Math.max(SLOW_ATK_FLOOR, SLOW_ATK_BASE-(st-1)*SLOW_ATK_PER_STACK); }
 export function frame(){
   const b=G.battle; if(!b||b.done)return;
+  if(PAUSED){renderCombat();renderPhase();return;}
   if(b.phase==='countdown'){
     b.cd-=0.033*SPEED;
     if(b.cd<=0){b.phase='advance';} 

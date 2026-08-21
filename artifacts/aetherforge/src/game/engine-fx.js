@@ -15,15 +15,25 @@ import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { drawGrid, fitGrid } from "./ui-planning.js";
 import { slowAtkRate, slowMoveRate } from "./engine-combat.js";
-import { beam, blast, bossIntroduction, deathParticles, floatingText, majorImpactShake, mountBattleRenderer, projectile, syncBattleRenderer, ultimateSequence } from "./battle-renderer.js";
+import { beam, blast, bossIntroduction, deathParticles, floatingText, majorImpactShake, mountBattleRenderer, projectile, setBattleHoveredUnit, syncBattleRenderer, ultimateSequence } from "./battle-renderer.js";
 
 /* ---------- playback speed ---------- */
 export let SPEED=1;
-export function setSpeed(s){SPEED=s;toast(s+'× speed');}
+export let PAUSED=false;
+export function setSpeed(s){SPEED=s;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.speed)===s));toast(s+'× speed');}
+const COMBAT_FEED=[];
+export function pushCombatEvent(text,tone=''){if(!text)return;COMBAT_FEED.unshift({text,tone});COMBAT_FEED.length=Math.min(COMBAT_FEED.length,6);const el=document.getElementById('combatFeed');if(el)el.innerHTML=COMBAT_FEED.map(x=>`<li class="${x.tone}">${x.text}</li>`).join('');}
+export function togglePause(){PAUSED=!PAUSED;const b=document.getElementById('pauseBtn');if(b){b.textContent=PAUSED?'▶ Resume':'Ⅱ Pause';b.setAttribute('aria-pressed',String(PAUSED));}document.getElementById('combatShell')?.classList.toggle('is-paused',PAUSED);pushCombatEvent(PAUSED?'Battle paused':'Battle resumed','system');}
+export function toggleCombatOptions(){const p=document.getElementById('combatOptions');if(!p)return;const open=p.hidden;p.hidden=!open;document.getElementById('optionsBtn')?.setAttribute('aria-expanded',String(open));}
+export function toggleReducedMotion(on){document.documentElement.classList.toggle('reduce-motion',!!on);}
+document.addEventListener('keydown',e=>{if(!document.getElementById('combatShell')||/INPUT|TEXTAREA|SELECT/.test(e.target?.tagName))return;if(e.code==='Space'){e.preventDefault();togglePause();}else if(['1','2','4'].includes(e.key))setSpeed(Number(e.key));else if(e.key==='Escape'&&!document.getElementById('combatOptions')?.hidden)toggleCombatOptions();});
 
 /* ---------- hovered unit (drives the live tooltip refresh) ---------- */
 export let HOVU=null;
+let FOCUSED_UNIT=null;
 export function setHOVU(v){ HOVU = v; }
+function focusUnit(u){FOCUSED_UNIT=u;renderFocusedUnit();}
+function renderFocusedUnit(){const el=document.getElementById('focusedUnit');if(!el)return;const u=HOVU||(FOCUSED_UNIT?.alive&&FOCUSED_UNIT)||(G.battle?.P||[]).find(x=>x.alive)||(G.battle?.E||[]).find(x=>x.alive);if(!u){el.innerHTML='<div class="hud-empty">No unit selected</div>';return;}const fc=u.side==='E'?(u.ecol||'#d65752'):(FCOL[u.faction]||'#aaa');el.innerHTML=`<div class="focus-head"><span class="focus-crest" style="--crest:${fc}">${u.ico||'◆'}</span><div><b>${u.name}</b><small>${u.faction||'Enemy'} · ${u.cls||'Unit'}</small></div></div><div class="stat-chips"><span>❤ ${Math.max(0,Math.round(u.hp))}/${Math.round(u.maxhp)}</span><span>⚔ ${Math.round(u.dmg)}</span><span>✦ ${Math.round(u.mag||0)}%</span></div><div class="focus-ult"><span>${u.ult?.name||'No ultimate'}</span><i style="width:${Math.min(100,u.mag||0)}%"></i></div>`;}
 
 /* ---------- phase label ---------- */
 export const PHASE_NAMES={countdown:'Countdown',advance:'Advance',clash:'Clash',escalation:'Escalation ⚡'};
@@ -35,14 +45,8 @@ export function renderPhase(){
 
 /* ---------- the combat screen shell ---------- */
 export function showCombat(){
-  let html=`<div class="panel"><div class="lbl">Battle — ${G.battle.node.nm}${G.battle.mod?` · ${G.battle.mod.ico} ${G.battle.mod.name}`:''}</div>
-    <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <span class="tip" id="btime">0.0s</span>
-      <span class="tip">⏩ <a class="link" onclick="setSpeed(1)">1×</a> ·
-        <a class="link" onclick="setSpeed(2)">2×</a> · <a class="link" onclick="setSpeed(4)">4×</a></span>
-    </div>
-    <div class="gridwrap" id="gridwrap"><div id="grid" style="width:${GRIDW}px;height:${GRIDH}px"></div></div>
-    <div class="row" style="margin-top:10px;justify-content:center" id="combatStatus"></div></div>`;
+  PAUSED=false;FOCUSED_UNIT=null;COMBAT_FEED.length=0;
+  let html=`<div class="panel battle-shell" id="combatShell"><header class="combat-topbar"><div><small>ENGAGEMENT</small><h2>${G.battle.node.nm}</h2></div><div class="phase-medallion"><span id="btime">0.0s</span></div><div class="combat-controls" aria-label="Battle controls"><div class="speed-group" role="group" aria-label="Playback speed"><button data-speed="1" class="active" onclick="setSpeed(1)">1×</button><button data-speed="2" onclick="setSpeed(2)">2×</button><button data-speed="4" onclick="setSpeed(4)">4×</button></div><button id="pauseBtn" aria-pressed="false" onclick="togglePause()">Ⅱ Pause</button><button id="optionsBtn" aria-expanded="false" onclick="toggleCombatOptions()">⚙ Options</button></div></header>${G.battle.mod?`<div class="battle-modifier"><span>${G.battle.mod.ico}</span><b>${G.battle.mod.name}</b><small>${G.battle.mod.desc||''}</small></div>`:''}<div class="combat-layout"><main class="battle-stage"><div class="gridwrap" id="gridwrap"><div id="grid" style="width:${GRIDW}px;height:${GRIDH}px"></div></div><div class="row" id="combatStatus"></div></main><aside class="combat-rail"><section><div class="rail-title">Focused unit</div><div id="focusedUnit" class="focused-unit"></div></section><section><div class="rail-title">Battle chronicle</div><ol id="combatFeed" class="combat-feed" aria-live="polite"></ol></section></aside></div><div id="combatOptions" class="combat-options" role="dialog" aria-label="Combat options" hidden><div><b>Battle Options</b><button aria-label="Close options" onclick="toggleCombatOptions()">×</button></div><label><input type="checkbox" onchange="toggleReducedMotion(this.checked)"> Reduce motion</label><p>Pause: <kbd>Space</kbd> · Speeds: <kbd>1</kbd> <kbd>2</kbd> <kbd>4</kbd> · Options: <kbd>Esc</kbd></p></div></div>`;
   SC.innerHTML=html;
   // Combat has no legacy SVG board. Pixi owns every visible battlefield layer;
   // the grid element only hosts the canvas and accessible tooltip hit areas.
@@ -52,6 +56,7 @@ export function showCombat(){
   void mountBattleRenderer(canvasHost).then(()=>{syncBattleRenderer(G.battle);const boss=[...(G.battle.P||[]),...(G.battle.E||[])].find(u=>u.boss);if(boss)bossIntroduction(boss);});
   resetCombatTokens();   // fresh grid → drop any tokens tracked from a prior battle
   renderCombat();
+  renderFocusedUnit();pushCombatEvent('Forces enter the field','system');
   fitGrid();
 }
 
@@ -104,11 +109,12 @@ function buildToken(u,g){
   d.setAttribute('tabindex','0'); d.setAttribute('role','button'); d.setAttribute('aria-label',u.name);
   d._sig=tokSig(u,g); d._lastAtk=null; d._lastHit=null; d._lastBig=null;
   // listeners attached ONCE (u is a stable object for this battle)
-  d.addEventListener('mouseenter',e=>{HOVU=u;showTip(u,true,e.clientX,e.clientY);});
+  d.addEventListener('mouseenter',e=>{HOVU=u;setBattleHoveredUnit(u);showTip(u,true,e.clientX,e.clientY);});
   d.addEventListener('mousemove',e=>positionTip(e.clientX,e.clientY));
-  d.addEventListener('mouseleave',()=>{HOVU=null;hideTip();});
-  d.addEventListener('focus',()=>{HOVU=u;const r=d.getBoundingClientRect();showTip(u,true,r.left+r.width/2,r.top);});
-  d.addEventListener('blur',()=>{HOVU=null;hideTip();});
+  d.addEventListener('mouseleave',()=>{HOVU=null;setBattleHoveredUnit(null);hideTip();});
+  d.addEventListener('click',()=>focusUnit(u));
+  d.addEventListener('focus',()=>{HOVU=u;setBattleHoveredUnit(u);const r=d.getBoundingClientRect();showTip(u,true,r.left+r.width/2,r.top);});
+  d.addEventListener('blur',()=>{HOVU=null;setBattleHoveredUnit(null);hideTip();});
   return d;
 }
 // retrigger a one-shot juice animation only on a NEW event (remove→reflow→re-add restarts it)
@@ -148,6 +154,7 @@ export function renderCombat(){
   // if hovering a unit that's still alive, refresh its tooltip content live
   if(HOVU && HOVU.alive){TT.innerHTML=tipHTML(HOVU,true);}
   else if(HOVU && !HOVU.alive){HOVU=null;hideTip();}
+  renderFocusedUnit();
 }
 
 // ---- shared debuff model (used by token badges + tooltip) ----
@@ -169,6 +176,7 @@ export function debuffBadges(u){
 
 /* ---------- floating combat text & particle bursts ---------- */
 export function deathBurst(u){
+  pushCombatEvent(`${u.name} falls`,u.side==='E'?'good':'danger');
   deathParticles(u);
 }
 // Floating combat text (damage numbers, status glyphs, crit banners) is the most frequent FX —
@@ -182,6 +190,7 @@ export function fx(u,txt,color,cls){
   floatingText(u,txt,color||'#fff',!!cls);
 }
 export function ultFx(u){
+  pushCombatEvent(`${u.name} casts ${u.ult?.name||'an ultimate'}`,'ultimate');
   ultimateSequence(u);return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
   const palettes={
@@ -289,6 +298,7 @@ export function healRingAt(u){
 }
 // ---- boss phase-transition banner ----
 export function bossPhaseFx(bu,phase){
+  pushCombatEvent(`${bu.name} enters phase ${phase}`,'danger');
   ultimateCamera(bu);floatingText(bu,'⚠ '+bu.name.split(',')[0]+' — PHASE '+phase,'#ff8a7a',true);toast('⚠ Boss enters Phase '+phase+' — reinforcements!');return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(bu.c,bu.r);
   const d=document.createElement('div');d.className='ultflash';
