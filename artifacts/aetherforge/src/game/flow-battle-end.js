@@ -10,6 +10,7 @@ import { finishRunStats, recordBattleStats } from "./stats.js";
 import { clearRun } from "./flow-save.js";
 import { pick } from "./rng.js";
 import { toast } from "./ui-tooltips.js";
+import { victoryMoment } from "./battle-renderer.js";
 
 export function endBattle(won){
   clearInterval(G.battle.timer);
@@ -17,6 +18,7 @@ export function endBattle(won){
   if(G._capSaved!=null){ G.cap=G._capSaved; G._capSaved=null; }   // undo Omen of Ruin cap bonus
   const status=document.getElementById('combatStatus');
   if(won){
+    victoryMoment();
     G.cleared++; G.actCleared=(G.actCleared||0)+1;
     const reward = G.battle.node.t==='boss'?15 : G.battle.node.t==='elite'?8:4;
     G.lore+=reward;
