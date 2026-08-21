@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "pixi.js": "^8.19.0"
+  },
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
