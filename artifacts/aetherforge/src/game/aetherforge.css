@@ -147,6 +147,13 @@ button.small{padding:5px 10px;font-size:12px}
   box-shadow:0 0 7px 2px var(--ult-color,#f0d375);animation:ultSpark .62s ease-out forwards}
 @keyframes ultSpark{0%{opacity:1;transform:translate(0,0) scale(.55)}100%{opacity:0;transform:translate(var(--ux),var(--uy)) scale(.1)}}
 
+/* GPU renderer foundation. Canvas sits behind the existing DOM interaction
+   layer until tokens, tooltips and effects have each migrated to Pixi. */
+.gridwrap{position:relative;isolation:isolate}
+.battle-canvas-host{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;border-radius:14px}
+.battle-canvas{display:block;width:100%;height:100%}
+#grid{position:relative;z-index:1;background:transparent!important}
+
 /* projectiles */
 .proj{position:absolute;z-index:7;pointer-events:none;width:14px;height:14px;margin:-7px 0 0 -7px;
   display:flex;align-items:center;justify-content:center;font-size:13px;will-change:transform;

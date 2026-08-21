@@ -15,6 +15,7 @@ import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { drawGrid, fitGrid } from "./ui-planning.js";
 import { slowAtkRate, slowMoveRate } from "./engine-combat.js";
+import { mountBattleRenderer, syncBattleRenderer } from "./battle-renderer.js";
 
 /* ---------- playback speed ---------- */
 export let SPEED=1;
@@ -44,6 +45,12 @@ export function showCombat(){
     <div class="row" style="margin-top:10px;justify-content:center" id="combatStatus"></div></div>`;
   SC.innerHTML=html;
   drawGrid('combat');
+  // The canvas is the permanent rendering foundation; DOM tokens remain above
+  // it during the staged migration so gameplay and tooltips are unaffected.
+  const canvasHost=document.createElement('div');
+  canvasHost.className='battle-canvas-host'; canvasHost.id='battle-canvas-host';
+  document.getElementById('grid').appendChild(canvasHost);
+  void mountBattleRenderer(canvasHost).then(()=>syncBattleRenderer(G.battle));
   resetCombatTokens();   // fresh grid → drop any tokens tracked from a prior battle
   renderCombat();
   fitGrid();
@@ -144,19 +151,7 @@ function updateToken(d,u){
 }
 export function renderCombat(){
   const g=document.getElementById('grid'); if(!g)return;
-  // damaging zones: a small, listener-free set — cheap to rebuild each frame
-  document.querySelectorAll('.zone-tile').forEach(e=>e.remove());
-  (G.battle.zones||[]).forEach(z=>{
-    z.tiles.forEach(t=>{
-      const ce=hexCenter(t.c,t.r);
-      const zt=document.createElement('div');zt.className='zone-tile';
-      zt.style.cssText=`position:absolute;left:${ce.x-18}px;top:${ce.y-18}px;width:36px;height:36px;border-radius:8px;`+
-        `background:${z.color};opacity:${Math.min(.5,0.18+z.life*0.04)};pointer-events:none;z-index:1;`+
-        `display:flex;align-items:center;justify-content:center;font-size:13px`;
-      zt.textContent=z.glyph;
-      g.appendChild(zt);
-    });
-  });
+  syncBattleRenderer(G.battle);
   // reconcile one persistent node per live unit
   const seen=new Set();
   [...G.battle.P,...G.battle.E].forEach(u=>{
