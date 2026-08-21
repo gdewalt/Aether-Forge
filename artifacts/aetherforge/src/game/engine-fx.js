@@ -15,7 +15,7 @@ import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { drawGrid, fitGrid } from "./ui-planning.js";
 import { slowAtkRate, slowMoveRate } from "./engine-combat.js";
-import { beam, blast, bossIntroduction, deathParticles, floatingText, majorImpactShake, mountBattleRenderer, projectile, syncBattleRenderer, ultimateCamera } from "./battle-renderer.js";
+import { beam, blast, bossIntroduction, deathParticles, floatingText, majorImpactShake, mountBattleRenderer, projectile, syncBattleRenderer, ultimateSequence } from "./battle-renderer.js";
 
 /* ---------- playback speed ---------- */
 export let SPEED=1;
@@ -44,9 +44,8 @@ export function showCombat(){
     <div class="gridwrap" id="gridwrap"><div id="grid" style="width:${GRIDW}px;height:${GRIDH}px"></div></div>
     <div class="row" style="margin-top:10px;justify-content:center" id="combatStatus"></div></div>`;
   SC.innerHTML=html;
-  drawGrid('combat');
-  // The canvas is the permanent rendering foundation; DOM tokens remain above
-  // it during the staged migration so gameplay and tooltips are unaffected.
+  // Combat has no legacy SVG board. Pixi owns every visible battlefield layer;
+  // the grid element only hosts the canvas and accessible tooltip hit areas.
   const canvasHost=document.createElement('div');
   canvasHost.className='battle-canvas-host'; canvasHost.id='battle-canvas-host';
   document.getElementById('grid').appendChild(canvasHost);
@@ -183,9 +182,7 @@ export function fx(u,txt,color,cls){
   floatingText(u,txt,color||'#fff',!!cls);
 }
 export function ultFx(u){
-  ultimateCamera(u);
-  floatingText(u,(u.side==='E'?'ENEMY · ':'ULTIMATE · ')+(u.ult.name||'ULTIMATE'),'#f0d375',true);
-  blast(u.c,u.r,.8,'#f0d375');return;
+  ultimateSequence(u);return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
   const palettes={
     nova:'#ff9d5c',heal:'#72dc8a',shield:'#7cdcff',execute:'#ff6474',doubleaxe:'#e6b860',
