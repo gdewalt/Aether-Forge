@@ -3,6 +3,9 @@ import { buyUpgrade, resetProgress } from "./data-units.js";
 import {
   beginCombat,
   setSpeed,
+  toggleCombatOptions,
+  togglePause,
+  toggleReducedMotion,
 } from "./engine-combat.js";
 import {
   eventChoice,
@@ -100,6 +103,9 @@ Object.assign(window, {
   sellPrompt,
   setAscension,
   setSpeed,
+  toggleCombatOptions,
+  togglePause,
+  toggleReducedMotion,
   showArmy,
   showCommanderSelect,
   showEquip,

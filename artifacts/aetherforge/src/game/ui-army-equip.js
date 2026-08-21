@@ -97,7 +97,7 @@ export function cardHTML(u,i,placed,opts){
   if(opts.cost!=null) tagStr=`<div class="cs" style="margin-top:3px;justify-content:space-between"><span class="chip" style="background:${RAR_COL[rar]};color:#0e0b14;font-size:8px">${rar}</span><span style="color:var(--gold-bright);font-weight:700">🪙${opts.cost}</span></div>`;
   else if(opts.sell!=null) tagStr=`<div class="cs" style="margin-top:3px;justify-content:space-between"><span class="chip" style="background:${RAR_COL[rar]};color:#0e0b14;font-size:8px">${rar}</span><span style="color:#d6b86a">sell 🪙${opts.sell}</span></div>`;
   return `<div class="card${placed?' placed':''}" data-i="${i}" style="${opts.border?`border-color:${RAR_COL[rar]}`:''}">
-    <div class="cn">${spriteThumb(u,24)} ${u.name}${u.tier>1?` <span style="color:var(--gold-bright)">${TIER_STARS[u.tier]}</span>`:''}</div>
+    <div class="cn"><span class="faction-crest" style="--crest:${fc}" title="${u.faction}">${(u.faction||'?').slice(0,1)}</span>${spriteThumb(u,24)} <span>${u.name}</span>${u.tier>1?` <span style="color:var(--gold-bright)">${TIER_STARS[u.tier]}</span>`:''}</div>
     <div class="cf"><span class="chip" style="background:${fc};color:#0e0b14">${u.faction}</span>
       <span class="chip" style="background:${cc};color:#fff">${u.cls}</span></div>
     <div class="cs"><span>❤${u.hp}</span><span>⚔${u.dmg}</span><span>${u.t==='r'?'🏹'+u.rng:'⚔1'}</span></div>
