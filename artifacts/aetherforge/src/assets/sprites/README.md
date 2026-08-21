@@ -1,5 +1,9 @@
 # Unit sprites
 
+This directory is the source of truth for unit artwork. The old root-level
+`unit-sprites.zip` was an unavailable Git LFS pointer and has been retired;
+the game and asset pipeline must never depend on that archive.
+
 Drop unit art here as `<artKey>.png` (or `.webp`). At build time Vite content-hashes
 every file in this folder and `ui-render-core.js` (`import.meta.glob`) turns them into a
 static `{ artKey -> hashed URL }` map — no runtime server, no object storage, no per-unit

@@ -15,7 +15,7 @@ import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { drawGrid, fitGrid } from "./ui-planning.js";
 import { slowAtkRate, slowMoveRate } from "./engine-combat.js";
-import { mountBattleRenderer, syncBattleRenderer } from "./battle-renderer.js";
+import { beam, blast, bossIntroduction, deathParticles, floatingText, majorImpactShake, mountBattleRenderer, projectile, syncBattleRenderer, ultimateCamera } from "./battle-renderer.js";
 
 /* ---------- playback speed ---------- */
 export let SPEED=1;
@@ -50,13 +50,13 @@ export function showCombat(){
   const canvasHost=document.createElement('div');
   canvasHost.className='battle-canvas-host'; canvasHost.id='battle-canvas-host';
   document.getElementById('grid').appendChild(canvasHost);
-  void mountBattleRenderer(canvasHost).then(()=>syncBattleRenderer(G.battle));
+  void mountBattleRenderer(canvasHost).then(()=>{syncBattleRenderer(G.battle);const boss=[...(G.battle.P||[]),...(G.battle.E||[])].find(u=>u.boss);if(boss)bossIntroduction(boss);});
   resetCombatTokens();   // fresh grid → drop any tokens tracked from a prior battle
   renderCombat();
   fitGrid();
 }
 
-/* ---------- per-frame paint: ONE persistent DOM node per live unit, reconciled ----------
+/* ---------- DOM accessibility/tooltip hit areas ----------
    The sim runs ~30×/sec. Tearing down and rebuilding every token each frame (createElement +
    innerHTML + sprite lookup + 3 addEventListener per unit per frame) was the biggest source of
    GC churn and mobile jank. Instead we keep one node per unit (TOK maps unit→node), created
@@ -100,15 +100,16 @@ function cacheTokRefs(d){
 }
 function buildToken(u,g){
   const d=document.createElement('div');
-  d.className='unit-tok live';
-  d.style.cssText=`--hs:70px;left:-999px;top:-999px;pointer-events:auto`;
-  d.innerHTML=tokInnerHTML(u,g);
-  cacheTokRefs(d);
+  d.className='battle-hitbox';
+  d.style.cssText=`left:-999px;top:-999px`;
+  d.setAttribute('tabindex','0'); d.setAttribute('role','button'); d.setAttribute('aria-label',u.name);
   d._sig=tokSig(u,g); d._lastAtk=null; d._lastHit=null; d._lastBig=null;
   // listeners attached ONCE (u is a stable object for this battle)
   d.addEventListener('mouseenter',e=>{HOVU=u;showTip(u,true,e.clientX,e.clientY);});
   d.addEventListener('mousemove',e=>positionTip(e.clientX,e.clientY));
   d.addEventListener('mouseleave',()=>{HOVU=null;hideTip();});
+  d.addEventListener('focus',()=>{HOVU=u;const r=d.getBoundingClientRect();showTip(u,true,r.left+r.width/2,r.top);});
+  d.addEventListener('blur',()=>{HOVU=null;hideTip();});
   return d;
 }
 // retrigger a one-shot juice animation only on a NEW event (remove→reflow→re-add restarts it)
@@ -129,25 +130,8 @@ function juice(d,u,bt,useSpr){
   }
 }
 function updateToken(d,u){
-  const g=tokGeom(u);
-  if(tokSig(u,g)!==d._sig){   // sprite loaded / transformed / side-flipped → rebuild inner structure
-    d.classList.remove('jx-atk','jx-hit','jx-bighit');
-    d.innerHTML=tokInnerHTML(u,g); cacheTokRefs(d);
-    d._sig=tokSig(u,g); d._lastAtk=null; d._lastHit=null; d._lastBig=null;
-  }
   const ce=hexCenter(u.c,u.r);
-  d.style.left=(ce.x-35)+'px'; d.style.top=(ce.y-35)+'px';
-  if(u._cloakT>0){ d.style.opacity='0.45'; d.style.filter='saturate(.4)'; }   // infiltrator cloak: ghosted
-  else if(d.style.opacity){ d.style.opacity=''; d.style.filter=''; }
-  juice(d,u,G.battle?G.battle.t:0,g.useSpr);
-  d._hpf.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
-  d._mgf.style.width=Math.min(100,u.mag)+'%';
-  const shielded=u.shield>0;
-  d._shf.style.width=(shielded?Math.min(100,u.shield/u.maxhp*100):0)+'%';
-  if(g.useSpr){ if(d._sprShield) d._sprShield.style.opacity=shielded?(0.5+(u._shieldFx>0?0.4:0)):0; }
-  else if(d._body){ d._body.style.boxShadow=shielded?`0 0 ${6+(u._shieldFx>0?10:0)}px ${2+(u._shieldFx>0?2:0)}px rgba(124,220,255,${0.55+(u._shieldFx>0?0.35:0)}), inset 0 0 6px rgba(124,220,255,.5)`:''; }
-  const ds=debuffBadges(u);
-  if(ds!==d._dbStr){ d._dbSlot.innerHTML=ds; d._dbStr=ds; }
+  d.style.left=(ce.x-29)+'px';d.style.top=(ce.y-38)+'px';d.setAttribute('aria-label',`${u.name}, ${Math.ceil(u.hp)} health`);
 }
 export function renderCombat(){
   const g=document.getElementById('grid'); if(!g)return;
@@ -186,16 +170,7 @@ export function debuffBadges(u){
 
 /* ---------- floating combat text & particle bursts ---------- */
 export function deathBurst(u){
-  const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
-  const col=u.side==='E'?'rgba(210,90,80,':'rgba(200,180,140,';
-  for(let i=0;i<7;i++){
-    const ang=RNG()*Math.PI*2, dist=10+RNG()*22;
-    const dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist-8;
-    const p=document.createElement('div');p.className='death-bit';
-    const sz=2+RNG()*3;
-    p.style.cssText=`left:${ce.x}px;top:${ce.y}px;width:${sz}px;height:${sz}px;background:${col}${(0.5+RNG()*0.3).toFixed(2)});--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px`;
-    g.appendChild(p);setTimeout(()=>p.remove(),650);
-  }
+  deathParticles(u);
 }
 // Floating combat text (damage numbers, status glyphs, crit banners) is the most frequent FX —
 // a hit spawns one every attack. Pool the DOM nodes instead of createElement/remove per hit to
@@ -205,16 +180,12 @@ export function deathBurst(u){
 // so the sim's seeded RNG stream — and thus deterministic outcomes — is unchanged.
 const _fxPool=[]; const _FX_MAX=80;
 export function fx(u,txt,color,cls){
-  const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
-  // small horizontal jitter so stacked numbers don't perfectly overlap
-  const jx=(RNG?RNG()*16-8:Math.random()*16-8);
-  const d=_fxPool.pop()||document.createElement('div');
-  d.className='fx'+(cls?' '+cls:'');
-  d.style.cssText=`left:${ce.x-10+jx}px;top:${ce.y-24}px;color:${color||'#fff'}`;
-  d.textContent=txt;g.appendChild(d);
-  setTimeout(()=>{ d.remove(); d.textContent=''; if(_fxPool.length<_FX_MAX)_fxPool.push(d); },1000);
+  floatingText(u,txt,color||'#fff',!!cls);
 }
 export function ultFx(u){
+  ultimateCamera(u);
+  floatingText(u,(u.side==='E'?'ENEMY · ':'ULTIMATE · ')+(u.ult.name||'ULTIMATE'),'#f0d375',true);
+  blast(u.c,u.r,.8,'#f0d375');return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
   const palettes={
     nova:'#ff9d5c',heal:'#72dc8a',shield:'#7cdcff',execute:'#ff6474',doubleaxe:'#e6b860',
@@ -240,6 +211,7 @@ export function ultFx(u){
 // ---- projectiles: animate a glyph from source hex to target hex ----
 export const PROJ_GLYPH={Sylvan:'➳',Ironhold:'●',Emberkin:'🔥',Tidecallers:'❄',Leonin:'🌾',Gilded:'✦'};
 export function spawnProjectile(src,tgt,opts){
+  projectile(src,tgt,{...(opts||{}),dur:(opts&&opts.dur||260)/(SPEED||1)});return;
   const g=document.getElementById('grid');if(!g)return;
   const a=hexCenter(src.c,src.r), bcen=hexCenter(tgt.c,tgt.r);
   const glyph=opts&&opts.glyph || PROJ_GLYPH[src.faction] || '•';
@@ -266,6 +238,7 @@ export function spawnProjectile(src,tgt,opts){
 }
 // ---- AoE blast ring at a hex ----
 export function blastAt(c,r,radiusHexes,color){
+  blast(c,r,radiusHexes,color);return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(c,r);
   const px=(radiusHexes+0.6)*HR*2;
   const d=document.createElement('div');d.className='blast';
@@ -273,9 +246,10 @@ export function blastAt(c,r,radiusHexes,color){
   g.appendChild(d);setTimeout(()=>d.remove(),520);
 }
 // ---- screen shake (grid trembles) ----
-export function screenShake(){ const g=document.getElementById('grid'); if(!g)return; g.classList.remove('quaking'); void g.offsetWidth; g.classList.add('quaking'); setTimeout(()=>g&&g.classList.remove('quaking'),620); }
+export function screenShake(){majorImpactShake();}
 // ---- expanding shockwave ring (bigger, louder than a blast) ----
 export function shockwaveAt(c,r,radiusHexes,color,delay){
+  setTimeout(()=>blast(c,r,radiusHexes,color||'#d89544',true),delay||0);return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(c,r);
   const px=(radiusHexes+0.9)*HR*2;
   setTimeout(()=>{ const g2=document.getElementById('grid'); if(!g2)return;
@@ -286,6 +260,7 @@ export function shockwaveAt(c,r,radiusHexes,color,delay){
 }
 // ---- debris kicked up by a quake ----
 export function debrisBurst(c,r,n){
+  blast(c,r,.45,'#b98b52');return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(c,r);
   const bits=['🪨','▪','◾','🪨','●'];
   for(let i=0;i<(n||5);i++){
@@ -296,6 +271,7 @@ export function debrisBurst(c,r,n){
 }
 // ---- piercing beam line drawn between two hexes, with muzzle flash ----
 export function beamLine(src,tgt,color){
+  beam(src,tgt,color);return;
   const g=document.getElementById('grid');if(!g)return;
   const a=hexCenter(src.c,src.r), b=hexCenter(tgt.c,tgt.r);
   const dx=b.x-a.x, dy=b.y-a.y; const len=Math.hypot(dx,dy)+HR; const ang=Math.atan2(dy,dx)*180/Math.PI;
@@ -308,6 +284,7 @@ export function beamLine(src,tgt,color){
   g.appendChild(m);setTimeout(()=>m.remove(),400);
 }
 export function healRingAt(u){
+  blast(u.c,u.r,.65,'#5bbf6a');return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
   const px=HR*2.4;const d=document.createElement('div');d.className='heal-ring';
   d.style.cssText=`left:${ce.x-px/2}px;top:${ce.y-px/2}px;width:${px}px;height:${px}px`;
@@ -315,6 +292,7 @@ export function healRingAt(u){
 }
 // ---- boss phase-transition banner ----
 export function bossPhaseFx(bu,phase){
+  ultimateCamera(bu);floatingText(bu,'⚠ '+bu.name.split(',')[0]+' — PHASE '+phase,'#ff8a7a',true);toast('⚠ Boss enters Phase '+phase+' — reinforcements!');return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(bu.c,bu.r);
   const d=document.createElement('div');d.className='ultflash';
   d.style.cssText=`left:${Math.max(10,ce.x-90)}px;top:${ce.y-44}px;font-size:22px;color:#ff8a7a;text-shadow:0 0 14px #9e2b25`;

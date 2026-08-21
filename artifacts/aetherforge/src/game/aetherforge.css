@@ -97,6 +97,8 @@ button.small{padding:5px 10px;font-size:12px}
 @keyframes emberFlick{0%{filter:brightness(.8)}100%{filter:brightness(1.5)}}
 /* combat juice */
 .unit-tok.live{transition:none}
+.battle-hitbox{position:absolute;width:58px;height:76px;z-index:9;background:transparent;border:0;border-radius:45%;cursor:help}
+.battle-hitbox:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;background:rgba(240,211,117,.08)}
 .jx-atk .tok-stack:not(.has-spr),.jx-atk .tok-body{animation:lungeDir .26s ease-out}
 .jx-atk .tok-stack.has-spr{animation:lungeDirSpr .26s ease-out}
 .jx-atk .spr-body{animation:none}
