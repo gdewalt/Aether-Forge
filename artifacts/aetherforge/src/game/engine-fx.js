@@ -10,7 +10,6 @@
    ============================================================ */
 import { COLS, G, GRIDH, GRIDW, HR, hexCenter } from "./engine-hex.js";
 import { FCOL } from "./data-units.js";
-import { RNG } from "./rng.js";
 import { SC, artOf, hasSprite, unitBodyHTML } from "./ui-render-core.js";
 import { TT, hideTip, positionTip, showTip, tipHTML, toast } from "./ui-tooltips.js";
 import { drawGrid, fitGrid } from "./ui-planning.js";
@@ -187,32 +186,16 @@ export function deathBurst(u){
 // so the sim's seeded RNG stream — and thus deterministic outcomes — is unchanged.
 const _fxPool=[]; const _FX_MAX=80;
 export function fx(u,txt,color,cls){
+  // Most ultimate branches historically emitted a second large name banner
+  // immediately after ultFx(). The compact Pixi cast label already carries
+  // that information, so suppress only that same-tick duplicate.
+  if(cls&&u?._ultCueAt!=null&&G.battle&&Math.abs(G.battle.t-u._ultCueAt)<.06)return;
   floatingText(u,txt,color||'#fff',!!cls);
 }
 export function ultFx(u){
   pushCombatEvent(`${u.name} casts ${u.ult?.name||'an ultimate'}`,'ultimate');
-  ultimateSequence(u);return;
-  const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(u.c,u.r);
-  const palettes={
-    nova:'#ff9d5c',heal:'#72dc8a',shield:'#7cdcff',execute:'#ff6474',doubleaxe:'#e6b860',
-    rally:'#f5d67a',freeze:'#8de8ff',chain:'#fff07a',beam:'#ff9d5c',summon:'#d0b8ef',
-    drain:'#e85d75',bulwark:'#7cdcff',curse:'#c684f1',berserk:'#ff6b55',quake:'#d89544',
-    transform:'#ffcf5c',blink:'#cb91ff',charm:'#e58ee7'
-  };
-  const color=palettes[u.ult.k]||'#f0d375';
-  const aura=document.createElement('div');aura.className='ult-aura';const size=78;
-  aura.style.cssText=`left:${ce.x-size/2}px;top:${ce.y-size/2}px;width:${size}px;height:${size}px;--ult-color:${color}`;
-  g.appendChild(aura);setTimeout(()=>aura.remove(),820);
-  for(let i=0;i<10;i++){
-    const a=(Math.PI*2*i/10)+(RNG?RNG()-.5:Math.random()-.5)*.35,dist=25+(RNG?RNG():Math.random())*30;
-    const s=document.createElement('div');s.className='ult-spark';
-    s.style.cssText=`left:${ce.x-2}px;top:${ce.y-2}px;--ult-color:${color};--ux:${Math.cos(a)*dist}px;--uy:${Math.sin(a)*dist}px`;
-    g.appendChild(s);setTimeout(()=>s.remove(),680);
-  }
-  const d=document.createElement('div');d.className='ultflash';
-  d.style.cssText=`left:${ce.x-115}px;top:${ce.y-43}px;width:230px;--ult-color:${color}`;
-  d.innerHTML=`<span class="ult-kicker">${u.side==='E'?'ENEMY':'ULTIMATE'}</span><span class="ult-name">✦ ${u.ult.name||'ULTIMATE'} ✦</span>`;
-  g.appendChild(d);setTimeout(()=>d.remove(),1050);
+  u._ultCueAt=G.battle?.t??0;
+  ultimateSequence(u);
 }
 // ---- projectiles: animate a glyph from source hex to target hex ----
 export const PROJ_GLYPH={Sylvan:'➳',Ironhold:'●',Emberkin:'🔥',Tidecallers:'❄',Leonin:'🌾',Gilded:'✦'};
@@ -252,10 +235,10 @@ export function blastAt(c,r,radiusHexes,color){
   g.appendChild(d);setTimeout(()=>d.remove(),520);
 }
 // ---- screen shake (grid trembles) ----
-export function screenShake(){majorImpactShake();}
+export function screenShake(){majorImpactShake(3.5,220);}
 // ---- expanding shockwave ring (bigger, louder than a blast) ----
 export function shockwaveAt(c,r,radiusHexes,color,delay){
-  setTimeout(()=>blast(c,r,radiusHexes,color||'#d89544',true),delay||0);return;
+  setTimeout(()=>blast(c,r,radiusHexes,color||'#d89544',false),delay||0);return;
   const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(c,r);
   const px=(radiusHexes+0.9)*HR*2;
   setTimeout(()=>{ const g2=document.getElementById('grid'); if(!g2)return;
@@ -299,11 +282,7 @@ export function healRingAt(u){
 // ---- boss phase-transition banner ----
 export function bossPhaseFx(bu,phase){
   pushCombatEvent(`${bu.name} enters phase ${phase}`,'danger');
-  ultimateCamera(bu);floatingText(bu,'⚠ '+bu.name.split(',')[0]+' — PHASE '+phase,'#ff8a7a',true);toast('⚠ Boss enters Phase '+phase+' — reinforcements!');return;
-  const g=document.getElementById('grid');if(!g)return;const ce=hexCenter(bu.c,bu.r);
-  const d=document.createElement('div');d.className='ultflash';
-  d.style.cssText=`left:${Math.max(10,ce.x-90)}px;top:${ce.y-44}px;font-size:22px;color:#ff8a7a;text-shadow:0 0 14px #9e2b25`;
-  d.textContent='⚠ '+bu.name.split(',')[0]+' — PHASE '+phase+'!';
-  g.appendChild(d);setTimeout(()=>d.remove(),1400);
+  ultimateCamera(bu);
+  floatingText(bu,'⚠ '+bu.name.split(',')[0]+' — PHASE '+phase,'#ff8a7a',true);
   toast('⚠ Boss enters Phase '+phase+' — reinforcements!');
 }
